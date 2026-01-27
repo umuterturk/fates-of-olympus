@@ -177,14 +177,37 @@ def _load_cards_from_json() -> tuple[tuple[CardDef, ...], dict[str, list[str]]]:
 # Card Data (loaded from JSON)
 # =============================================================================
 
-# Load cards once at module import time
-_ALL_CARDS, _DECK_DEFINITIONS = _load_cards_from_json()
 
-# Public API - tuple of all card definitions
-ALL_CARDS: tuple[CardDef, ...] = _ALL_CARDS
+class _CardDataStore:
+    """
+    Mutable container for card data.
+    
+    This allows hot-reloading of card definitions without module reimport.
+    Using a class avoids pyright's constant redefinition warnings.
+    """
+    
+    def __init__(self) -> None:
+        self.all_cards: tuple[CardDef, ...]
+        self.deck_definitions: dict[str, list[str]]
+        self.registry: dict[CardId, CardDef]
+        self._load()
+    
+    def _load(self) -> None:
+        """Load card data from JSON."""
+        self.all_cards, self.deck_definitions = _load_cards_from_json()
+        self.registry = {card.id: card for card in self.all_cards}
+    
+    def reload(self) -> None:
+        """Reload card data from JSON."""
+        self._load()
 
-# Registry for quick lookup by ID
-CARD_REGISTRY: dict[CardId, CardDef] = {card.id: card for card in ALL_CARDS}
+
+# Initialize card data at module import time
+_card_data = _CardDataStore()
+
+# Public API - access card data through the store
+ALL_CARDS: tuple[CardDef, ...] = _card_data.all_cards
+CARD_REGISTRY: dict[CardId, CardDef] = _card_data.registry
 
 
 # =============================================================================
@@ -194,7 +217,7 @@ CARD_REGISTRY: dict[CardId, CardDef] = {card.id: card for card in ALL_CARDS}
 
 def get_card_def(card_id: CardId) -> CardDef | None:
     """Get a card definition by ID."""
-    return CARD_REGISTRY.get(card_id)
+    return _card_data.registry.get(card_id)
 
 
 def get_starter_deck_defs() -> tuple[CardDef, ...]:
@@ -204,8 +227,8 @@ def get_starter_deck_defs() -> tuple[CardDef, ...]:
     Returns cards suitable for a starter deck, providing a mix of
     costs and ability types.
     """
-    card_ids = _DECK_DEFINITIONS.get("starter", [])
-    return tuple(CARD_REGISTRY[CardId(cid)] for cid in card_ids if CardId(cid) in CARD_REGISTRY)
+    card_ids = _card_data.deck_definitions.get("starter", [])
+    return tuple(_card_data.registry[CardId(cid)] for cid in card_ids if CardId(cid) in _card_data.registry)
 
 
 def get_destroy_deck_defs() -> tuple[CardDef, ...]:
@@ -214,8 +237,8 @@ def get_destroy_deck_defs() -> tuple[CardDef, ...]:
 
     Focuses on destroy mechanics and synergies.
     """
-    card_ids = _DECK_DEFINITIONS.get("destroy", [])
-    return tuple(CARD_REGISTRY[CardId(cid)] for cid in card_ids if CardId(cid) in CARD_REGISTRY)
+    card_ids = _card_data.deck_definitions.get("destroy", [])
+    return tuple(_card_data.registry[CardId(cid)] for cid in card_ids if CardId(cid) in _card_data.registry)
 
 
 def get_move_deck_defs() -> tuple[CardDef, ...]:
@@ -224,8 +247,8 @@ def get_move_deck_defs() -> tuple[CardDef, ...]:
 
     Focuses on move mechanics and synergies.
     """
-    card_ids = _DECK_DEFINITIONS.get("move", [])
-    return tuple(CARD_REGISTRY[CardId(cid)] for cid in card_ids if CardId(cid) in CARD_REGISTRY)
+    card_ids = _card_data.deck_definitions.get("move", [])
+    return tuple(_card_data.registry[CardId(cid)] for cid in card_ids if CardId(cid) in _card_data.registry)
 
 
 def reload_cards() -> None:
@@ -234,12 +257,15 @@ def reload_cards() -> None:
 
     This allows runtime reloading of card data without restarting the application.
     Useful for development and testing balance changes.
+    
+    Note: Updates the internal store. Modules that imported ALL_CARDS or CARD_REGISTRY
+    directly at import time will need to re-import to see changes.
     """
-    global _ALL_CARDS, _DECK_DEFINITIONS, ALL_CARDS, CARD_REGISTRY
-
-    _ALL_CARDS, _DECK_DEFINITIONS = _load_cards_from_json()
-    ALL_CARDS = _ALL_CARDS
-    CARD_REGISTRY = {card.id: card for card in ALL_CARDS}
+    _card_data.reload()
+    # Update module-level references for code that accesses them directly
+    global ALL_CARDS, CARD_REGISTRY  # noqa: PLW0603
+    ALL_CARDS = _card_data.all_cards  # type: ignore[misc]
+    CARD_REGISTRY = _card_data.registry  # type: ignore[misc]
 
 
 # =============================================================================

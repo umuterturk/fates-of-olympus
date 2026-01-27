@@ -20,15 +20,11 @@ Tests cover:
 - SilenceOngoingEffect (Gorgon Glare)
 """
 
-import pytest
-
 from engine.types import (
     PlayerId,
     LocationIndex,
     InstanceId,
     Power,
-    CardId,
-    LOCATION_CAPACITY,
 )
 from engine.models import (
     CardInstance,
@@ -428,7 +424,7 @@ class TestMoveCardEffect:
             location=LocationIndex(0),  # Play to location 0
         )
 
-        new_state, events = resolve_actions(state, action, PassAction(player_id=PlayerId(1)))
+        new_state, _ = resolve_actions(state, action, PassAction(player_id=PlayerId(1)))
 
         # Iris should NOT be at location 0 (she moved)
         loc0_cards = new_state.get_location(LocationIndex(0)).get_cards(PlayerId(0))
