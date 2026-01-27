@@ -1,0 +1,6 @@
+# Fates of Olympus - Dependencies
+# No runtime dependencies (standard library only)
+
+# Development dependencies
+pytest>=8.0.0
+pyright>=1.1.350
