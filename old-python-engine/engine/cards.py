@@ -42,7 +42,7 @@ from engine.effects import (
 # =============================================================================
 
 # Path to the cards.json file (relative to this module)
-CARDS_JSON_PATH = Path(__file__).parent.parent / "cards.json"
+CARDS_JSON_PATH = Path(__file__).parent.parent.parent / "cards.json"
 
 
 def _parse_target_filter(target_str: str) -> TargetFilter:
