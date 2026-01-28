@@ -25,7 +25,6 @@ import type {
   PlayerState,
   CardInstance,
   CardDef,
-  LocationState,
   PlayCardAction,
   PassAction,
 } from './models';
@@ -35,7 +34,6 @@ import {
   getCards,
   getLocation,
   withLocation,
-  withPlayer,
   withCardDestroyed,
   withCardMoved,
   hasDestroyedCardThisGame,
@@ -45,7 +43,7 @@ import {
 } from './models';
 import { resolveTurn } from './controller';
 import { getCardDef } from './cards';
-import type { PlayerId, LocationIndex, TurnNumber, InstanceId } from './types';
+import type { PlayerId, TurnNumber, InstanceId } from './types';
 
 // =============================================================================
 // Test Helpers
