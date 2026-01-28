@@ -157,7 +157,7 @@ export const EVENT_ANIMATIONS: Record<GameEvent['type'], AnimationConfig> = {
   CardRevealed: { duration: 0.6, interruptible: false },
   CardMoved: { duration: 0.7, interruptible: false },
   CardDestroyed: { duration: 0.5, interruptible: false },
-  PowerChanged: { duration: 0.4, interruptible: true },
+  PowerChanged: { duration: 1.0, interruptible: false },
   PlayerPassed: { duration: 0.2, interruptible: true },
   ActionInvalid: { duration: 0.3, interruptible: true },
 };

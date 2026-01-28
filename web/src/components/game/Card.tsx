@@ -110,6 +110,7 @@ export function Card({
     <motion.div
       layout
       layoutId={`card-${card.instanceId}`}
+      data-card-id={card.instanceId}
       className={clsx("relative", wrapperSizeClasses[size])}
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}

@@ -14,7 +14,7 @@
 import { create } from 'zustand';
 import type { GameState, PlayerAction, CardInstance, PlayCardAction } from '@engine/models';
 import type { GameEvent } from '@engine/events';
-import type { LocationIndex } from '@engine/types';
+import type { LocationIndex, PlayerId } from '@engine/types';
 import { createGame, resolveTurn, startNextTurn, validateAction } from '@engine/controller';
 import { computeGreedyAction } from '../ai/greedy';
 import {
@@ -22,6 +22,8 @@ import {
   withPlayer,
   withLocation,
   getLocation,
+  getTotalPower,
+  withEnergy,
   removeFromHand,
   spendEnergy,
   addCard,
@@ -37,25 +39,25 @@ function applyCardPlay(
 ): GameState {
   const { playerId, cardInstanceId, location: locationIndex } = action;
   const player = getPlayer(state, playerId);
-  
+
   // Remove card from hand
   const [playerWithoutCard, card] = removeFromHand(player, cardInstanceId);
   if (!card) return state;
-  
+
   // Spend energy
   const playerSpent = spendEnergy(playerWithoutCard, card.cardDef.cost);
   let newState = withPlayer(state, playerId, playerSpent);
-  
+
   // Add card to location (unrevealed for player, revealed depends on context)
   const playedCard: CardInstance = {
     ...card,
     revealed: playerId === 0, // Player cards shown immediately, NPC hidden until reveal
   };
-  
+
   const location = getLocation(newState, locationIndex);
   const newLocation = addCard(location, playedCard, playerId);
   newState = withLocation(newState, locationIndex, newLocation);
-  
+
   return newState;
 }
 
@@ -67,9 +69,15 @@ interface GameStore {
   /** Actions the player has taken this turn */
   playerActions: PlayCardAction[];
   events: GameEvent[];
+  /** PowerChanged events to animate - filtered from all events */
+  powerChangedEvents: GameEvent[];
+  /** Current index for sequentially playing animations */
+  currentAnimationIndex: number;
   isAnimating: boolean;
   isNpcThinking: boolean;
-  
+  /** Location winners for end-game animation */
+  locationWinners: readonly (PlayerId | null)[] | null;
+
   // Actions
   initGame: () => void;
   /** Play a card from hand to location (doesn't end the turn) */
@@ -81,6 +89,14 @@ interface GameStore {
   /** End the turn - triggers NPC plays and resolution */
   endTurn: () => Promise<void>;
   setAnimating: (isAnimating: boolean) => void;
+  /** Advance to next animation */
+  nextAnimation: () => void;
+  /** Clear all pending animations */
+  clearAnimations: () => void;
+  /** Clear location winners after animation */
+  clearLocationWinners: () => void;
+  /** Add energy to a player */
+  addEnergy: (playerId: PlayerId, amount: number) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -88,18 +104,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
   turnStartState: null,
   playerActions: [],
   events: [],
+  powerChangedEvents: [],
+  currentAnimationIndex: 0,
   isAnimating: false,
   isNpcThinking: false,
+  locationWinners: null,
 
   initGame: () => {
     const { state, events } = createGame();
-    set({ 
+    set({
       gameState: state,
       turnStartState: state,
       playerActions: [],
       events,
+      powerChangedEvents: [],
+      currentAnimationIndex: 0,
       isAnimating: false,
       isNpcThinking: false,
+      locationWinners: null,
     });
   },
 
@@ -107,24 +129,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameState, playerActions } = get();
     if (!gameState) return;
     if (gameState.result !== 'IN_PROGRESS') return;
-    
+
     const action: PlayCardAction = {
       type: 'PlayCard',
       playerId: 0,
       cardInstanceId,
       location,
     };
-    
+
     // Validate the action
     const validation = validateAction(gameState, action);
     if (!validation.valid) {
       console.warn('Invalid action:', validation.reason);
       return;
     }
-    
+
     // Apply the card play immediately
     const newState = applyCardPlay(gameState, action);
-    
+
     set({
       gameState: newState,
       playerActions: [...playerActions, action],
@@ -134,13 +156,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   moveCard: (cardInstanceId: number, newLocation: LocationIndex | null) => {
     const { turnStartState, playerActions } = get();
     if (!turnStartState) return;
-    
+
     // Find the action for this card
     const actionIndex = playerActions.findIndex(a => a.cardInstanceId === cardInstanceId);
     if (actionIndex === -1) return; // Card not found in pending actions
-    
+
     let newActions: PlayCardAction[];
-    
+
     if (newLocation === null) {
       // Return to hand - remove the action entirely
       newActions = [
@@ -159,13 +181,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...playerActions.slice(actionIndex + 1),
       ];
     }
-    
+
     // Rebuild state from turnStartState by replaying updated actions
     let newState = turnStartState;
     for (const action of newActions) {
       newState = applyCardPlay(newState, action);
     }
-    
+
     set({
       gameState: newState,
       playerActions: newActions,
@@ -181,52 +203,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameState, turnStartState, playerActions } = get();
     if (!gameState || !turnStartState) return;
     if (gameState.result !== 'IN_PROGRESS') return;
-    
+
     set({ isNpcThinking: true });
-    
+
     try {
       // Let NPC make its decisions based on the turn start state
       // NPC plays multiple cards until it passes
       const npcActions: PlayCardAction[] = [];
       let npcState = turnStartState;
-      
+
       // Small delay before NPC starts "thinking"
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // NPC plays cards until it passes
       while (true) {
         const npcAction = computeGreedyAction(npcState, 1);
         if (npcAction.type === 'Pass') break;
-        
+
         // Validate and apply NPC action
         const validation = validateAction(npcState, npcAction);
         if (!validation.valid) break;
-        
+
         npcActions.push(npcAction);
         npcState = applyCardPlay(npcState, npcAction);
-        
+
         // Small delay between NPC plays for visual effect
         await new Promise(resolve => setTimeout(resolve, 200));
       }
-      
+
       set({ isNpcThinking: false, isAnimating: true });
-      
+
       // Now resolve the turn using the original turn start state
       // Process player and NPC actions in pairs
       let resolvedState = turnStartState;
       let allEvents: GameEvent[] = [];
-      
+
       const maxPlays = Math.max(playerActions.length, npcActions.length);
-      
+
       for (let i = 0; i < maxPlays; i++) {
         const playerAction: PlayerAction = playerActions[i] ?? { type: 'Pass', playerId: 0 };
         const npcAction: PlayerAction = npcActions[i] ?? { type: 'Pass', playerId: 1 };
-        
+
         const { state: newState, events } = resolveTurn(resolvedState, playerAction, npcAction);
         resolvedState = newState;
         allEvents = [...allEvents, ...events];
       }
-      
+
       // If no plays at all, still resolve an empty turn
       if (maxPlays === 0) {
         const { state: newState, events } = resolveTurn(
@@ -237,20 +259,51 @@ export const useGameStore = create<GameStore>((set, get) => ({
         resolvedState = newState;
         allEvents = [...allEvents, ...events];
       }
-      
-      set({ 
-        gameState: resolvedState, 
+
+      // Filter out PowerChanged events that target different cards (buff/debuff effects)
+      const powerChangedEvents = allEvents.filter(
+        (e): e is GameEvent & { type: 'PowerChanged' } =>
+          e.type === 'PowerChanged' &&
+          'sourceCardId' in e &&
+          'cardInstanceId' in e &&
+          (e as { sourceCardId: number; cardInstanceId: number }).sourceCardId !==
+          (e as { sourceCardId: number; cardInstanceId: number }).cardInstanceId
+      );
+
+      // Calculate current location winners for animation
+      const currentLocationWinners = resolvedState.locations.map(loc => {
+        const p0 = getTotalPower(loc, 0);
+        const p1 = getTotalPower(loc, 1);
+        if (p0 > p1) return 0 as PlayerId;
+        if (p1 > p0) return 1 as PlayerId;
+        return null;
+      });
+
+      set({
+        gameState: resolvedState,
         events: allEvents,
         playerActions: [],
+        powerChangedEvents,
+        currentAnimationIndex: 0,
       });
-      
-      // Small delay for animations
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+
+      // Wait for buff/debuff animations (approx 1s per animation, max 3.8s)
+      const buffAnimationTime = Math.min(powerChangedEvents.length, 3) * 1000 + 800;
+      if (buffAnimationTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, buffAnimationTime));
+      }
+
+      // NOW trigger point animations
+      set({ locationWinners: currentLocationWinners });
+
+      // Wait for point animations to complete
+      const pointAnimationTime = 1500;
+      await new Promise(resolve => setTimeout(resolve, pointAnimationTime));
+
       // If game is still in progress, start next turn
       if (resolvedState.result === 'IN_PROGRESS') {
         const { state: nextState, events: nextEvents } = startNextTurn(resolvedState);
-        set({ 
+        set({
           gameState: nextState,
           turnStartState: nextState,
           events: nextEvents,
@@ -261,8 +314,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);
-      set({ 
-        isNpcThinking: false, 
+      set({
+        isNpcThinking: false,
         isAnimating: false,
       });
     }
@@ -270,5 +323,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setAnimating: (isAnimating: boolean) => {
     set({ isAnimating });
+  },
+
+  nextAnimation: () => {
+    const { currentAnimationIndex, powerChangedEvents } = get();
+    if (currentAnimationIndex < powerChangedEvents.length - 1) {
+      set({ currentAnimationIndex: currentAnimationIndex + 1 });
+    } else {
+      // All animations complete
+      set({ powerChangedEvents: [], currentAnimationIndex: 0 });
+    }
+  },
+
+  clearAnimations: () => {
+    set({ powerChangedEvents: [], currentAnimationIndex: 0 });
+  },
+
+  clearLocationWinners: () => {
+    set({ locationWinners: null });
+  },
+
+  addEnergy: (playerId: PlayerId, amount: number) => {
+    const { gameState } = get();
+    if (!gameState) return;
+
+    const player = getPlayer(gameState, playerId);
+    set({
+      gameState: withPlayer(gameState, playerId, withEnergy(player, player.energy + amount)),
+    });
   },
 }));

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
-import { EnergyDisplay } from '@components/game/EnergyDisplay';
+import { BuffDebuffAnimation } from '@components/game/BuffDebuffAnimation';
+import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
 import { useGameStore } from '@store/gameStore';
 import type { LocationIndex } from '@engine/types';
+import type { PowerChangedEvent } from '@engine/events';
 
 // Hook to detect mobile
 function useIsMobile() {
@@ -28,12 +30,18 @@ export function Game() {
   const {
     gameState,
     playerActions,
+    powerChangedEvents,
+    currentAnimationIndex,
     isAnimating,
     isNpcThinking,
+    locationWinners,
     initGame,
     playCard,
     moveCard,
     endTurn,
+    nextAnimation,
+    clearLocationWinners,
+    addEnergy,
   } = useGameStore();
 
   const isMobile = useIsMobile();
@@ -42,6 +50,8 @@ export function Game() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   // Track if selected card is from board (pending) vs hand
   const [isSelectedFromBoard, setIsSelectedFromBoard] = useState(false);
+  // Track if game end screen is visible
+  const [isEndScreenVisible, setIsEndScreenVisible] = useState(true);
 
   useEffect(() => {
     initGame();
@@ -73,7 +83,7 @@ export function Game() {
   };
 
   const handleLocationClick = (locationIndex: number) => {
-    if (selectedCard === null || isAnimating || isNpcThinking) return;
+    if (selectedCard === null || isAnimating || isNpcThinking || isGameOver) return;
 
     if (isSelectedFromBoard) {
       // Moving a pending card to a new location
@@ -87,7 +97,7 @@ export function Game() {
   };
 
   const handleHandClick = () => {
-    if (selectedCard !== null && isSelectedFromBoard && !isAnimating && !isNpcThinking) {
+    if (selectedCard !== null && isSelectedFromBoard && !isAnimating && !isNpcThinking && !isGameOver) {
       moveCard(selectedCard, null); // null = return to hand
       setSelectedCard(null);
       setIsSelectedFromBoard(false);
@@ -95,7 +105,7 @@ export function Game() {
   };
 
   const handleEndTurn = () => {
-    if (!isAnimating && !isNpcThinking) {
+    if (!isAnimating && !isNpcThinking && !isGameOver) {
       endTurn();
       setSelectedCard(null);
       setIsSelectedFromBoard(false);
@@ -106,6 +116,7 @@ export function Game() {
   const pendingCardIds = new Set(playerActions.map(a => a.cardInstanceId));
 
   const isDisabled = isAnimating || isNpcThinking;
+  const isGameOver = gameState.result !== 'IN_PROGRESS';
 
   return (
     <div className={clsx(
@@ -131,13 +142,21 @@ export function Game() {
             "font-display text-olympus-gold",
             isMobile ? "text-sm" : "text-xl"
           )}>
-            Turn {gameState.turn}/6
+            {gameState.result === 'IN_PROGRESS' ? `Turn ${gameState.turn}/6` : 'Game Ended'}
           </div>
         </div>
-        <EnergyDisplay
-          current={gameState.players[0].energy}
-          max={gameState.turn}
-        />
+
+        {gameState.result !== 'IN_PROGRESS' && !isEndScreenVisible && (
+          <button
+            onClick={() => setIsEndScreenVisible(true)}
+            className={clsx(
+              "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
+              isMobile ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm"
+            )}
+          >
+            Show Results
+          </button>
+        )}
       </header>
 
       {/* Opponent area (NPC) - compact on mobile */}
@@ -187,9 +206,9 @@ export function Game() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Game Board and Hand wrapped in LayoutGroup for shared card animations */}
-      <LayoutGroup>
-        {/* Game Board - takes remaining space */}
+      {/* Game Board and Hand - Board takes remaining space */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Game Board */}
         <div className={clsx(
           "flex items-center justify-center flex-1",
           isMobile ? "min-h-[360px]" : "min-h-[500px]"
@@ -248,14 +267,17 @@ export function Game() {
               Cancel
             </button>
 
-            {/* Available Energy Display - Gold sphere */}
-            <div className={clsx(
-              "flex items-center justify-center rounded-full",
-              "bg-gradient-to-br from-yellow-300 via-olympus-gold to-yellow-600",
-              "shadow-lg shadow-olympus-gold/50",
-              "border-2 border-yellow-300/50",
-              isMobile ? "w-10 h-10" : "w-14 h-14"
-            )}>
+            <div
+              data-points-indicator
+              data-power-indicator
+              className={clsx(
+                "flex items-center justify-center rounded-full",
+                "bg-gradient-to-br from-yellow-300 via-olympus-gold to-yellow-600",
+                "shadow-lg shadow-olympus-gold/50",
+                "border-2 border-yellow-300/50",
+                isMobile ? "w-10 h-10" : "w-14 h-14"
+              )}
+            >
               <span className={clsx(
                 "text-black font-bold font-display drop-shadow flex items-center gap-0.5",
                 isMobile ? "text-base" : "text-xl"
@@ -267,7 +289,7 @@ export function Game() {
 
             <button
               onClick={handleEndTurn}
-              disabled={isDisabled}
+              disabled={isDisabled || isGameOver}
               className={clsx(
                 "relative rounded-lg font-display font-semibold transition-all overflow-hidden",
                 "bg-gradient-to-r from-olympus-gold via-yellow-500 to-olympus-bronze",
@@ -281,11 +303,21 @@ export function Game() {
             </button>
           </div>
         </div>
-      </LayoutGroup>
+      </div>
+
+      {/* Buff/Debuff Animation Overlay */}
+      <BuffDebuffAnimation
+        event={
+          powerChangedEvents.length > 0 && currentAnimationIndex < powerChangedEvents.length
+            ? (powerChangedEvents[currentAnimationIndex] as PowerChangedEvent)
+            : null
+        }
+        onComplete={nextAnimation}
+      />
 
       {/* Game over overlay - z-index 1000 to be above tooltips */}
       <AnimatePresence>
-        {gameState.result !== 'IN_PROGRESS' && (
+        {gameState.result !== 'IN_PROGRESS' && isEndScreenVisible && (
           <motion.div
             className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"
             initial={{ opacity: 0 }}
@@ -325,13 +357,25 @@ export function Game() {
                 isMobile ? "gap-2" : "gap-4"
               )}>
                 <button
-                  onClick={() => initGame()}
+                  onClick={() => {
+                    initGame();
+                    setIsEndScreenVisible(true);
+                  }}
                   className={clsx(
                     "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
                     isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
                   )}
                 >
                   Play Again
+                </button>
+                <button
+                  onClick={() => setIsEndScreenVisible(false)}
+                  className={clsx(
+                    "bg-white/10 text-white font-display rounded-lg hover:bg-white/20 transition-colors border border-white/20",
+                    isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
+                  )}
+                >
+                  View Board
                 </button>
                 <Link
                   to="/"
@@ -347,6 +391,14 @@ export function Game() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Location Win Animation - +1 flying to points indicator */}
+      <LocationWinAnimation
+        locationWinners={locationWinners}
+        playerId={0}
+        onComplete={clearLocationWinners}
+        onPointLanded={() => addEnergy(0, 1)}
+      />
     </div>
   );
 }
