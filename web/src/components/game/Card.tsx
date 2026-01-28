@@ -32,8 +32,8 @@ export function Card({
   const basePower = card.cardDef.basePower;
   const powerDiff = power - basePower;
 
-  // Image path - tries multiple extensions
-  const imagePath = `/cards/${card.cardDef.id}.png`;
+  // Image path - use base URL for GitHub Pages compatibility
+  const imagePath = `${import.meta.env.BASE_URL}cards/${card.cardDef.id}.png`;
 
   const sizeClasses = {
     sm: 'w-16 h-24 text-xs',

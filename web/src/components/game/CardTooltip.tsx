@@ -38,7 +38,7 @@ export function CardTooltip({ cardDef, power, powerDiff, cardWidth = 96 }: CardT
         {/* Card image preview */}
         <div className="relative h-24 bg-gray-800">
           <img
-            src={`/cards/${cardDef.id}.png`}
+            src={`${import.meta.env.BASE_URL}cards/${cardDef.id}.png`}
             alt={cardDef.name}
             className="w-full h-full object-cover"
             onError={(e) => {
