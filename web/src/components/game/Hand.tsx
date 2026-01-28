@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import type { CardInstance } from '@engine/models';
@@ -15,6 +15,22 @@ interface HandProps {
   disabled?: boolean;
 }
 
+// Hook to detect mobile
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+}
+
 export function Hand({
   cards,
   energy,
@@ -25,6 +41,7 @@ export function Hand({
   disabled = false,
 }: HandProps) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const isMobile = useIsMobile();
 
   const handleCardClick = (card: CardInstance, e: React.MouseEvent) => {
     e.stopPropagation(); // Don't trigger hand click
@@ -47,10 +64,14 @@ export function Hand({
     }
   };
 
+  // Use 'sm' size on mobile, 'md' on desktop
+  const cardSize = isMobile ? 'sm' : 'md';
+
   return (
     <motion.div
       className={clsx(
-        "flex justify-center gap-2 p-4 bg-black/30 rounded-xl overflow-visible",
+        "flex justify-center items-center overflow-visible bg-black/30 rounded-xl flex-1",
+        isMobile ? "gap-0.5 px-1 py-1" : "gap-2 p-4",
         isDropTarget && "ring-2 ring-olympus-gold bg-olympus-gold/10 cursor-pointer",
       )}
       onClick={handleHandAreaClick}
@@ -66,22 +87,21 @@ export function Hand({
         const zIndex = isHovered ? 100 : isSelected ? 10 : index;
 
         return (
-          <motion.div
+          <div
             key={card.instanceId}
             className="relative"
-            animate={{
-              y: isSelected ? -20 : 0,
-              scale: isSelected ? 1.05 : 1,
+            style={{ 
+              zIndex,
+              transform: `translateY(${isSelected ? (isMobile ? -10 : -20) : 0}px) scale(${isSelected ? 1.05 : 1})`,
+              transition: 'transform 0.2s ease-out',
             }}
-            transition={{ duration: 0.2 }}
-            style={{ zIndex }}
-            onMouseEnter={() => setHoveredCard(card.instanceId)}
-            onMouseLeave={() => setHoveredCard(null)}
+            onMouseEnter={() => !isMobile && setHoveredCard(card.instanceId)}
+            onMouseLeave={() => !isMobile && setHoveredCard(null)}
             onClick={(e) => handleCardClick(card, e)}
           >
             <Card
               card={card}
-              size="md"
+              size={cardSize}
               selected={isSelected}
               disabled={disabled || !canAfford}
             />
@@ -89,17 +109,23 @@ export function Hand({
             {/* Unaffordable overlay - shows when card costs more than current energy */}
             {!canAfford && (
               <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center pointer-events-none">
-                <span className="text-red-400 text-sm font-bold bg-black/80 px-2 py-1 rounded">
-                  Cost: {card.cardDef.cost} ⚡
+                <span className={clsx(
+                  "text-red-400 font-bold bg-black/80 rounded",
+                  isMobile ? "text-[8px] px-1 py-0.5" : "text-sm px-2 py-1"
+                )}>
+                  {card.cardDef.cost} ⚡
                 </span>
               </div>
             )}
-          </motion.div>
+          </div>
         );
       })}
 
       {cards.length === 0 && (
-        <div className="text-gray-500 py-8">
+        <div className={clsx(
+          "text-gray-500",
+          isMobile ? "py-4 text-xs" : "py-8"
+        )}>
           No cards in hand
         </div>
       )}

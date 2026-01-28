@@ -1,11 +1,29 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { clsx } from 'clsx';
 import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
 import { EnergyDisplay } from '@components/game/EnergyDisplay';
 import { useGameStore } from '@store/gameStore';
-import type { LocationIndex } from '@engine/types';
+import type { LocationIndex, PlayerId } from '@engine/types';
+import { getTotalPower } from '@engine/models';
+
+// Hook to detect mobile
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+}
 
 export function Game() {
   const { 
@@ -18,6 +36,8 @@ export function Game() {
     moveCard,
     endTurn,
   } = useGameStore();
+  
+  const isMobile = useIsMobile();
 
   // Selected card can be from hand or a pending card on board
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -89,15 +109,30 @@ export function Game() {
   const isDisabled = isAnimating || isNpcThinking;
 
   return (
-    <div className="min-h-screen flex flex-col p-4 max-w-6xl mx-auto">
+    <div className={clsx(
+      "h-full flex flex-col max-w-6xl mx-auto",
+      isMobile ? "p-2" : "p-4"
+    )}>
       {/* Header */}
-      <header className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="text-gray-400 hover:text-white">
-            ← Back
+      <header className={clsx(
+        "flex justify-between items-center",
+        isMobile ? "mb-1" : "mb-4"
+      )}>
+        <div className={clsx(
+          "flex items-center",
+          isMobile ? "gap-2" : "gap-4"
+        )}>
+          <Link to="/" className={clsx(
+            "text-gray-400 hover:text-white",
+            isMobile && "text-xs"
+          )}>
+            ←
           </Link>
-          <div className="text-xl font-display text-olympus-gold">
-            Turn {gameState.turn} / 6
+          <div className={clsx(
+            "font-display text-olympus-gold",
+            isMobile ? "text-sm" : "text-xl"
+          )}>
+            Turn {gameState.turn}/6
           </div>
         </div>
         <EnergyDisplay 
@@ -106,16 +141,27 @@ export function Game() {
         />
       </header>
 
-      {/* Opponent area (NPC) */}
+      {/* Opponent area (NPC) - compact on mobile */}
       <motion.div 
-        className="mb-4 flex justify-between items-center px-4 py-2 bg-black/30 rounded-lg"
+        className={clsx(
+          "flex justify-between items-center bg-black/30 rounded-lg",
+          isMobile ? "mb-1 px-2 py-1" : "mb-4 px-4 py-2"
+        )}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
         <div>
-          <div className="text-sm text-gray-300">Opponent (NPC)</div>
-          <div className="text-xs text-gray-500">
-            {gameState.players[1].hand.length} cards in hand • Energy: {gameState.players[1].energy}
+          <div className={clsx(
+            "text-gray-300",
+            isMobile ? "text-[10px]" : "text-sm"
+          )}>
+            {isMobile ? 'NPC' : 'Opponent (NPC)'}
+          </div>
+          <div className={clsx(
+            "text-gray-500",
+            isMobile ? "text-[8px]" : "text-xs"
+          )}>
+            {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
           </div>
         </div>
         
@@ -125,7 +171,10 @@ export function Game() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="flex items-center gap-2 text-olympus-gold"
+              className={clsx(
+                "flex items-center gap-1 text-olympus-gold",
+                isMobile && "text-xs"
+              )}
             >
               <motion.span
                 animate={{ rotate: 360 }}
@@ -133,7 +182,7 @@ export function Game() {
               >
                 ⚡
               </motion.span>
-              Thinking...
+              {!isMobile && 'Thinking...'}
             </motion.div>
           )}
         </AnimatePresence>
@@ -141,8 +190,11 @@ export function Game() {
 
       {/* Game Board and Hand wrapped in LayoutGroup for shared card animations */}
       <LayoutGroup>
-        {/* Game Board */}
-        <div className="flex-1 flex flex-col">
+        {/* Game Board - takes remaining space */}
+        <div className={clsx(
+          "flex items-center justify-center flex-1",
+          isMobile ? "min-h-[360px]" : "min-h-[500px]"
+        )}>
           <Board 
             locations={gameState.locations}
             onLocationClick={handleLocationClick}
@@ -153,26 +205,24 @@ export function Game() {
           />
         </div>
 
-        {/* Instructions */}
-        <div className="text-center text-sm text-gray-400 my-2">
-          {selectedCard !== null 
-            ? isSelectedFromBoard
-              ? 'Click a location to move your card, or click your hand to return it'
-              : 'Click a location to play your card' 
-            : cardsPlayedThisTurn > 0
-              ? 'Click a played card to move it, or select another card from hand'
-              : 'Select a card from your hand, then click a location to play it'}
-        </div>
-
-        {/* Player Hand */}
-        <div className="mt-auto pt-4">
-          <div className="flex justify-between items-center mb-2 px-4">
-            <span className="text-sm text-gray-400">Your Hand</span>
-            <span className="text-sm text-gray-500">
-              {gameState.players[0].hand.length} cards
-            </span>
+        {/* Instructions - hidden on mobile to save space */}
+        {!isMobile && (
+          <div className="text-center text-sm text-gray-400 my-2">
+            {selectedCard !== null 
+              ? isSelectedFromBoard
+                ? 'Click a location to move your card, or click your hand to return it'
+                : 'Click a location to play your card' 
+              : cardsPlayedThisTurn > 0
+                ? 'Click a played card to move it, or select another card from hand'
+                : 'Select a card from your hand, then click a location to play it'}
           </div>
-          
+        )}
+
+        {/* Player Hand - fixed height area */}
+        <div className={clsx(
+          isMobile ? "h-[120px]" : "h-[180px]",
+          "flex flex-col shrink-0"
+        )}>
           <Hand
             cards={gameState.players[0].hand}
             energy={gameState.players[0].energy}
@@ -184,22 +234,52 @@ export function Game() {
           />
 
           {/* Action buttons */}
-          <div className="flex justify-center gap-4 mt-4">
+          <div className={clsx(
+            "flex justify-center items-center shrink-0",
+            isMobile ? "gap-3 mt-1" : "gap-4 mt-4"
+          )}>
             <button
               onClick={() => handleCardSelect(null)}
               disabled={selectedCard === null || isDisabled}
-              className="px-6 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={clsx(
+                "bg-gray-700/80 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all border border-gray-600",
+                isMobile ? "px-3 py-1.5 text-xs" : "px-5 py-2"
+              )}
             >
               Cancel
             </button>
+            
+            {/* Current Power Display - Gold sphere */}
+            <div className={clsx(
+              "flex items-center justify-center rounded-full",
+              "bg-gradient-to-br from-yellow-300 via-olympus-gold to-yellow-600",
+              "shadow-lg shadow-olympus-gold/50",
+              "border-2 border-yellow-300/50",
+              isMobile ? "w-10 h-10" : "w-14 h-14"
+            )}>
+              <span className={clsx(
+                "text-black font-bold font-display drop-shadow",
+                isMobile ? "text-base" : "text-xl"
+              )}>
+                {gameState.locations.reduce((total, loc) => 
+                  total + getTotalPower(loc, 0 as PlayerId), 0
+                )}
+              </span>
+            </div>
+            
             <button
               onClick={handleEndTurn}
               disabled={isDisabled}
-              className="px-6 py-2 bg-olympus-bronze rounded-lg hover:bg-yellow-700 
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={clsx(
+                "relative rounded-lg font-display font-semibold transition-all overflow-hidden",
+                "bg-gradient-to-r from-olympus-gold via-yellow-500 to-olympus-bronze",
+                "text-black shadow-lg shadow-olympus-gold/30",
+                "hover:shadow-olympus-gold/50 hover:scale-105",
+                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none",
+                isMobile ? "px-4 py-1.5 text-xs" : "px-6 py-2"
+              )}
             >
-              Reveal Cards {cardsPlayedThisTurn > 0 && `(${cardsPlayedThisTurn} cards)`}
+              <span className="relative z-10">End Turn</span>
             </button>
           </div>
         </div>
@@ -209,23 +289,32 @@ export function Game() {
       <AnimatePresence>
         {gameState.result !== 'IN_PROGRESS' && (
           <motion.div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div 
-              className="text-center bg-olympus-navy p-8 rounded-xl border-2 border-olympus-gold"
+              className={clsx(
+                "text-center bg-olympus-navy rounded-xl border-2 border-olympus-gold",
+                isMobile ? "p-4" : "p-8"
+              )}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-5xl font-display text-olympus-gold mb-4">
+              <h2 className={clsx(
+                "font-display text-olympus-gold",
+                isMobile ? "text-2xl mb-2" : "text-5xl mb-4"
+              )}>
                 {gameState.result === 'PLAYER_0_WINS' ? '⚡ Victory! ⚡' : 
                  gameState.result === 'PLAYER_1_WINS' ? '💀 Defeat' : '⚖️ Draw'}
               </h2>
               
-              <p className="text-gray-300 mb-6">
+              <p className={clsx(
+                "text-gray-300",
+                isMobile ? "text-sm mb-4" : "mb-6"
+              )}>
                 {gameState.result === 'PLAYER_0_WINS' 
                   ? 'The gods smile upon you!' 
                   : gameState.result === 'PLAYER_1_WINS'
@@ -233,20 +322,27 @@ export function Game() {
                   : 'An honorable stalemate!'}
               </p>
               
-              <div className="flex gap-4 justify-center">
+              <div className={clsx(
+                "flex justify-center",
+                isMobile ? "gap-2" : "gap-4"
+              )}>
                 <button
                   onClick={() => initGame()}
-                  className="px-8 py-3 bg-olympus-gold text-black font-display rounded-lg
-                           hover:bg-yellow-400 transition-colors"
+                  className={clsx(
+                    "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
+                    isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
+                  )}
                 >
                   Play Again
                 </button>
                 <Link
                   to="/"
-                  className="px-8 py-3 bg-gray-700 text-white font-display rounded-lg
-                           hover:bg-gray-600 transition-colors"
+                  className={clsx(
+                    "bg-gray-700 text-white font-display rounded-lg hover:bg-gray-600 transition-colors",
+                    isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
+                  )}
                 >
-                  Main Menu
+                  Menu
                 </Link>
               </div>
             </motion.div>

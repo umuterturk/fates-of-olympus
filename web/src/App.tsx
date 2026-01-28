@@ -13,17 +13,30 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-olympus-navy text-white">
-      <AnimatePresence mode="wait">
-        {isLoading ? (
-          <LoadingScreen key="loading" onLoadComplete={handleLoadComplete} />
-        ) : (
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/game" element={<Game />} />
-          </Routes>
-        )}
-      </AnimatePresence>
+    <div className="min-h-screen bg-olympus-navy text-white relative">
+      {/* Mobile background image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden blur-xs"
+        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.png)` }}
+      />
+      {/* Overlay for readability */}
+      <div 
+        className="absolute inset-0 sm:hidden"
+        style={{ background: 'radial-gradient(circle at center, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.4) 100%)' }}
+      />
+      
+      <div className="relative z-10 min-h-screen">
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <LoadingScreen key="loading" onLoadComplete={handleLoadComplete} />
+          ) : (
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/game" element={<Game />} />
+            </Routes>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
