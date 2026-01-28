@@ -6,13 +6,12 @@ import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
 import { EnergyDisplay } from '@components/game/EnergyDisplay';
 import { useGameStore } from '@store/gameStore';
-import type { LocationIndex, PlayerId } from '@engine/types';
-import { getTotalPower } from '@engine/models';
+import type { LocationIndex } from '@engine/types';
 
 // Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 640);
@@ -21,22 +20,22 @@ function useIsMobile() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   return isMobile;
 }
 
 export function Game() {
-  const { 
-    gameState, 
+  const {
+    gameState,
     playerActions,
     isAnimating,
     isNpcThinking,
-    initGame, 
+    initGame,
     playCard,
     moveCard,
     endTurn,
   } = useGameStore();
-  
+
   const isMobile = useIsMobile();
 
   // Selected card can be from hand or a pending card on board
@@ -51,7 +50,7 @@ export function Game() {
   if (!gameState) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div 
+        <motion.div
           className="text-2xl text-olympus-gold"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
@@ -75,7 +74,7 @@ export function Game() {
 
   const handleLocationClick = (locationIndex: number) => {
     if (selectedCard === null || isAnimating || isNpcThinking) return;
-    
+
     if (isSelectedFromBoard) {
       // Moving a pending card to a new location
       moveCard(selectedCard, locationIndex as LocationIndex);
@@ -102,7 +101,7 @@ export function Game() {
       setIsSelectedFromBoard(false);
     }
   };
-  
+
   const cardsPlayedThisTurn = playerActions.length;
   const pendingCardIds = new Set(playerActions.map(a => a.cardInstanceId));
 
@@ -135,14 +134,14 @@ export function Game() {
             Turn {gameState.turn}/6
           </div>
         </div>
-        <EnergyDisplay 
-          current={gameState.players[0].energy} 
-          max={gameState.turn} 
+        <EnergyDisplay
+          current={gameState.players[0].energy}
+          max={gameState.turn}
         />
       </header>
 
       {/* Opponent area (NPC) - compact on mobile */}
-      <motion.div 
+      <motion.div
         className={clsx(
           "flex justify-between items-center bg-black/30 rounded-lg",
           isMobile ? "mb-1 px-2 py-1" : "mb-4 px-4 py-2"
@@ -164,7 +163,7 @@ export function Game() {
             {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
           </div>
         </div>
-        
+
         <AnimatePresence>
           {isNpcThinking && (
             <motion.div
@@ -195,7 +194,7 @@ export function Game() {
           "flex items-center justify-center flex-1",
           isMobile ? "min-h-[360px]" : "min-h-[500px]"
         )}>
-          <Board 
+          <Board
             locations={gameState.locations}
             onLocationClick={handleLocationClick}
             onCardClick={(cardId) => handleCardSelect(cardId, true)}
@@ -208,10 +207,10 @@ export function Game() {
         {/* Instructions - hidden on mobile to save space */}
         {!isMobile && (
           <div className="text-center text-sm text-gray-400 my-2">
-            {selectedCard !== null 
+            {selectedCard !== null
               ? isSelectedFromBoard
                 ? 'Click a location to move your card, or click your hand to return it'
-                : 'Click a location to play your card' 
+                : 'Click a location to play your card'
               : cardsPlayedThisTurn > 0
                 ? 'Click a played card to move it, or select another card from hand'
                 : 'Select a card from your hand, then click a location to play it'}
@@ -248,8 +247,8 @@ export function Game() {
             >
               Cancel
             </button>
-            
-            {/* Current Power Display - Gold sphere */}
+
+            {/* Available Energy Display - Gold sphere */}
             <div className={clsx(
               "flex items-center justify-center rounded-full",
               "bg-gradient-to-br from-yellow-300 via-olympus-gold to-yellow-600",
@@ -258,15 +257,14 @@ export function Game() {
               isMobile ? "w-10 h-10" : "w-14 h-14"
             )}>
               <span className={clsx(
-                "text-black font-bold font-display drop-shadow",
+                "text-black font-bold font-display drop-shadow flex items-center gap-0.5",
                 isMobile ? "text-base" : "text-xl"
               )}>
-                {gameState.locations.reduce((total, loc) => 
-                  total + getTotalPower(loc, 0 as PlayerId), 0
-                )}
+                <span className="text-yellow-800">⚡</span>
+                {gameState.players[0].energy}
               </span>
             </div>
-            
+
             <button
               onClick={handleEndTurn}
               disabled={isDisabled}
@@ -294,7 +292,7 @@ export function Game() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div 
+            <motion.div
               className={clsx(
                 "text-center bg-olympus-navy rounded-xl border-2 border-olympus-gold",
                 isMobile ? "p-4" : "p-8"
@@ -307,21 +305,21 @@ export function Game() {
                 "font-display text-olympus-gold",
                 isMobile ? "text-2xl mb-2" : "text-5xl mb-4"
               )}>
-                {gameState.result === 'PLAYER_0_WINS' ? '⚡ Victory! ⚡' : 
-                 gameState.result === 'PLAYER_1_WINS' ? '💀 Defeat' : '⚖️ Draw'}
+                {gameState.result === 'PLAYER_0_WINS' ? '⚡ Victory! ⚡' :
+                  gameState.result === 'PLAYER_1_WINS' ? '💀 Defeat' : '⚖️ Draw'}
               </h2>
-              
+
               <p className={clsx(
                 "text-gray-300",
                 isMobile ? "text-sm mb-4" : "mb-6"
               )}>
-                {gameState.result === 'PLAYER_0_WINS' 
-                  ? 'The gods smile upon you!' 
+                {gameState.result === 'PLAYER_0_WINS'
+                  ? 'The gods smile upon you!'
                   : gameState.result === 'PLAYER_1_WINS'
-                  ? 'The Fates were not in your favor...'
-                  : 'An honorable stalemate!'}
+                    ? 'The Fates were not in your favor...'
+                    : 'An honorable stalemate!'}
               </p>
-              
+
               <div className={clsx(
                 "flex justify-center",
                 isMobile ? "gap-2" : "gap-4"

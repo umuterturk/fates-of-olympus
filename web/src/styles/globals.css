@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  html, body {
+
+  html,
+  body {
     @apply font-body;
     /* Disable scrolling */
     overflow: hidden;
@@ -26,7 +28,12 @@
     overflow: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
   }
 
@@ -39,6 +46,7 @@
 }
 
 @layer components {
+
   /* Card styles */
   .card {
     @apply relative rounded-lg overflow-hidden;
@@ -57,16 +65,28 @@
 
   .card-power {
     @apply absolute top-1 left-1;
-    @apply w-6 h-6 rounded-full;
-    @apply bg-olympus-gold text-black;
+    @apply w-4 h-4;
     @apply flex items-center justify-center;
-    @apply font-bold text-sm;
+    @apply font-bold text-xs text-black;
+    background: linear-gradient(145deg,
+        rgba(255, 235, 130, 0.95) 0%,
+        rgba(255, 215, 0, 0.9) 25%,
+        rgba(212, 175, 55, 0.85) 50%,
+        rgba(184, 134, 11, 0.9) 75%,
+        rgba(139, 101, 8, 0.95) 100%);
+    transform: rotate(45deg);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+    box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.4), inset -1px -1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-power>* {
+    transform: rotate(-45deg);
   }
 
   /* Mobile card adjustments */
   @media (max-width: 640px) {
     .card-power {
-      @apply w-4 h-4 text-[10px] top-0.5 left-0.5;
+      @apply w-3 h-3 text-[9px] top-0.5 left-0.5;
     }
   }
 
@@ -79,52 +99,42 @@
   .location-card-wrapper {
     position: relative;
     /* Gold border background - slightly larger than content */
-    background: linear-gradient(
-      135deg,
-      #d4af37 0%,
-      #f4d03f 25%,
-      #d4af37 50%,
-      #b8860b 75%,
-      #d4af37 100%
-    );
+    background: linear-gradient(135deg,
+        #d4af37 0%,
+        #f4d03f 25%,
+        #d4af37 50%,
+        #b8860b 75%,
+        #d4af37 100%);
     padding: 3px;
-    clip-path: polygon(
-      25% 0%, 75% 0%,
-      100% 25%, 100% 75%,
-      75% 100%, 25% 100%,
-      0% 75%, 0% 25%
-    );
+    clip-path: polygon(25% 0%, 75% 0%,
+        100% 25%, 100% 75%,
+        75% 100%, 25% 100%,
+        0% 75%, 0% 25%);
   }
 
   .location-card-highlight {
     /* Brighter gold when highlighted */
-    background: linear-gradient(
-      135deg,
-      #ffd700 0%,
-      #ffec8b 25%,
-      #ffd700 50%,
-      #ffd700 75%,
-      #ffec8b 100%
-    );
+    background: linear-gradient(135deg,
+        #ffd700 0%,
+        #ffec8b 25%,
+        #ffd700 50%,
+        #ffd700 75%,
+        #ffec8b 100%);
     filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.9));
   }
 
   /* Location card inner - the actual card content */
   .location-card-inner {
     @apply relative w-full h-full;
-    background: linear-gradient(
-      135deg,
-      rgba(88, 28, 135, 0.95) 0%,
-      rgba(126, 34, 206, 0.9) 50%,
-      rgba(88, 28, 135, 0.95) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba(88, 28, 135, 0.95) 0%,
+        rgba(126, 34, 206, 0.9) 50%,
+        rgba(88, 28, 135, 0.95) 100%);
     /* Diamond/octagon clip path - matches wrapper */
-    clip-path: polygon(
-      25% 0%, 75% 0%,
-      100% 25%, 100% 75%,
-      75% 100%, 25% 100%,
-      0% 75%, 0% 25%
-    );
+    clip-path: polygon(25% 0%, 75% 0%,
+        100% 25%, 100% 75%,
+        75% 100%, 25% 100%,
+        0% 75%, 0% 25%);
   }
 
   /* Power display */
@@ -168,6 +178,7 @@
 }
 
 @layer utilities {
+
   /* Card flip animation */
   .flip-card {
     transform-style: preserve-3d;
@@ -193,9 +204,12 @@
   }
 
   @keyframes pendingGlow {
-    0%, 100% {
+
+    0%,
+    100% {
       box-shadow: 0 0 8px 2px rgba(234, 179, 8, 0.3);
     }
+
     50% {
       box-shadow: 0 0 16px 4px rgba(234, 179, 8, 0.6);
     }

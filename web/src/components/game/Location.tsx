@@ -18,7 +18,7 @@ interface LocationProps {
 // Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 640);
@@ -27,7 +27,7 @@ function useIsMobile() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   return isMobile;
 }
 
@@ -49,7 +49,7 @@ export function Location({
   const locationNames = ['Mount Olympus', 'The Underworld', 'The Aegean Sea'];
   const locationShortNames = ['Olympus', 'Underworld', 'Aegean'];
   const locationImages = ['mount_olympus.png', 'the_uderworld.png', 'aegean_see.png'];
-  const locationName = isMobile 
+  const locationName = isMobile
     ? (locationShortNames[location.index] ?? `Loc ${location.index + 1}`)
     : (locationNames[location.index] ?? `Location ${location.index + 1}`);
   const locationImage = locationImages[location.index];
@@ -58,16 +58,16 @@ export function Location({
     e.stopPropagation();
     onCardClick?.(cardInstanceId);
   };
-  
+
   // Use 'loc' size on mobile (48x68), 'sm' on desktop (64x96)
   const cardSize = isMobile ? 'loc' : 'sm';
-  
+
   // Card dimensions for grid calculation (must match Card component sizes)
   // loc: w-12 h-[68px] = 48x68px, sm: w-16 h-24 = 64x96px
   const cardW = isMobile ? 48 : 64;
   const cardH = isMobile ? 68 : 96;
   const gap = isMobile ? 1 : 4;
-  
+
   // 2x2 grid dimensions
   const gridW = cardW * 2 + gap;
   const gridH = cardH * 2 + gap;
@@ -82,10 +82,10 @@ export function Location({
       layout
     >
       {/* Opponent cards (top) - 2x2 grid, cards fill from bottom row first */}
-      <div 
+      <div
         className="grid grid-cols-2 justify-items-center items-end overflow-visible"
-        style={{ 
-          width: gridW, 
+        style={{
+          width: gridW,
           height: gridH,
           gap: gap,
         }}
@@ -98,8 +98,8 @@ export function Location({
             const cardIndex = visualSlot < 2 ? visualSlot + 2 : visualSlot - 2;
             const card = opponentCards[cardIndex];
             return (
-              <div 
-                key={visualSlot} 
+              <div
+                key={visualSlot}
                 className="flex items-end justify-center"
                 style={{ width: cardW, height: cardH }}
               >
@@ -140,7 +140,7 @@ export function Location({
               e.currentTarget.style.display = 'none';
             }}
           />
-          
+
           {/* Gradient overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50" />
 
@@ -163,9 +163,9 @@ export function Location({
           "absolute z-20 left-1/2 -translate-x-1/2",
           isMobile ? "top-0" : "top-0"
         )}>
-          <HexPowerBadge 
-            power={opponentPower} 
-            isWinning={opponentPower > playerPower} 
+          <HexPowerBadge
+            power={opponentPower}
+            isWinning={opponentPower > playerPower}
             isMobile={isMobile}
           />
         </div>
@@ -175,19 +175,19 @@ export function Location({
           "absolute z-20 left-1/2 -translate-x-1/2",
           isMobile ? "bottom-0" : "bottom-0"
         )}>
-          <HexPowerBadge 
-            power={playerPower} 
-            isWinning={playerPower > opponentPower} 
+          <HexPowerBadge
+            power={playerPower}
+            isWinning={playerPower > opponentPower}
             isMobile={isMobile}
           />
         </div>
       </div>
 
       {/* Player cards (bottom) - 2x2 grid */}
-      <div 
+      <div
         className="grid grid-cols-2 justify-items-center items-start overflow-visible"
-        style={{ 
-          width: gridW, 
+        style={{
+          width: gridW,
           height: gridH,
           gap: gap,
         }}
@@ -196,10 +196,10 @@ export function Location({
           const card = playerCards[slotIndex];
           const isPending = card ? (pendingCardIds?.has(card.instanceId) ?? false) : false;
           const isSelected = card ? selectedCard === card.instanceId : false;
-          
+
           return (
-            <div 
-              key={slotIndex} 
+            <div
+              key={slotIndex}
               className="flex items-start justify-center"
               style={{ width: cardW, height: cardH }}
             >
@@ -231,15 +231,29 @@ export function Location({
 }
 
 // Hexagonal power badge like Marvel Snap
-function HexPowerBadge({ 
-  power, 
-  isWinning, 
+function HexPowerBadge({
+  power,
+  isWinning,
   isMobile = false,
-}: { 
-  power: number; 
-  isWinning: boolean; 
+}: {
+  power: number;
+  isWinning: boolean;
   isMobile?: boolean;
 }) {
+  // 3D gradient colors
+  const getGradient = () => {
+    if (isWinning) {
+      // Emerald green 3D gradient
+      return 'linear-gradient(145deg, #4ade80 0%, #22c55e 25%, #16a34a 50%, #15803d 75%, #166534 100%)';
+    } else if (power === 0) {
+      // Gray 3D gradient
+      return 'linear-gradient(145deg, #9ca3af 0%, #6b7280 25%, #4b5563 50%, #374151 75%, #1f2937 100%)';
+    } else {
+      // Red 3D gradient
+      return 'linear-gradient(145deg, #f87171 0%, #ef4444 25%, #dc2626 50%, #b91c1c 75%, #991b1b 100%)';
+    }
+  };
+
   return (
     <motion.div
       className={clsx(
@@ -251,20 +265,20 @@ function HexPowerBadge({
       animate={{ scale: [1, 1.15, 1] }}
       transition={{ duration: 0.3 }}
     >
-      {/* Hexagon background */}
-      <div 
-        className={clsx(
-          'absolute inset-0',
-          isWinning ? 'bg-green-500' : power === 0 ? 'bg-gray-600' : 'bg-red-500'
-        )}
+      {/* Hexagon background with 3D gradient */}
+      <div
+        className="absolute inset-0"
         style={{
+          background: getGradient(),
           clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+          filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4))',
         }}
       />
-      {/* Inner border */}
-      <div 
-        className="absolute inset-0.5 bg-black/20"
+      {/* Inner highlight/shadow for 3D effect */}
+      <div
+        className="absolute inset-0.5"
         style={{
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)',
           clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
         }}
       />

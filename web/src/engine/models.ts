@@ -112,9 +112,63 @@ export function drawCard(player: PlayerState): [PlayerState, CardInstance | null
   }
   const [drawn, ...rest] = player.deck;
   if (!drawn) return [player, null];
-  
+
   return [
     { ...player, deck: rest, hand: [...player.hand, drawn] },
+    drawn,
+  ];
+}
+
+/**
+ * Draw a card with weighted probability based on turn number.
+ * Higher cost cards become more likely as turns progress.
+ * @param player - The player state
+ * @param turn - Current turn number (1-6)
+ * @returns [newPlayerState, drawnCard | null]
+ */
+export function drawCardWeighted(player: PlayerState, turn: number): [PlayerState, CardInstance | null] {
+  if (player.deck.length === 0) {
+    return [player, null];
+  }
+
+  // Calculate weights for each card based on cost and turn
+  // Weight formula: cost^(turn * 0.5) gives exponential preference to higher costs as turns progress
+  // Turn 1: slight preference for low cost (factor ~1-2.4)
+  // Turn 6: strong preference for high cost (factor ~1-14)
+  const weights = player.deck.map(card => {
+    const cost = card.cardDef.cost;
+    // Clamp cost to 1-6 range for consistent weighting
+    const clampedCost = Math.max(1, Math.min(6, cost));
+    // Exponential weight based on turn
+    return Math.pow(clampedCost, turn * 0.4);
+  });
+
+  // Calculate total weight
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  // Random selection based on weights
+  let random = Math.random() * totalWeight;
+  let selectedIndex = 0;
+
+  for (let i = 0; i < weights.length; i++) {
+    random -= weights[i]!;
+    if (random <= 0) {
+      selectedIndex = i;
+      break;
+    }
+  }
+
+  // Get the selected card
+  const drawn = player.deck[selectedIndex]!;
+
+  // Remove it from the deck
+  const newDeck = [
+    ...player.deck.slice(0, selectedIndex),
+    ...player.deck.slice(selectedIndex + 1)
+  ];
+
+  return [
+    { ...player, deck: newDeck, hand: [...player.hand, drawn] },
     drawn,
   ];
 }
@@ -126,7 +180,7 @@ export function removeFromHand(
 ): [PlayerState, CardInstance | null] {
   const index = player.hand.findIndex(c => c.instanceId === instanceId);
   if (index === -1) return [player, null];
-  
+
   const card = player.hand[index]!;
   const newHand = [...player.hand.slice(0, index), ...player.hand.slice(index + 1)];
   return [{ ...player, hand: newHand }, card];
@@ -191,10 +245,10 @@ export function removeCard(
 /** Update a card in this location */
 export function updateCard(location: LocationState, updatedCard: CardInstance): LocationState {
   const newCardsByPlayer: [readonly CardInstance[], readonly CardInstance[]] = [
-    location.cardsByPlayer[0].map(c => 
+    location.cardsByPlayer[0].map(c =>
       c.instanceId === updatedCard.instanceId ? updatedCard : c
     ),
-    location.cardsByPlayer[1].map(c => 
+    location.cardsByPlayer[1].map(c =>
       c.instanceId === updatedCard.instanceId ? updatedCard : c
     ),
   ];
@@ -231,7 +285,7 @@ export interface GameState {
   readonly cardsMovedThisGame: readonly InstanceId[];
   readonly cardsMovedThisTurn: readonly InstanceId[];
   readonly silencedCards: readonly InstanceId[];
-  
+
   // Bonus energy for next turn (from effects like Iris)
   readonly bonusEnergyNextTurn: PlayerTuple<number>;
 }

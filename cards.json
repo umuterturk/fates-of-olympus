@@ -439,7 +439,7 @@
     }
   ],
   "decks": {
-    "starter": ["hoplite", "satyr", "harpies", "argive_scout", "iris", "hermes", "athena", "medusa", "myrmidon", "pegasus_rider", "minotaur", "cyclops"],
+    "starter": ["hoplite", "satyr", "naiad_nymph", "shade", "harpies", "argive_scout", "iris", "hermes", "phaethon", "gorgon_glare", "athena", "ares", "medusa", "myrmidon", "underworld_gate", "pegasus_rider", "minotaur", "hecate", "poseidon", "cerberus", "hades", "cyclops", "zeus", "titan_atlas"],
     "destroy": ["hoplite", "shade", "harpies", "argive_scout", "gorgon_glare", "athena", "myrmidon", "underworld_gate", "hecate", "minotaur", "cerberus", "hades"],
     "move": ["hoplite", "satyr", "naiad_nymph", "iris", "hermes", "phaethon", "athena", "myrmidon", "pegasus_rider", "poseidon", "cyclops", "titan_atlas"]
   }

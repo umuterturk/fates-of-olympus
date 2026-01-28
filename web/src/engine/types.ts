@@ -37,14 +37,14 @@ export type Power = number;
 export const MAX_TURNS = 6;
 export const LOCATION_CAPACITY = 4;
 export const STARTING_HAND_SIZE = 3;
-export const DECK_SIZE = 12;
-export const MAX_HAND_SIZE = 4;
+export const DECK_SIZE = 24;
+export const MAX_HAND_SIZE = 7;
 
 // =============================================================================
 // Enums
 // =============================================================================
 
-export type AbilityType = 
+export type AbilityType =
   | 'VANILLA'
   | 'ON_REVEAL'
   | 'ONGOING';
