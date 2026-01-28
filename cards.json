@@ -111,7 +111,7 @@
       "name": "Iris",
       "cost": 2,
       "base_power": 3,
-      "text": "On Reveal: Move this to another location.",
+      "text": "On Reveal: Move this to another location. +1 Energy next turn.",
       "ability_type": "ON_REVEAL",
       "tags": ["On-Reveal", "Move"],
       "effects": [
@@ -119,6 +119,10 @@
           "type": "MoveCardEffect",
           "target": "SELF",
           "to_other_location": true
+        },
+        {
+          "type": "AddEnergyNextTurnEffect",
+          "amount": 1
         }
       ],
       "depiction": "Rainbow-winged goddess-messenger with a bright sash",

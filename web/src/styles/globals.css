@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  /* Card styles */
+  .card {
+    @apply relative rounded-lg overflow-hidden;
+    @apply bg-card-bg border-2 border-card-border;
+    @apply transition-transform duration-200;
+    perspective: 1000px;
+  }
+
+  .card:hover {
+    @apply border-olympus-gold;
+    transform: translateY(-4px);
+  }
+
+  .card-power {
+    @apply absolute bottom-1 right-1;
+    @apply w-8 h-8 rounded-full;
+    @apply bg-olympus-gold text-black;
+    @apply flex items-center justify-center;
+    @apply font-bold text-lg;
+  }
+
+  .card-cost {
+    @apply absolute top-1 left-1;
+    @apply w-6 h-6 rounded-full;
+    @apply bg-card-cost text-white;
+    @apply flex items-center justify-center;
+    @apply font-bold text-sm;
+  }
+
+  /* Location styles */
+  .location {
+    @apply flex flex-col gap-4 p-4;
+    @apply bg-black/30 rounded-xl;
+    @apply border border-white/10;
+    @apply overflow-visible;
+    min-height: 300px;
+  }
+
+  .location-slot {
+    @apply flex-1 flex flex-wrap gap-2;
+    @apply justify-center items-start;
+    @apply overflow-visible;
+  }
+
+  /* Power display */
+  .power-display {
+    @apply px-3 py-1 rounded-full;
+    @apply font-bold text-lg;
+  }
+
+  .power-winning {
+    @apply bg-green-600;
+  }
+
+  .power-losing {
+    @apply bg-red-600;
+  }
+
+  .power-tied {
+    @apply bg-yellow-600;
+  }
+}
+
+@layer utilities {
+  /* Card flip animation */
+  .flip-card {
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+  }
+
+  .flip-card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .flip-card-front,
+  .flip-card-back {
+    backface-visibility: hidden;
+  }
+
+  .flip-card-back {
+    transform: rotateY(180deg);
+  }
+}
