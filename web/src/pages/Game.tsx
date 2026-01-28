@@ -26,6 +26,61 @@ function useIsMobile() {
   return isMobile;
 }
 
+interface RetreatButtonProps {
+  onRetreat: () => void;
+  disabled: boolean;
+  isMobile: boolean;
+}
+
+function RetreatButton({ onRetreat, disabled, isMobile }: RetreatButtonProps) {
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    if (isConfirming) {
+      const timer = setTimeout(() => setIsConfirming(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isConfirming]);
+
+  return (
+    <button
+      onClick={() => {
+        if (isConfirming) {
+          onRetreat();
+          setIsConfirming(false);
+        } else {
+          setIsConfirming(true);
+        }
+      }}
+      disabled={disabled}
+      className={clsx(
+        "relative overflow-hidden rounded-lg transition-all duration-300 border focus:outline-none",
+        isConfirming
+          ? "bg-red-600 text-white border-red-400 px-6 py-2 scale-105 shadow-lg shadow-red-900/50"
+          : "bg-red-900/30 text-red-100/70 hover:bg-red-800/50 hover:text-red-100 border-red-900/50 px-5 py-2",
+        isMobile ? "text-xs" : "text-sm"
+      )}
+    >
+      <motion.div
+        initial={false}
+        animate={{ y: isConfirming ? -20 : 0, opacity: isConfirming ? 0 : 1 }}
+        className="flex flex-col items-center"
+      >
+        Retreat
+      </motion.div>
+      {isConfirming && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="absolute inset-0 flex items-center justify-center font-bold"
+        >
+          Confirm?
+        </motion.div>
+      )}
+    </button>
+  );
+}
+
 export function Game() {
   const {
     gameState,
@@ -42,6 +97,7 @@ export function Game() {
     nextAnimation,
     clearLocationWinners,
     addEnergy,
+    retreat,
   } = useGameStore();
 
   const isMobile = useIsMobile();
@@ -256,16 +312,11 @@ export function Game() {
             "flex justify-center items-center shrink-0",
             isMobile ? "gap-3 mt-1" : "gap-4 mt-4"
           )}>
-            <button
-              onClick={() => handleCardSelect(null)}
-              disabled={selectedCard === null || isDisabled}
-              className={clsx(
-                "bg-gray-700/80 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all border border-gray-600",
-                isMobile ? "px-3 py-1.5 text-xs" : "px-5 py-2"
-              )}
-            >
-              Cancel
-            </button>
+            <RetreatButton
+              onRetreat={retreat}
+              disabled={isDisabled || isGameOver}
+              isMobile={isMobile}
+            />
 
             <div
               data-points-indicator

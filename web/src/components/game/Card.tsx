@@ -4,6 +4,8 @@ import { clsx } from 'clsx';
 import type { CardInstance } from '@engine/models';
 import { getEffectivePower } from '@engine/models';
 import { CardTooltip } from './CardTooltip';
+import { useGameStore } from '@store/gameStore';
+import type { PowerChangedEvent } from '@engine/events';
 
 interface CardProps {
   card: CardInstance;
@@ -51,6 +53,15 @@ export function Card({
   const power = getEffectivePower(card);
   const basePower = card.cardDef.basePower;
   const powerDiff = power - basePower;
+
+  // Get current animation state
+  const { powerChangedEvents, currentAnimationIndex, isAnimating } = useGameStore();
+  const currentEvent = isAnimating && powerChangedEvents.length > 0 && currentAnimationIndex < powerChangedEvents.length
+    ? (powerChangedEvents[currentAnimationIndex] as PowerChangedEvent)
+    : null;
+
+  const isSourceOfEffect = currentEvent && currentEvent.sourceCardId === card.instanceId;
+  const isTargetOfEffect = currentEvent && currentEvent.cardInstanceId === card.instanceId;
 
   // Image path - use base URL for GitHub Pages compatibility
   const imagePath = `${import.meta.env.BASE_URL}cards/${card.cardDef.id}.png`;
@@ -154,8 +165,28 @@ export function Card({
           disabled && 'brightness-[0.7] saturate-[0.8] cursor-not-allowed',
         )}
         onClick={disabled ? undefined : onClick}
-        whileHover={disabled ? undefined : { scale: 1.05, y: -4 }}
+        initial={false}
+        animate={isSourceOfEffect ? {
+          scale: 1.2,
+          y: -10,
+          zIndex: 50,
+          boxShadow: '0 0 20px 5px rgba(212, 175, 55, 0.6), 0 0 40px 10px rgba(184, 134, 11, 0.4)',
+        } : isTargetOfEffect ? {
+          scale: 1.05,
+          zIndex: 40,
+        } : {
+          scale: 1,
+          y: 0,
+          zIndex: 1,
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        }}
+        whileHover={disabled ? undefined : { scale: 1.05, y: -4, zIndex: 100 }}
         whileTap={disabled ? undefined : { scale: 0.98 }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
         drag={draggable && !disabled}
         dragSnapToOrigin
       >

@@ -97,6 +97,8 @@ interface GameStore {
   clearLocationWinners: () => void;
   /** Add energy to a player */
   addEnergy: (playerId: PlayerId, amount: number) => void;
+  /** Retreat from the game (concede) */
+  retreat: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -351,6 +353,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const player = getPlayer(gameState, playerId);
     set({
       gameState: withPlayer(gameState, playerId, withEnergy(player, player.energy + amount)),
+    });
+  },
+
+  retreat: () => {
+    const { gameState } = get();
+    if (!gameState || gameState.result !== 'IN_PROGRESS') return;
+
+    set({
+      gameState: {
+        ...gameState,
+        result: 'PLAYER_1_WINS',
+      },
+      isAnimating: false,
+      isNpcThinking: false,
     });
   },
 }));
