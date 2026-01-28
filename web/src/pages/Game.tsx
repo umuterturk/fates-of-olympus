@@ -271,20 +271,21 @@ export function Game() {
               data-points-indicator
               data-power-indicator
               className={clsx(
-                "flex items-center justify-center rounded-full",
-                "bg-gradient-to-br from-yellow-300 via-olympus-gold to-yellow-600",
-                "shadow-lg shadow-olympus-gold/50",
-                "border-2 border-yellow-300/50",
-                isMobile ? "w-10 h-10" : "w-14 h-14"
+                "flex items-center justify-center font-bold",
+                "text-amber-100",
+                isMobile ? "w-12 h-10 text-base" : "w-16 h-14 text-2xl"
               )}
+              style={{
+                background: 'linear-gradient(145deg, #4a3219 0%, #3a2815 25%, #2c1e0f 50%, #1a1209 75%, #0d0904 100%)',
+                clipPath: 'polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)',
+                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))',
+                boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5)',
+              }}
             >
-              <span className={clsx(
-                "text-black font-bold font-display drop-shadow flex items-center gap-0.5",
-                isMobile ? "text-base" : "text-xl"
-              )}>
-                <span className="text-yellow-800">⚡</span>
-                {gameState.players[0].energy}
-              </span>
+              <div className="flex items-center -ml-1">
+                <span className="text-[0.9em] brightness-125 mr-0.5">⚡</span>
+                <span>{gameState.players[0].energy}</span>
+              </div>
             </div>
 
             <button

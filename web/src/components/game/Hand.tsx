@@ -18,7 +18,7 @@ interface HandProps {
 // Hook to detect mobile
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 640);
@@ -27,7 +27,7 @@ function useIsMobile() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   return isMobile;
 }
 
@@ -46,10 +46,10 @@ export function Hand({
   const handleCardClick = (card: CardInstance, e: React.MouseEvent) => {
     e.stopPropagation(); // Don't trigger hand click
     if (disabled) return;
-    
+
     // Check if card is affordable
     if (card.cardDef.cost > energy) return;
-    
+
     // Toggle selection
     if (selectedCard === card.instanceId) {
       onSelectCard(null);
@@ -82,7 +82,7 @@ export function Hand({
         const isSelected = selectedCard === card.instanceId;
 
         const isHovered = hoveredCard === card.instanceId;
-        
+
         // Hovered card needs highest z-index for tooltip to appear above selected cards
         const zIndex = isHovered ? 100 : isSelected ? 10 : index;
 
@@ -90,7 +90,7 @@ export function Hand({
           <div
             key={card.instanceId}
             className="relative"
-            style={{ 
+            style={{
               zIndex,
               transform: `translateY(${isSelected ? (isMobile ? -10 : -20) : 0}px) scale(${isSelected ? 1.05 : 1})`,
               transition: 'transform 0.2s ease-out',
@@ -104,19 +104,9 @@ export function Hand({
               size={cardSize}
               selected={isSelected}
               disabled={disabled || !canAfford}
+              isAffordable={canAfford}
             />
-            
-            {/* Unaffordable overlay - shows when card costs more than current energy */}
-            {!canAfford && (
-              <div className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center pointer-events-none">
-                <span className={clsx(
-                  "text-red-400 font-bold bg-black/80 rounded",
-                  isMobile ? "text-[8px] px-1 py-0.5" : "text-sm px-2 py-1"
-                )}>
-                  {card.cardDef.cost} ⚡
-                </span>
-              </div>
-            )}
+
           </div>
         );
       })}

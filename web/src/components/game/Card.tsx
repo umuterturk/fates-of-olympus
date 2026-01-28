@@ -10,6 +10,7 @@ interface CardProps {
   size?: 'xs' | 'loc' | 'sm' | 'md' | 'lg';
   selected?: boolean;
   disabled?: boolean;
+  isAffordable?: boolean;
   faceDown?: boolean;
   onClick?: () => void;
   draggable?: boolean;
@@ -37,6 +38,7 @@ export function Card({
   size = 'md',
   selected = false,
   disabled = false,
+  isAffordable = true,
   faceDown = false,
   onClick,
   draggable = false,
@@ -149,7 +151,7 @@ export function Card({
           'card cursor-pointer overflow-hidden relative',
           sizeClasses[size],
           selected && 'ring-2 ring-olympus-gold ring-offset-2 ring-offset-olympus-navy',
-          disabled && 'opacity-50 cursor-not-allowed',
+          disabled && 'brightness-[0.7] saturate-[0.8] cursor-not-allowed',
         )}
         onClick={disabled ? undefined : onClick}
         whileHover={disabled ? undefined : { scale: 1.05, y: -4 }}
@@ -193,21 +195,37 @@ export function Card({
           <div
             className={clsx(
               'absolute flex items-center justify-center font-bold',
-              'text-amber-100',
-              size === 'xs' || size === 'loc' ? 'w-3 h-3 text-[6px] top-6 left-0' :
-                size === 'sm' ? 'w-3.5 h-3.5 text-[7px] top-7 left-0' :
-                  size === 'md' ? 'w-4 h-4 text-[9px] top-8 left-0.5' :
-                    'w-5 h-5 text-[10px] top-10 left-0.5'
+              isAffordable ? 'text-amber-100' : 'text-red-500',
+              size === 'xs' || size === 'loc' ? 'w-4 h-3.5 text-[7px] top-6 left-0' :
+                size === 'sm' ? 'w-5 h-4.5 text-[9px] top-7 left-0' :
+                  size === 'md' ? 'w-6 h-5.5 text-[10px] top-8 left-0.5' :
+                    'w-8 h-7 text-xs top-10 left-0.5'
             )}
             style={{
-              background: 'linear-gradient(145deg, #b5651d 0%, #8B4513 25%, #654321 50%, #4a3219 75%, #3a2815 100%)',
-              clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-              filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))',
-              boxShadow: 'inset 1px 1px 2px rgba(255, 200, 150, 0.3), inset -1px -1px 2px rgba(0, 0, 0, 0.3)',
+              background: 'linear-gradient(145deg, #4a3219 0%, #3a2815 25%, #2c1e0f 50%, #1a1209 75%, #0d0904 100%)',
+              clipPath: 'polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)',
+              filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4))',
+              boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {card.cardDef.cost}
+            <div className="flex items-center -ml-0.5">
+              <span className="text-[0.9em] brightness-125">⚡</span>
+              <span className="-ml-0.5">{card.cardDef.cost}</span>
+            </div>
           </div>
+
+          {!isAffordable && !faceDown && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 px-2">
+              <span className={clsx(
+                "text-red-500 font-bold text-center uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]",
+                size === 'xs' || size === 'loc' ? 'text-[6px]' :
+                  size === 'sm' ? 'text-[8px]' :
+                    'text-[10px]'
+              )}>
+                Not Enough Energy
+              </span>
+            </div>
+          )}
 
           {/* Ability text (only on larger cards without images, or always show on lg) */}
           {((size !== 'sm' && imageError) || size === 'lg') && card.cardDef.text && (
@@ -231,21 +249,27 @@ export function Card({
       </motion.div>
 
       {/* Mobile info button */}
-      {showTooltip && isMobile && !faceDown && (
-        <button
-          onClick={handleInfoClick}
-          className={clsx(
-            'absolute z-20 bg-olympus-gold/90 text-black rounded-full flex items-center justify-center font-bold',
-            'hover:bg-olympus-gold active:scale-95 transition-transform',
-            (size === 'xs' || size === 'loc') ? 'w-3 h-3 text-[7px] -top-0.5 -right-0.5' :
-              size === 'sm' ? 'w-4 h-4 text-[9px] -top-1 -right-1' :
-                'w-5 h-5 text-[10px] -top-1 -right-1'
-          )}
-        >
-          i
-        </button>
-      )}
-    </motion.div>
+      {
+        showTooltip && isMobile && !faceDown && (
+          <button
+            onClick={handleInfoClick}
+            className={clsx(
+              'absolute z-20 rounded-full flex items-center justify-center font-bold text-black',
+              'transition-all active:scale-90 select-none shadow-sm opacity-85',
+              (size === 'xs' || size === 'loc') ? 'w-2.5 h-2.5 text-[8px] -top-0.5 -right-0.5' :
+                size === 'sm' ? 'w-3.5 h-3.5 text-[10px] -top-1 -right-1' :
+                  'w-4.5 h-4.5 text-[12px] -top-1 -right-1'
+            )}
+            style={{
+              background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <span className="leading-none">?</span>
+          </button>
+        )
+      }
+    </motion.div >
   );
 }
 
