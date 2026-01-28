@@ -216,6 +216,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // NPC plays cards until it passes
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const npcAction = computeGreedyAction(npcState, 1);
         if (npcAction.type === 'Pass') break;

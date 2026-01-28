@@ -488,7 +488,7 @@ function applyEffect(
         if (destLoc === null) continue;
 
         // Remove from source
-        let sourceLoc = getLocation(newState, fromLoc);
+        const sourceLoc = getLocation(newState, fromLoc);
         const [newSourceLoc, removedCard] = removeCard(sourceLoc, target.instanceId);
         if (!removedCard) continue;
 
@@ -519,7 +519,7 @@ function applyEffect(
         const locIdx = findCardLocation(newState, target.instanceId);
         if (locIdx === null) continue;
 
-        let loc = getLocation(newState, locIdx);
+        const loc = getLocation(newState, locIdx);
         const [newLoc, removed] = removeCard(loc, target.instanceId);
         if (!removed) continue;
 
@@ -591,7 +591,7 @@ function applyEffect(
       if (targetLoc === null) break;
 
       // Reduce enemy power
-      let currentTarget = findCardByInstance(newState, target.instanceId);
+      const currentTarget = findCardByInstance(newState, target.instanceId);
       if (!currentTarget) break;
 
       const oldTargetPower = getEffectivePower(currentTarget);
@@ -613,7 +613,7 @@ function applyEffect(
       // Increase source power
       const sourceLoc = findCardLocation(newState, sourceCard.instanceId);
       if (sourceLoc !== null) {
-        let currentSource = findCardByInstance(newState, sourceCard.instanceId);
+        const currentSource = findCardByInstance(newState, sourceCard.instanceId);
         if (currentSource) {
           const oldSourcePower = getEffectivePower(currentSource);
           const updatedSource = addPermanentPower(currentSource, effect.amount);
@@ -677,7 +677,7 @@ function applyEffect(
       const destroyLoc = findCardLocation(newState, toDestroy.instanceId);
       if (destroyLoc === null) break;
 
-      let loc = getLocation(newState, destroyLoc);
+      const loc = getLocation(newState, destroyLoc);
       const [newLoc, removed] = removeCard(loc, toDestroy.instanceId);
       if (!removed) break;
 

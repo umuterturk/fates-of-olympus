@@ -378,9 +378,9 @@ describe('StealPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const enemyCard = getCards(loc, 1)[0]!;
 
-    // Shade steals 3 power (based on cards.json)
-    // Enemy should have 3 - 3 = 0 power
-    expect(getEffectivePower(enemyCard)).toBe(0);
+    // Shade steals 2 power (based on cards.json)
+    // Enemy should have 3 - 2 = 1 power
+    expect(getEffectivePower(enemyCard)).toBe(1);
   });
 
   it('Shade should destroy itself after stealing power', () => {
@@ -1144,7 +1144,7 @@ describe('Destroy Synergy', () => {
 
 describe('Move Synergy', () => {
   it("Playing Iris should enable Poseidon's +2 bonus", () => {
-    let state = createTestState({
+    const state = createTestState({
       turn: 4 as TurnNumber,
       p0Energy: 6, // Enough for both Iris(2) and Poseidon(4)
       p1Energy: 4,

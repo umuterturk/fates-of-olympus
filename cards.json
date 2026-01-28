@@ -7,7 +7,9 @@
       "base_power": 2,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": ["Vanilla"],
+      "tags": [
+        "Vanilla"
+      ],
       "effects": [],
       "depiction": "Armored Greek hoplite with round shield and spear",
       "mood": "Steadfast, disciplined",
@@ -20,7 +22,10 @@
       "base_power": 2,
       "text": "On Reveal: Give another allied card here +1 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Buff"],
+      "tags": [
+        "On-Reveal",
+        "Buff"
+      ],
       "effects": [
         {
           "type": "AddPowerEffect",
@@ -39,7 +44,10 @@
       "base_power": 1,
       "text": "Ongoing: Your other cards here have +1 Power.",
       "ability_type": "ONGOING",
-      "tags": ["Ongoing", "Buff"],
+      "tags": [
+        "Ongoing",
+        "Buff"
+      ],
       "effects": [
         {
           "type": "AddOngoingPowerEffect",
@@ -58,12 +66,16 @@
       "base_power": 2,
       "text": "On Reveal: Steal 2 Power from an enemy card here, then destroy this.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Destroy", "Drain"],
+      "tags": [
+        "On-Reveal",
+        "Destroy",
+        "Drain"
+      ],
       "effects": [
         {
           "type": "StealPowerEffect",
           "target": "ONE_SAME_LOCATION_ENEMY",
-          "amount": 3
+          "amount": 2
         },
         {
           "type": "DestroyCardEffect",
@@ -81,7 +93,11 @@
       "base_power": 2,
       "text": "On Reveal: Give an enemy card here -1 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Debuff", "Tech"],
+      "tags": [
+        "On-Reveal",
+        "Debuff",
+        "Tech"
+      ],
       "effects": [
         {
           "type": "AddPowerEffect",
@@ -100,7 +116,9 @@
       "base_power": 3,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": ["Vanilla"],
+      "tags": [
+        "Vanilla"
+      ],
       "effects": [],
       "depiction": "Lightly armored runner with a short spear and cloak",
       "mood": "Alert, cautious",
@@ -113,7 +131,10 @@
       "base_power": 3,
       "text": "On Reveal: Move this to another location. +1 Energy next turn.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Move"],
+      "tags": [
+        "On-Reveal",
+        "Move"
+      ],
       "effects": [
         {
           "type": "MoveCardEffect",
@@ -136,7 +157,10 @@
       "base_power": 3,
       "text": "On Reveal: Move one other allied card here to another location.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Move"],
+      "tags": [
+        "On-Reveal",
+        "Move"
+      ],
       "effects": [
         {
           "type": "MoveCardEffect",
@@ -155,7 +179,10 @@
       "base_power": 3,
       "text": "On Reveal: Move this to another location.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Move"],
+      "tags": [
+        "On-Reveal",
+        "Move"
+      ],
       "effects": [
         {
           "type": "MoveCardEffect",
@@ -174,7 +201,10 @@
       "base_power": 3,
       "text": "Ongoing: Enemy cards here lose Ongoing abilities.",
       "ability_type": "ONGOING",
-      "tags": ["Ongoing", "Tech"],
+      "tags": [
+        "Ongoing",
+        "Tech"
+      ],
       "effects": [
         {
           "type": "SilenceOngoingEffect",
@@ -192,7 +222,11 @@
       "base_power": 2,
       "text": "Ongoing: Your other cards here have +1 Power for each other friendly card here.",
       "ability_type": "ONGOING",
-      "tags": ["Ongoing", "Buff", "Build-Around"],
+      "tags": [
+        "Ongoing",
+        "Buff",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ScalingOngoingPowerEffect",
@@ -212,7 +246,11 @@
       "base_power": 4,
       "text": "Ongoing: Your cards here have +1 Power if this location is full.",
       "ability_type": "ONGOING",
-      "tags": ["Ongoing", "Buff", "Build-Around"],
+      "tags": [
+        "Ongoing",
+        "Buff",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ConditionalOngoingPowerEffect",
@@ -232,7 +270,11 @@
       "base_power": 3,
       "text": "On Reveal: Give enemy cards here -1 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Debuff", "Tech"],
+      "tags": [
+        "On-Reveal",
+        "Debuff",
+        "Tech"
+      ],
       "effects": [
         {
           "type": "AddPowerEffect",
@@ -251,7 +293,9 @@
       "base_power": 4,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": ["Vanilla"],
+      "tags": [
+        "Vanilla"
+      ],
       "effects": [],
       "depiction": "Elite spear-soldier with ant-emblem shield",
       "mood": "Loyal, relentless",
@@ -264,7 +308,10 @@
       "base_power": 2,
       "text": "On Reveal: +2 Power for each card destroyed this game.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Build-Around"],
+      "tags": [
+        "On-Reveal",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ScalingPowerEffect",
@@ -283,7 +330,10 @@
       "base_power": 5,
       "text": "On Reveal: Move one other allied card here to another location.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Move"],
+      "tags": [
+        "On-Reveal",
+        "Move"
+      ],
       "effects": [
         {
           "type": "MoveCardEffect",
@@ -302,7 +352,9 @@
       "base_power": 5,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": ["Vanilla"],
+      "tags": [
+        "Vanilla"
+      ],
       "effects": [],
       "depiction": "Bull-headed monster with a heavy axe",
       "mood": "Brutal, stubborn",
@@ -315,7 +367,12 @@
       "base_power": 4,
       "text": "On Reveal: Destroy one other allied card here to give an enemy card here -4 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Destroy", "Debuff", "Tech"],
+      "tags": [
+        "On-Reveal",
+        "Destroy",
+        "Debuff",
+        "Tech"
+      ],
       "effects": [
         {
           "type": "DestroyAndBuffEffect",
@@ -335,7 +392,11 @@
       "base_power": 4,
       "text": "On Reveal: If you moved a card this game, give your cards here +2 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Buff", "Build-Around"],
+      "tags": [
+        "On-Reveal",
+        "Buff",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ConditionalPowerEffect",
@@ -361,7 +422,10 @@
       "base_power": 5,
       "text": "On Reveal: If you destroyed a card this game, +4 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Build-Around"],
+      "tags": [
+        "On-Reveal",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ConditionalPowerEffect",
@@ -381,7 +445,10 @@
       "base_power": 4,
       "text": "On Reveal: If a card was destroyed this game, summon a Spirit here with Power equal to 2 + cards destroyed.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Build-Around"],
+      "tags": [
+        "On-Reveal",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ReviveEffect"
@@ -398,7 +465,9 @@
       "base_power": 7,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": ["Vanilla"],
+      "tags": [
+        "Vanilla"
+      ],
       "effects": [],
       "depiction": "One-eyed giant smith with a massive hammer",
       "mood": "Blunt, powerful",
@@ -411,7 +480,10 @@
       "base_power": 8,
       "text": "On Reveal: If this is your only card here, +6 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": ["On-Reveal", "Build-Around"],
+      "tags": [
+        "On-Reveal",
+        "Build-Around"
+      ],
       "effects": [
         {
           "type": "ConditionalPowerEffect",
@@ -431,7 +503,9 @@
       "base_power": 9,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": ["Vanilla"],
+      "tags": [
+        "Vanilla"
+      ],
       "effects": [],
       "depiction": "Titanic figure bearing the sky on his shoulders",
       "mood": "Enduring, solemn",
@@ -439,8 +513,59 @@
     }
   ],
   "decks": {
-    "starter": ["hoplite", "satyr", "naiad_nymph", "shade", "harpies", "argive_scout", "iris", "hermes", "phaethon", "gorgon_glare", "athena", "ares", "medusa", "myrmidon", "underworld_gate", "pegasus_rider", "minotaur", "hecate", "poseidon", "cerberus", "hades", "cyclops", "zeus", "titan_atlas"],
-    "destroy": ["hoplite", "shade", "harpies", "argive_scout", "gorgon_glare", "athena", "myrmidon", "underworld_gate", "hecate", "minotaur", "cerberus", "hades"],
-    "move": ["hoplite", "satyr", "naiad_nymph", "iris", "hermes", "phaethon", "athena", "myrmidon", "pegasus_rider", "poseidon", "cyclops", "titan_atlas"]
+    "starter": [
+      "hoplite",
+      "satyr",
+      "naiad_nymph",
+      "shade",
+      "harpies",
+      "argive_scout",
+      "iris",
+      "hermes",
+      "phaethon",
+      "gorgon_glare",
+      "athena",
+      "ares",
+      "medusa",
+      "myrmidon",
+      "underworld_gate",
+      "pegasus_rider",
+      "minotaur",
+      "hecate",
+      "poseidon",
+      "cerberus",
+      "hades",
+      "cyclops",
+      "zeus",
+      "titan_atlas"
+    ],
+    "destroy": [
+      "hoplite",
+      "shade",
+      "harpies",
+      "argive_scout",
+      "gorgon_glare",
+      "athena",
+      "myrmidon",
+      "underworld_gate",
+      "hecate",
+      "minotaur",
+      "cerberus",
+      "hades"
+    ],
+    "move": [
+      "hoplite",
+      "satyr",
+      "naiad_nymph",
+      "iris",
+      "hermes",
+      "phaethon",
+      "athena",
+      "myrmidon",
+      "pegasus_rider",
+      "poseidon",
+      "cyclops",
+      "titan_atlas"
+    ]
   }
 }
