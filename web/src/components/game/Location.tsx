@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import type { LocationState } from '@engine/models';
 import { getTotalPower, getCards } from '@engine/models';
 import { Card } from './Card';
+import { useGameStore } from '@store/gameStore';
 
 interface LocationProps {
   location: LocationState;
@@ -45,6 +46,16 @@ export function Location({
   const opponentCards = getCards(location, 1);
   const playerPower = getTotalPower(location, 0);
   const opponentPower = getTotalPower(location, 1);
+  
+  // Get NPC card reveal state for staggered animation
+  const revealedNpcCardIds = useGameStore(state => state.revealedNpcCardIds);
+  const pendingNpcCardIds = useGameStore(state => state.pendingNpcCardIds);
+  
+  // Helper to check if an NPC card should be visible
+  // Show if: card is NOT pending reveal, OR it has already been revealed
+  const shouldShowNpcCard = (cardInstanceId: number) => {
+    return !pendingNpcCardIds.has(cardInstanceId) || revealedNpcCardIds.has(cardInstanceId);
+  };
 
   const locationNames = ['Mount Olympus', 'The Underworld', 'The Aegean Sea'];
   const locationShortNames = ['Olympus', 'Underworld', 'Aegean'];
@@ -98,6 +109,7 @@ export function Location({
             // Map visual slots to card indices: top row shows cards 2,3; bottom row shows cards 0,1
             const cardIndex = visualSlot < 2 ? visualSlot + 2 : visualSlot - 2;
             const card = opponentCards[cardIndex];
+            const isNewCard = card && pendingNpcCardIds.has(card.instanceId);
             return (
               <div
                 key={visualSlot}
@@ -105,12 +117,19 @@ export function Location({
                 className="flex items-end justify-center"
                 style={{ width: cardW, height: cardH }}
               >
-                {card && (
+                {card && shouldShowNpcCard(card.instanceId) && (
                   <motion.div
                     key={card.instanceId}
-                    initial={{ scale: 0, opacity: 0, y: -20 }}
+                    initial={isNewCard 
+                      ? { y: -500, opacity: 0, scale: 0.8 } 
+                      : { scale: 0, opacity: 0, y: -20 }
+                    }
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0, opacity: 0 }}
+                    transition={isNewCard 
+                      ? { type: 'spring', damping: 20, stiffness: 200 }
+                      : { duration: 0.3 }
+                    }
                   >
                     <Card
                       card={card}

@@ -83,6 +83,10 @@ interface GameStore {
   locationWinners: readonly (PlayerId | null)[] | null;
   /** Whether to show the game result (delayed until animations complete) */
   showGameResult: boolean;
+  /** NPC card instance IDs that have been revealed (for staggered animation) */
+  revealedNpcCardIds: Set<number>;
+  /** All NPC card IDs that need to be revealed this turn (used to hide them initially) */
+  pendingNpcCardIds: Set<number>;
 
   // Actions
   initGame: () => void;
@@ -122,6 +126,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isNpcThinking: false,
   locationWinners: null,
   showGameResult: false,
+  revealedNpcCardIds: new Set(),
+  pendingNpcCardIds: new Set(),
 
   initGame: () => {
     const { state, events } = createGame();
@@ -138,6 +144,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isNpcThinking: false,
       locationWinners: null,
       showGameResult: false,
+      revealedNpcCardIds: new Set(),
+      pendingNpcCardIds: new Set(),
     });
   },
 
@@ -321,6 +329,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         preAnimationState = withLocation(preAnimationState, action.location, newLocation);
       }
       
+      // Track NPC card IDs for staggered reveal animation
+      const npcCardIds = npcActions.map(a => a.cardInstanceId);
+      
       // Apply all NPC actions with revealed=true
       for (const action of npcActions) {
         const player = getPlayer(preAnimationState, action.playerId);
@@ -337,20 +348,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       // FIRST: Update gameState to show ALL cards (including NPC's) before animations
-      // This ensures the animation can find both source and target cards in the DOM
+      // Set pendingNpcCardIds so we know which cards are new and need reveal animation
+      // Clear revealedNpcCardIds so NPC cards start hidden (will be revealed one by one)
+      // NOTE: Don't set powerChangedEvents yet - wait until NPC cards are revealed
       set({
         gameState: preAnimationState,
         events: allEvents,
         playerActions: [],
-        powerChangedEvents,
+        powerChangedEvents: [], // Don't trigger buff/debuff animations yet
         cardDestroyedEvents: [],
         currentAnimationIndex: 0,
         currentDestroyAnimationIndex: 0,
+        pendingNpcCardIds: new Set(npcCardIds), // Cards that need reveal animation
+        revealedNpcCardIds: new Set(), // Start with no NPC cards revealed
       });
 
-      // Wait for buff/debuff animations (approx 2.2s per animation)
-      const buffAnimationTime = Math.min(powerChangedEvents.length, 3) * 2200 + 500;
+      // Reveal NPC cards one by one with staggered animation
+      for (const cardId of npcCardIds) {
+        await new Promise(resolve => setTimeout(resolve, 400));
+        set(state => ({
+          revealedNpcCardIds: new Set([...state.revealedNpcCardIds, cardId])
+        }));
+      }
+      
+      // Wait for the last card's fly-in animation to complete (spring animation ~500ms)
+      if (npcCardIds.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      }
+      
+      // Clear pending NPC cards after reveal animation completes
+      set({ pendingNpcCardIds: new Set() });
+
+      // NOW trigger buff/debuff animations after all NPC cards are visible
       if (powerChangedEvents.length > 0) {
+        set({ powerChangedEvents, currentAnimationIndex: 0 });
+        
+        // Wait for buff/debuff animations (approx 2.2s per animation)
+        const buffAnimationTime = Math.min(powerChangedEvents.length, 3) * 2200 + 500;
         await new Promise(resolve => setTimeout(resolve, buffAnimationTime));
       }
 
@@ -395,10 +429,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
           turnStartState: nextState,
           events: nextEvents,
           isAnimating: false,
+          revealedNpcCardIds: new Set(), // Reset for next turn
+          pendingNpcCardIds: new Set(),
         });
       } else {
         // Game is over - show result after animations complete
-        set({ isAnimating: false, showGameResult: true });
+        set({ isAnimating: false, showGameResult: true, revealedNpcCardIds: new Set(), pendingNpcCardIds: new Set() });
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);
