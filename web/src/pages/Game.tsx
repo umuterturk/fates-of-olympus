@@ -44,6 +44,7 @@ function RetreatButton({ onRetreat, disabled, isMobile }: RetreatButtonProps) {
 
   return (
     <button
+      data-name="retreat-button"
       onClick={() => {
         if (isConfirming) {
           onRetreat();
@@ -115,8 +116,9 @@ export function Game() {
 
   if (!gameState) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-name="loading-screen" className="min-h-screen flex items-center justify-center">
         <motion.div
+          data-name="loading-text"
           className="text-2xl text-olympus-gold"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
@@ -174,36 +176,102 @@ export function Game() {
   const isDisabled = isAnimating || isNpcThinking;
   const isGameOver = gameState.result !== 'IN_PROGRESS';
 
-  return (
-    <div className={clsx(
-      "h-full flex flex-col max-w-6xl mx-auto",
-      isMobile ? "p-2" : "p-4"
-    )}>
+  // Action buttons component - reused in mobile (bottom) and desktop (sidebar)
+  const actionButtons = (vertical: boolean = false) => (
+    <div
+      data-name="action-buttons"
+      className={clsx(
+        "flex items-center shrink-0",
+        vertical ? "flex-col gap-4" : "flex-row justify-center",
+        !vertical && (isMobile ? "gap-3 mt-1" : "gap-4 mt-4")
+      )}
+    >
+      <RetreatButton
+        onRetreat={retreat}
+        disabled={isDisabled || isGameOver}
+        isMobile={isMobile}
+      />
+
+      <div
+        data-name="energy-indicator"
+        className={clsx(
+          "flex items-center justify-center font-bold",
+          "text-amber-100",
+          isMobile ? "w-12 h-10 text-base" : "w-16 h-14 text-2xl"
+        )}
+        style={{
+          background: 'linear-gradient(145deg, #4a3219 0%, #3a2815 25%, #2c1e0f 50%, #1a1209 75%, #0d0904 100%)',
+          clipPath: 'polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)',
+          filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))',
+          boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5)',
+        }}
+      >
+        <div className="flex items-center -ml-1">
+          <span className="text-[0.9em] brightness-125 mr-0.5">⚡</span>
+          <span>{gameState.players[0].energy}</span>
+        </div>
+      </div>
+
+      <button
+        data-name="end-turn-button"
+        onClick={handleEndTurn}
+        disabled={isDisabled || isGameOver}
+        className={clsx(
+          "relative rounded-lg font-display font-semibold transition-all overflow-hidden",
+          "bg-gradient-to-r from-olympus-gold via-yellow-500 to-olympus-bronze",
+          "text-black shadow-lg shadow-olympus-gold/30",
+          "hover:shadow-olympus-gold/50 hover:scale-105",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none",
+          isMobile ? "px-4 py-1.5 text-xs" : "px-6 py-2"
+        )}
+      >
+        <span className="relative z-10">End Turn</span>
+      </button>
+    </div>
+  );
+
+  // Game content - shared between mobile and desktop
+  const gameContent = (
+    <>
       {/* Header */}
-      <header className={clsx(
-        "flex justify-between items-center",
-        isMobile ? "mb-1" : "mb-4"
-      )}>
-        <div className={clsx(
-          "flex items-center",
-          isMobile ? "gap-2" : "gap-4"
-        )}>
-          <Link to="/" className={clsx(
-            "text-gray-400 hover:text-white",
-            isMobile && "text-xs"
-          )}>
+      <header
+        data-name="header"
+        className={clsx(
+          "flex justify-between items-center",
+          isMobile ? "mb-1" : "mb-2"
+        )}
+      >
+        <div
+          data-name="header-left"
+          className={clsx(
+            "flex items-center",
+            isMobile ? "gap-2" : "gap-4"
+          )}
+        >
+          <Link
+            data-name="back-link"
+            to="/"
+            className={clsx(
+              "text-gray-400 hover:text-white",
+              isMobile && "text-xs"
+            )}
+          >
             ←
           </Link>
-          <div className={clsx(
-            "font-display text-olympus-gold",
-            isMobile ? "text-sm" : "text-xl"
-          )}>
+          <div
+            data-name="turn-indicator"
+            className={clsx(
+              "font-display text-olympus-gold",
+              isMobile ? "text-sm" : "text-xl"
+            )}
+          >
             {gameState.result === 'IN_PROGRESS' ? `Turn ${gameState.turn}/6` : 'Game Ended'}
           </div>
         </div>
 
         {gameState.result !== 'IN_PROGRESS' && !isEndScreenVisible && (
           <button
+            data-name="show-results-button"
             onClick={() => setIsEndScreenVisible(true)}
             className={clsx(
               "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
@@ -217,31 +285,34 @@ export function Game() {
 
       {/* Opponent area (NPC) - compact on mobile */}
       <motion.div
+        data-name="opponent-area"
         className={clsx(
           "flex justify-between items-center bg-black/30 rounded-lg",
-          isMobile ? "mb-1 px-2 py-1" : "mb-4 px-4 py-2"
+          isMobile ? "mb-1 px-2 py-1" : "mb-2 px-4 py-1"
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div>
-          <div className={clsx(
-            "text-gray-300",
-            isMobile ? "text-[10px]" : "text-sm"
-          )}>
-            {isMobile ? 'NPC' : 'Opponent (NPC)'}
+        {isMobile ? (
+          <div data-name="opponent-info">
+            <div className="text-gray-300 text-[10px]">NPC</div>
+            <div className="text-gray-500 text-[8px]">
+              {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
+            </div>
           </div>
-          <div className={clsx(
-            "text-gray-500",
-            isMobile ? "text-[8px]" : "text-xs"
-          )}>
-            {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
+        ) : (
+          <div data-name="opponent-info" className="flex items-center gap-3">
+            <span className="text-gray-300 text-sm">Opponent (NPC)</span>
+            <span className="text-gray-500 text-xs">
+              {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
+            </span>
           </div>
-        </div>
+        )}
 
         <AnimatePresence>
           {isNpcThinking && (
             <motion.div
+              data-name="npc-thinking-indicator"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
@@ -263,12 +334,15 @@ export function Game() {
       </motion.div>
 
       {/* Game Board and Hand - Board takes remaining space */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div data-name="board-and-hand-container" className="flex-1 flex flex-col min-h-0">
         {/* Game Board */}
-        <div className={clsx(
-          "flex items-center justify-center flex-1",
-          isMobile ? "min-h-[360px]" : "min-h-[500px]"
-        )}>
+        <div
+          data-name="board-container"
+          className={clsx(
+            "flex items-center justify-center",
+            isMobile ? "min-h-[360px] flex-1" : "h-[650px]"
+          )}
+        >
           <Board
             locations={gameState.locations}
             onLocationClick={handleLocationClick}
@@ -279,24 +353,15 @@ export function Game() {
           />
         </div>
 
-        {/* Instructions - hidden on mobile to save space */}
-        {!isMobile && (
-          <div className="text-center text-sm text-gray-400 my-2">
-            {selectedCard !== null
-              ? isSelectedFromBoard
-                ? 'Click a location to move your card, or click your hand to return it'
-                : 'Click a location to play your card'
-              : cardsPlayedThisTurn > 0
-                ? 'Click a played card to move it, or select another card from hand'
-                : 'Select a card from your hand, then click a location to play it'}
-          </div>
-        )}
 
         {/* Player Hand - fixed height area */}
-        <div className={clsx(
-          isMobile ? "h-[120px]" : "h-[180px]",
-          "flex flex-col shrink-0"
-        )}>
+        <div
+          data-name="hand-container"
+          className={clsx(
+            isMobile ? "h-[120px]" : "h-[160px]",
+            "flex flex-col shrink-0"
+          )}
+        >
           <Hand
             cards={gameState.players[0].hand}
             energy={gameState.players[0].energy}
@@ -307,55 +372,40 @@ export function Game() {
             disabled={isDisabled}
           />
 
-          {/* Action buttons */}
-          <div className={clsx(
-            "flex justify-center items-center shrink-0",
-            isMobile ? "gap-3 mt-1" : "gap-4 mt-4"
-          )}>
-            <RetreatButton
-              onRetreat={retreat}
-              disabled={isDisabled || isGameOver}
-              isMobile={isMobile}
-            />
-
-            <div
-              data-points-indicator
-              data-power-indicator
-              className={clsx(
-                "flex items-center justify-center font-bold",
-                "text-amber-100",
-                isMobile ? "w-12 h-10 text-base" : "w-16 h-14 text-2xl"
-              )}
-              style={{
-                background: 'linear-gradient(145deg, #4a3219 0%, #3a2815 25%, #2c1e0f 50%, #1a1209 75%, #0d0904 100%)',
-                clipPath: 'polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)',
-                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))',
-                boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5)',
-              }}
-            >
-              <div className="flex items-center -ml-1">
-                <span className="text-[0.9em] brightness-125 mr-0.5">⚡</span>
-                <span>{gameState.players[0].energy}</span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleEndTurn}
-              disabled={isDisabled || isGameOver}
-              className={clsx(
-                "relative rounded-lg font-display font-semibold transition-all overflow-hidden",
-                "bg-gradient-to-r from-olympus-gold via-yellow-500 to-olympus-bronze",
-                "text-black shadow-lg shadow-olympus-gold/30",
-                "hover:shadow-olympus-gold/50 hover:scale-105",
-                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none",
-                isMobile ? "px-4 py-1.5 text-xs" : "px-6 py-2"
-              )}
-            >
-              <span className="relative z-10">End Turn</span>
-            </button>
-          </div>
+          {/* Action buttons - only on mobile */}
+          {isMobile && actionButtons(false)}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div
+      data-name="game-root"
+      className={clsx(
+        "h-full",
+        isMobile 
+          ? "flex flex-col p-2" 
+          : "flex justify-center items-start pt-2"
+      )}
+    >
+      {isMobile ? (
+        // Mobile layout - unchanged vertical stack
+        gameContent
+      ) : (
+        // Desktop layout - centered portrait-like width with action sidebar
+        <div data-name="desktop-layout" className="flex flex-row items-stretch h-full">
+          {/* Main game column - portrait width */}
+          <div data-name="main-game-column" className="w-[620px] min-h-[850px] flex flex-col px-3 pt-3 pb-6 bg-black/40 rounded-xl shadow-lg shadow-black/50">
+            {gameContent}
+          </div>
+          
+          {/* Action sidebar - desktop only */}
+          <div data-name="action-sidebar" className="flex flex-col justify-center ml-4 pr-4">
+            {actionButtons(true)}
+          </div>
+        </div>
+      )}
 
       {/* Buff/Debuff Animation Overlay */}
       <BuffDebuffAnimation
@@ -371,12 +421,14 @@ export function Game() {
       <AnimatePresence>
         {gameState.result !== 'IN_PROGRESS' && isEndScreenVisible && (
           <motion.div
+            data-name="game-over-backdrop"
             className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
+              data-name="game-over-modal"
               className={clsx(
                 "text-center bg-olympus-navy rounded-xl border-2 border-olympus-gold",
                 isMobile ? "p-4" : "p-8"
@@ -385,18 +437,24 @@ export function Game() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className={clsx(
-                "font-display text-olympus-gold",
-                isMobile ? "text-2xl mb-2" : "text-5xl mb-4"
-              )}>
+              <h2
+                data-name="game-over-title"
+                className={clsx(
+                  "font-display text-olympus-gold",
+                  isMobile ? "text-2xl mb-2" : "text-5xl mb-4"
+                )}
+              >
                 {gameState.result === 'PLAYER_0_WINS' ? '⚡ Victory! ⚡' :
                   gameState.result === 'PLAYER_1_WINS' ? '💀 Defeat' : '⚖️ Draw'}
               </h2>
 
-              <p className={clsx(
-                "text-gray-300",
-                isMobile ? "text-sm mb-4" : "mb-6"
-              )}>
+              <p
+                data-name="game-over-message"
+                className={clsx(
+                  "text-gray-300",
+                  isMobile ? "text-sm mb-4" : "mb-6"
+                )}
+              >
                 {gameState.result === 'PLAYER_0_WINS'
                   ? 'The gods smile upon you!'
                   : gameState.result === 'PLAYER_1_WINS'
@@ -404,11 +462,15 @@ export function Game() {
                     : 'An honorable stalemate!'}
               </p>
 
-              <div className={clsx(
-                "flex justify-center",
-                isMobile ? "gap-2" : "gap-4"
-              )}>
+              <div
+                data-name="game-over-buttons"
+                className={clsx(
+                  "flex justify-center",
+                  isMobile ? "gap-2" : "gap-4"
+                )}
+              >
                 <button
+                  data-name="play-again-button"
                   onClick={() => {
                     initGame();
                     setIsEndScreenVisible(true);
@@ -421,6 +483,7 @@ export function Game() {
                   Play Again
                 </button>
                 <button
+                  data-name="view-board-button"
                   onClick={() => setIsEndScreenVisible(false)}
                   className={clsx(
                     "bg-white/10 text-white font-display rounded-lg hover:bg-white/20 transition-colors border border-white/20",
@@ -430,6 +493,7 @@ export function Game() {
                   View Board
                 </button>
                 <Link
+                  data-name="menu-link"
                   to="/"
                   className={clsx(
                     "bg-gray-700 text-white font-display rounded-lg hover:bg-gray-600 transition-colors",

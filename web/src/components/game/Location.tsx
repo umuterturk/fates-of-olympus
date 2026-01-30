@@ -59,13 +59,13 @@ export function Location({
     onCardClick?.(cardInstanceId);
   };
 
-  // Use 'loc' size on mobile (48x68), 'sm' on desktop (64x96)
+  // Use 'loc' size on mobile (48x68), 'sm' on desktop (80x120)
   const cardSize = isMobile ? 'loc' : 'sm';
 
   // Card dimensions for grid calculation (must match Card component sizes)
-  // loc: w-12 h-[68px] = 48x68px, sm: w-16 h-24 = 64x96px
-  const cardW = isMobile ? 48 : 64;
-  const cardH = isMobile ? 68 : 96;
+  // loc: w-12 = 48px, sm: w-20 = 80px
+  const cardW = isMobile ? 48 : 80;
+  const cardH = isMobile ? 68 : 120;
   const gap = isMobile ? 1 : 4;
 
   // 2x2 grid dimensions
@@ -74,7 +74,7 @@ export function Location({
 
   return (
     <motion.div
-      data-location-index={location.index}
+      data-name={`location-${location.index}`}
       className={clsx(
         'location-container flex-1 flex flex-col items-center',
         onClick && !disabled && 'cursor-pointer',
@@ -84,6 +84,7 @@ export function Location({
     >
       {/* Opponent cards (top) - 2x2 grid, cards fill from bottom row first */}
       <div
+        data-name={`location-${location.index}-opponent-cards`}
         className="grid grid-cols-2 justify-items-center items-end overflow-visible"
         style={{
           width: gridW,
@@ -101,6 +102,7 @@ export function Location({
             return (
               <div
                 key={visualSlot}
+                data-name={`location-${location.index}-opponent-slot-${visualSlot}`}
                 className="flex items-end justify-center"
                 style={{ width: cardW, height: cardH }}
               >
@@ -126,12 +128,15 @@ export function Location({
 
       {/* Central location card with highlight wrapper - square with cropped corners */}
       {/* 5% bigger: 100->105 mobile, 140->147 desktop */}
-      <div className={clsx(
-        "relative my-1 transition-all location-card-wrapper",
-        isDropTarget && 'location-card-highlight',
-        isMobile ? "w-[105px] h-[105px]" : "w-[147px] h-[147px]"
-      )}>
-        <div className="location-card-inner overflow-hidden">
+      <div
+        data-name={`location-${location.index}-card`}
+        className={clsx(
+          "relative my-1 transition-all location-card-wrapper",
+          isDropTarget && 'location-card-highlight',
+          isMobile ? "w-[105px] h-[105px]" : "w-[147px] h-[147px]"
+        )}
+      >
+        <div data-name={`location-${location.index}-card-inner`} className="location-card-inner overflow-hidden">
           {/* Location background image */}
           <img
             src={`${import.meta.env.BASE_URL}locations/${locationImage}`}
@@ -150,20 +155,26 @@ export function Location({
             "absolute inset-0 flex flex-col items-center justify-start px-2 text-center",
             isMobile ? "pt-5" : "pt-7"
           )}>
-            <h3 className={clsx(
-              "font-display text-olympus-gold leading-tight drop-shadow-lg",
-              isMobile ? "text-sm" : "text-base"
-            )}>
+            <h3
+              data-name={`location-${location.index}-name`}
+              className={clsx(
+                "font-display text-olympus-gold leading-tight drop-shadow-lg",
+                isMobile ? "text-sm" : "text-base"
+              )}
+            >
               {locationName}
             </h3>
           </div>
         </div>
 
         {/* Opponent power badge (top center) - moved towards center */}
-        <div className={clsx(
-          "absolute z-20 left-1/2 -translate-x-1/2",
-          isMobile ? "top-0" : "top-0"
-        )}>
+        <div
+          data-name={`location-${location.index}-opponent-power`}
+          className={clsx(
+            "absolute z-20 left-1/2 -translate-x-1/2",
+            isMobile ? "top-0" : "top-0"
+          )}
+        >
           <HexPowerBadge
             power={opponentPower}
             isWinning={opponentPower > playerPower}
@@ -172,10 +183,13 @@ export function Location({
         </div>
 
         {/* Player power badge (bottom center) - moved towards center */}
-        <div className={clsx(
-          "absolute z-20 left-1/2 -translate-x-1/2",
-          isMobile ? "bottom-0" : "bottom-0"
-        )}>
+        <div
+          data-name={`location-${location.index}-player-power`}
+          className={clsx(
+            "absolute z-20 left-1/2 -translate-x-1/2",
+            isMobile ? "bottom-0" : "bottom-0"
+          )}
+        >
           <HexPowerBadge
             power={playerPower}
             isWinning={playerPower > opponentPower}
@@ -186,6 +200,7 @@ export function Location({
 
       {/* Player cards (bottom) - 2x2 grid */}
       <div
+        data-name={`location-${location.index}-player-cards`}
         className="grid grid-cols-2 justify-items-center items-start overflow-visible"
         style={{
           width: gridW,
@@ -201,6 +216,7 @@ export function Location({
           return (
             <div
               key={slotIndex}
+              data-name={`location-${location.index}-player-slot-${slotIndex}`}
               className="flex items-start justify-center"
               style={{ width: cardW, height: cardH }}
             >

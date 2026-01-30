@@ -42,6 +42,7 @@ export function Board({
   
   return (
     <motion.div
+      data-name="board"
       className={clsx(
         "flex flex-1 justify-center items-center",
         isMobile ? "gap-1" : "gap-4"

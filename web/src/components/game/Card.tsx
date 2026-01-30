@@ -47,7 +47,7 @@ export function Card({
   showTooltip = true,
 }: CardProps) {
   const [imageError, setImageError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isInfoHovered, setIsInfoHovered] = useState(false);
   const [showMobileTooltip, setShowMobileTooltip] = useState(false);
   const isMobile = useIsMobile();
   const power = getEffectivePower(card);
@@ -125,15 +125,13 @@ export function Card({
       layoutId={`card-${card.instanceId}`}
       data-card-id={card.instanceId}
       className={clsx("relative", wrapperSizeClasses[size])}
-      onMouseEnter={() => !isMobile && setIsHovered(true)}
-      onMouseLeave={() => !isMobile && setIsHovered(false)}
       transition={{
         layout: { duration: 0.4, type: 'spring', bounce: 0.2 },
       }}
     >
-      {/* Desktop: Tooltip on hover - outside the card to avoid clipping */}
+      {/* Desktop: Tooltip on hover over info button */}
       <AnimatePresence>
-        {showTooltip && isHovered && !faceDown && !isMobile && (
+        {showTooltip && isInfoHovered && !faceDown && !isMobile && (
           <CardTooltip
             cardDef={card.cardDef}
             power={power}
@@ -279,27 +277,29 @@ export function Card({
 
       </motion.div>
 
-      {/* Mobile info button */}
-      {
-        showTooltip && isMobile && !faceDown && (
-          <button
-            onClick={handleInfoClick}
-            className={clsx(
-              'absolute z-20 rounded-full flex items-center justify-center font-bold text-black',
-              'transition-all active:scale-90 select-none shadow-sm opacity-85',
-              (size === 'xs' || size === 'loc') ? 'w-2.5 h-2.5 text-[8px] -top-0.5 -right-0.5' :
-                size === 'sm' ? 'w-3.5 h-3.5 text-[10px] -top-1 -right-1' :
-                  'w-4.5 h-4.5 text-[12px] -top-1 -right-1'
-            )}
-            style={{
-              background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)',
-            }}
-          >
-            <span className="leading-none">?</span>
-          </button>
-        )
-      }
+      {/* Info button - click on mobile, hover on desktop */}
+      {showTooltip && !faceDown && (
+        <button
+          onClick={isMobile ? handleInfoClick : undefined}
+          onMouseEnter={() => !isMobile && setIsInfoHovered(true)}
+          onMouseLeave={() => !isMobile && setIsInfoHovered(false)}
+          className={clsx(
+            'absolute z-20 rounded-full flex items-center justify-center font-bold text-black',
+            'transition-all active:scale-90 select-none shadow-sm',
+            isMobile ? 'opacity-85' : 'opacity-70 hover:opacity-100',
+            (size === 'xs' || size === 'loc') ? 'w-2.5 h-2.5 text-[8px] -top-0.5 -right-0.5' :
+              size === 'sm' ? 'w-3.5 h-3.5 text-[10px] -top-1 -right-1' :
+                size === 'md' ? 'w-5 h-5 text-[12px] -top-1.5 -right-1.5' :
+                  'w-5 h-5 text-[12px] -top-1.5 -right-1.5'
+          )}
+          style={{
+            background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)',
+          }}
+        >
+          <span className="leading-none">?</span>
+        </button>
+      )}
     </motion.div >
   );
 }

@@ -19,9 +19,20 @@ function App() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden blur-xs"
         style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.png)` }}
       />
-      {/* Overlay for readability */}
+      {/* Mobile overlay for readability */}
       <div 
         className="absolute inset-0 sm:hidden"
+        style={{ background: 'radial-gradient(circle at center, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.4) 100%)' }}
+      />
+      
+      {/* Desktop background image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat hidden sm:block blur-xs"
+        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.png)` }}
+      />
+      {/* Desktop overlay for readability */}
+      <div 
+        className="absolute inset-0 hidden sm:block"
         style={{ background: 'radial-gradient(circle at center, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.4) 100%)' }}
       />
       
