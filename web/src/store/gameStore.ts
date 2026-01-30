@@ -71,12 +71,18 @@ interface GameStore {
   events: GameEvent[];
   /** PowerChanged events to animate - filtered from all events */
   powerChangedEvents: GameEvent[];
+  /** CardDestroyed events to animate */
+  cardDestroyedEvents: GameEvent[];
   /** Current index for sequentially playing animations */
   currentAnimationIndex: number;
+  /** Current index for destruction animations */
+  currentDestroyAnimationIndex: number;
   isAnimating: boolean;
   isNpcThinking: boolean;
   /** Location winners for end-game animation */
   locationWinners: readonly (PlayerId | null)[] | null;
+  /** Whether to show the game result (delayed until animations complete) */
+  showGameResult: boolean;
 
   // Actions
   initGame: () => void;
@@ -91,6 +97,8 @@ interface GameStore {
   setAnimating: (isAnimating: boolean) => void;
   /** Advance to next animation */
   nextAnimation: () => void;
+  /** Advance to next destroy animation */
+  nextDestroyAnimation: () => void;
   /** Clear all pending animations */
   clearAnimations: () => void;
   /** Clear location winners after animation */
@@ -107,10 +115,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerActions: [],
   events: [],
   powerChangedEvents: [],
+  cardDestroyedEvents: [],
   currentAnimationIndex: 0,
+  currentDestroyAnimationIndex: 0,
   isAnimating: false,
   isNpcThinking: false,
   locationWinners: null,
+  showGameResult: false,
 
   initGame: () => {
     const { state, events } = createGame();
@@ -120,10 +131,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerActions: [],
       events,
       powerChangedEvents: [],
+      cardDestroyedEvents: [],
       currentAnimationIndex: 0,
+      currentDestroyAnimationIndex: 0,
       isAnimating: false,
       isNpcThinking: false,
       locationWinners: null,
+      showGameResult: false,
     });
   },
 
@@ -273,6 +287,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           (e as { sourceCardId: number; cardInstanceId: number }).cardInstanceId
       );
 
+      // Filter CardDestroyed events
+      const cardDestroyedEvents = allEvents.filter(
+        (e): e is GameEvent & { type: 'CardDestroyed' } => e.type === 'CardDestroyed'
+      );
+
       // Calculate current location winners for animation
       const currentLocationWinners = resolvedState.locations.map(loc => {
         const p0 = getTotalPower(loc, 0);
@@ -282,18 +301,83 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return null;
       });
 
+      // Build a pre-animation state that shows ALL cards (including NPC's) revealed
+      // This is needed so the animation can find both source and target cards in the DOM
+      // We start from turnStartState and add all played cards with revealed=true
+      let preAnimationState = turnStartState;
+      
+      // Apply all player actions with revealed=true
+      for (const action of playerActions) {
+        const player = getPlayer(preAnimationState, action.playerId);
+        const [playerWithoutCard, card] = removeFromHand(player, action.cardInstanceId);
+        if (!card) continue;
+        
+        const playerSpent = spendEnergy(playerWithoutCard, card.cardDef.cost);
+        preAnimationState = withPlayer(preAnimationState, action.playerId, playerSpent);
+        
+        const playedCard: CardInstance = { ...card, revealed: true };
+        const location = getLocation(preAnimationState, action.location);
+        const newLocation = addCard(location, playedCard, action.playerId);
+        preAnimationState = withLocation(preAnimationState, action.location, newLocation);
+      }
+      
+      // Apply all NPC actions with revealed=true
+      for (const action of npcActions) {
+        const player = getPlayer(preAnimationState, action.playerId);
+        const [playerWithoutCard, card] = removeFromHand(player, action.cardInstanceId);
+        if (!card) continue;
+        
+        const playerSpent = spendEnergy(playerWithoutCard, card.cardDef.cost);
+        preAnimationState = withPlayer(preAnimationState, action.playerId, playerSpent);
+        
+        const playedCard: CardInstance = { ...card, revealed: true };
+        const location = getLocation(preAnimationState, action.location);
+        const newLocation = addCard(location, playedCard, action.playerId);
+        preAnimationState = withLocation(preAnimationState, action.location, newLocation);
+      }
+
+      // FIRST: Update gameState to show ALL cards (including NPC's) before animations
+      // This ensures the animation can find both source and target cards in the DOM
       set({
-        gameState: resolvedState,
+        gameState: preAnimationState,
         events: allEvents,
         playerActions: [],
         powerChangedEvents,
+        cardDestroyedEvents: [],
         currentAnimationIndex: 0,
+        currentDestroyAnimationIndex: 0,
       });
 
-      // Wait for buff/debuff animations (approx 1s per animation, max 3.8s)
-      const buffAnimationTime = Math.min(powerChangedEvents.length, 3) * 1000 + 800;
-      if (buffAnimationTime > 0) {
+      // Wait for buff/debuff animations (approx 2.2s per animation)
+      const buffAnimationTime = Math.min(powerChangedEvents.length, 3) * 2200 + 500;
+      if (powerChangedEvents.length > 0) {
         await new Promise(resolve => setTimeout(resolve, buffAnimationTime));
+      }
+
+      // SECOND: Show destruction animations BEFORE removing cards from state
+      if (cardDestroyedEvents.length > 0) {
+        console.log('[GameStore] Triggering destruction animations (cards still visible):', cardDestroyedEvents);
+        set({ cardDestroyedEvents, currentDestroyAnimationIndex: 0 });
+        
+        // Small delay to let React re-render with the new events
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Wait for destruction animations (approx 8s per destruction - DEBUG MODE)
+        const destroyAnimationTime = Math.min(cardDestroyedEvents.length, 3) * 500 + 100;
+        console.log('[GameStore] Waiting for destruction animation:', destroyAnimationTime, 'ms');
+        await new Promise(resolve => setTimeout(resolve, destroyAnimationTime));
+      }
+
+      // THIRD: NOW update the game state (cards move and disappear)
+      set({
+        gameState: resolvedState,
+        cardDestroyedEvents: [], // Clear destruction events
+      });
+
+      // Wait for move animations to complete (they are triggered by the state change and handled by layoutId)
+      const moveEvents = allEvents.filter(e => e.type === 'CardMoved');
+      if (moveEvents.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 800)); // EVENT_ANIMATIONS.CardMoved is 0.7s
       }
 
       // NOW trigger point animations
@@ -313,7 +397,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
           isAnimating: false,
         });
       } else {
-        set({ isAnimating: false });
+        // Game is over - show result after animations complete
+        set({ isAnimating: false, showGameResult: true });
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);
@@ -338,8 +423,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  nextDestroyAnimation: () => {
+    const { currentDestroyAnimationIndex, cardDestroyedEvents } = get();
+    if (currentDestroyAnimationIndex < cardDestroyedEvents.length - 1) {
+      set({ currentDestroyAnimationIndex: currentDestroyAnimationIndex + 1 });
+    } else {
+      // All destroy animations complete
+      set({ cardDestroyedEvents: [], currentDestroyAnimationIndex: 0 });
+    }
+  },
+
   clearAnimations: () => {
-    set({ powerChangedEvents: [], currentAnimationIndex: 0 });
+    set({ 
+      powerChangedEvents: [], 
+      currentAnimationIndex: 0,
+      cardDestroyedEvents: [],
+      currentDestroyAnimationIndex: 0,
+    });
   },
 
   clearLocationWinners: () => {
@@ -367,6 +467,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
       isAnimating: false,
       isNpcThinking: false,
+      showGameResult: true,
     });
   },
 }));

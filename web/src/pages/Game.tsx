@@ -5,10 +5,11 @@ import { clsx } from 'clsx';
 import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
 import { BuffDebuffAnimation } from '@components/game/BuffDebuffAnimation';
+import { CardDestroyedAnimation } from '@components/game/CardDestroyedAnimation';
 import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
 import { useGameStore } from '@store/gameStore';
 import type { LocationIndex } from '@engine/types';
-import type { PowerChangedEvent } from '@engine/events';
+import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
 
 // Hook to detect mobile
 function useIsMobile() {
@@ -87,15 +88,19 @@ export function Game() {
     gameState,
     playerActions,
     powerChangedEvents,
+    cardDestroyedEvents,
     currentAnimationIndex,
+    currentDestroyAnimationIndex,
     isAnimating,
     isNpcThinking,
     locationWinners,
+    showGameResult,
     initGame,
     playCard,
     moveCard,
     endTurn,
     nextAnimation,
+    nextDestroyAnimation,
     clearLocationWinners,
     addEnergy,
     retreat,
@@ -268,7 +273,7 @@ export function Game() {
           </div>
         </div>
 
-        {gameState.result !== 'IN_PROGRESS' && !isEndScreenVisible && (
+        {showGameResult && gameState.result !== 'IN_PROGRESS' && !isEndScreenVisible && (
           <button
             data-name="show-results-button"
             onClick={() => setIsEndScreenVisible(true)}
@@ -286,18 +291,18 @@ export function Game() {
       <motion.div
         data-name="opponent-area"
         className={clsx(
-          "flex justify-between items-center bg-black/30 rounded-lg",
-          isMobile ? "mb-1 px-2 py-1" : "mb-2 px-4 py-1"
+          "flex justify-between items-center bg-black/30 rounded-lg shrink-0",
+          isMobile ? "mb-1 px-2 h-6" : "mb-2 px-4 h-8"
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
         {isMobile ? (
-          <div data-name="opponent-info">
-            <div className="text-gray-300 text-[10px]">NPC</div>
-            <div className="text-gray-500 text-[8px]">
+          <div data-name="opponent-info" className="flex items-center gap-1.5">
+            <span className="text-gray-300 text-[10px]">NPC</span>
+            <span className="text-gray-500 text-[8px]">
               {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
-            </div>
+            </span>
           </div>
         ) : (
           <div data-name="opponent-info" className="flex items-center gap-3">
@@ -317,10 +322,11 @@ export function Game() {
               exit={{ opacity: 0, scale: 0.8 }}
               className={clsx(
                 "flex items-center gap-1 text-olympus-gold",
-                isMobile && "text-xs"
+                isMobile ? "text-[10px]" : "text-xs"
               )}
             >
               <motion.span
+                className={isMobile ? "text-[10px]" : "text-sm"}
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               >
@@ -416,9 +422,19 @@ export function Game() {
         onComplete={nextAnimation}
       />
 
+      {/* Card Destroyed Animation Overlay */}
+      <CardDestroyedAnimation
+        event={
+          cardDestroyedEvents.length > 0 && currentDestroyAnimationIndex < cardDestroyedEvents.length
+            ? (cardDestroyedEvents[currentDestroyAnimationIndex] as CardDestroyedEvent)
+            : null
+        }
+        onComplete={nextDestroyAnimation}
+      />
+
       {/* Game over overlay - z-index 1000 to be above tooltips */}
       <AnimatePresence>
-        {gameState.result !== 'IN_PROGRESS' && isEndScreenVisible && (
+        {showGameResult && gameState.result !== 'IN_PROGRESS' && isEndScreenVisible && (
           <motion.div
             data-name="game-over-backdrop"
             className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"

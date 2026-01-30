@@ -4,7 +4,7 @@
  * This component renders an overlay with particles traveling from source card to target card.
  * Green particles for buffs (+power), red particles for debuffs (-power).
  * 
- * Animation duration: 1 second
+ * Animation duration: 2 seconds
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -42,15 +42,15 @@ function Particle({
     size?: 'sm' | 'md' | 'lg';
 }) {
     const sizeClasses = {
-        sm: 'w-2 h-2',
-        md: 'w-3 h-3',
-        lg: 'w-4 h-4',
+        sm: 'w-3 h-3',
+        md: 'w-5 h-5',
+        lg: 'w-7 h-7',
     };
 
     const glowSize = {
-        sm: '4px',
-        md: '8px',
-        lg: '12px',
+        sm: '8px',
+        md: '14px',
+        lg: '20px',
     };
 
     return (
@@ -60,11 +60,11 @@ function Particle({
                 left: startX,
                 top: startY,
                 background: isBuff
-                    ? 'radial-gradient(circle, #4ade80 0%, #22c55e 50%, #16a34a 100%)'
-                    : 'radial-gradient(circle, #f87171 0%, #ef4444 50%, #dc2626 100%)',
+                    ? 'radial-gradient(circle, #86efac 0%, #4ade80 30%, #22c55e 60%, #16a34a 100%)'
+                    : 'radial-gradient(circle, #fca5a5 0%, #f87171 30%, #ef4444 60%, #dc2626 100%)',
                 boxShadow: isBuff
-                    ? `0 0 ${glowSize[size]} ${glowSize[size]} rgba(74, 222, 128, 0.6), 0 0 20px 8px rgba(34, 197, 94, 0.4)`
-                    : `0 0 ${glowSize[size]} ${glowSize[size]} rgba(248, 113, 113, 0.6), 0 0 20px 8px rgba(239, 68, 68, 0.4)`,
+                    ? `0 0 ${glowSize[size]} ${glowSize[size]} rgba(74, 222, 128, 0.8), 0 0 30px 15px rgba(34, 197, 94, 0.5), 0 0 50px 25px rgba(22, 163, 74, 0.3)`
+                    : `0 0 ${glowSize[size]} ${glowSize[size]} rgba(248, 113, 113, 0.8), 0 0 30px 15px rgba(239, 68, 68, 0.5), 0 0 50px 25px rgba(220, 38, 38, 0.3)`,
             }}
             initial={{
                 x: 0,
@@ -75,18 +75,18 @@ function Particle({
             animate={{
                 x: endX - startX,
                 y: endY - startY,
-                opacity: [0, 1, 1, 0],
-                scale: [0, 1.2, 1, 0.5],
+                opacity: [0, 1, 1, 1, 0],
+                scale: [0, 1.5, 1.2, 1, 0.3],
             }}
             transition={{
-                duration: 0.7,
+                duration: 1.2,
                 delay,
-                ease: [0.4, 0, 0.2, 1],
+                ease: [0.25, 0.1, 0.25, 1],
                 opacity: {
-                    times: [0, 0.2, 0.8, 1],
+                    times: [0, 0.15, 0.5, 0.85, 1],
                 },
                 scale: {
-                    times: [0, 0.2, 0.8, 1],
+                    times: [0, 0.15, 0.5, 0.85, 1],
                 },
             }}
         />
@@ -111,29 +111,54 @@ function BeamTrail({
     const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
 
     return (
-        <motion.div
-            className="absolute h-1 origin-left"
-            style={{
-                left: startX,
-                top: startY,
-                transform: `rotate(${angle}deg)`,
-                background: isBuff
-                    ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.8), rgba(74, 222, 128, 0.3), transparent)'
-                    : 'linear-gradient(90deg, rgba(239, 68, 68, 0.8), rgba(248, 113, 113, 0.3), transparent)',
-                boxShadow: isBuff
-                    ? '0 0 10px 2px rgba(34, 197, 94, 0.5)'
-                    : '0 0 10px 2px rgba(239, 68, 68, 0.5)',
-            }}
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: distance, opacity: [0, 1, 1, 0] }}
-            transition={{
-                duration: 0.8,
-                ease: 'easeOut',
-                opacity: {
-                    times: [0, 0.1, 0.7, 1],
-                },
-            }}
-        />
+        <>
+            {/* Main beam - thicker and more visible */}
+            <motion.div
+                className="absolute h-2 origin-left rounded-full"
+                style={{
+                    left: startX,
+                    top: startY - 2,
+                    transform: `rotate(${angle}deg)`,
+                    background: isBuff
+                        ? 'linear-gradient(90deg, rgba(74, 222, 128, 0.9), rgba(34, 197, 94, 0.7), rgba(22, 163, 74, 0.4), transparent)'
+                        : 'linear-gradient(90deg, rgba(248, 113, 113, 0.9), rgba(239, 68, 68, 0.7), rgba(220, 38, 38, 0.4), transparent)',
+                    boxShadow: isBuff
+                        ? '0 0 20px 6px rgba(34, 197, 94, 0.6), 0 0 40px 12px rgba(22, 163, 74, 0.3)'
+                        : '0 0 20px 6px rgba(239, 68, 68, 0.6), 0 0 40px 12px rgba(220, 38, 38, 0.3)',
+                }}
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: distance, opacity: [0, 1, 1, 0.8, 0] }}
+                transition={{
+                    duration: 1.4,
+                    ease: 'easeOut',
+                    opacity: {
+                        times: [0, 0.1, 0.5, 0.8, 1],
+                    },
+                }}
+            />
+            {/* Secondary glow beam */}
+            <motion.div
+                className="absolute h-4 origin-left rounded-full"
+                style={{
+                    left: startX,
+                    top: startY - 6,
+                    transform: `rotate(${angle}deg)`,
+                    background: isBuff
+                        ? 'linear-gradient(90deg, rgba(134, 239, 172, 0.4), rgba(74, 222, 128, 0.2), transparent)'
+                        : 'linear-gradient(90deg, rgba(252, 165, 165, 0.4), rgba(248, 113, 113, 0.2), transparent)',
+                }}
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: distance * 0.9, opacity: [0, 0.8, 0.6, 0] }}
+                transition={{
+                    duration: 1.2,
+                    delay: 0.1,
+                    ease: 'easeOut',
+                    opacity: {
+                        times: [0, 0.2, 0.7, 1],
+                    },
+                }}
+            />
+        </>
     );
 }
 
@@ -151,21 +176,38 @@ function ImpactBurst({
 }) {
     return (
         <>
-            {/* Expanding ring */}
+            {/* Outer expanding ring */}
             <motion.div
-                className="absolute rounded-full border-2"
+                className="absolute rounded-full border-4"
                 style={{
                     left: x,
                     top: y,
                     borderColor: isBuff ? '#22c55e' : '#ef4444',
                     transform: 'translate(-50%, -50%)',
+                    boxShadow: isBuff
+                        ? '0 0 20px 4px rgba(34, 197, 94, 0.6)'
+                        : '0 0 20px 4px rgba(239, 68, 68, 0.6)',
                 }}
                 initial={{ width: 0, height: 0, opacity: 1 }}
-                animate={{ width: 80, height: 80, opacity: 0 }}
-                transition={{ duration: 0.6, delay: 0.5, ease: 'easeOut' }}
+                animate={{ width: 140, height: 140, opacity: 0 }}
+                transition={{ duration: 0.9, delay: 0.8, ease: 'easeOut' }}
             />
 
-            {/* Inner glow */}
+            {/* Inner expanding ring */}
+            <motion.div
+                className="absolute rounded-full border-2"
+                style={{
+                    left: x,
+                    top: y,
+                    borderColor: isBuff ? '#4ade80' : '#f87171',
+                    transform: 'translate(-50%, -50%)',
+                }}
+                initial={{ width: 0, height: 0, opacity: 1 }}
+                animate={{ width: 100, height: 100, opacity: 0 }}
+                transition={{ duration: 0.7, delay: 0.9, ease: 'easeOut' }}
+            />
+
+            {/* Inner glow - larger and more intense */}
             <motion.div
                 className="absolute rounded-full"
                 style={{
@@ -173,36 +215,54 @@ function ImpactBurst({
                     top: y,
                     transform: 'translate(-50%, -50%)',
                     background: isBuff
-                        ? 'radial-gradient(circle, rgba(74, 222, 128, 0.5), transparent 70%)'
-                        : 'radial-gradient(circle, rgba(248, 113, 113, 0.5), transparent 70%)',
+                        ? 'radial-gradient(circle, rgba(134, 239, 172, 0.8), rgba(74, 222, 128, 0.5), transparent 70%)'
+                        : 'radial-gradient(circle, rgba(252, 165, 165, 0.8), rgba(248, 113, 113, 0.5), transparent 70%)',
                 }}
                 initial={{ width: 0, height: 0, opacity: 0 }}
-                animate={{ width: 60, height: 60, opacity: [0, 1, 0] }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                animate={{ width: 120, height: 120, opacity: [0, 1, 0.8, 0] }}
+                transition={{ duration: 0.8, delay: 0.7, opacity: { times: [0, 0.3, 0.7, 1] } }}
             />
 
-            {/* Power change indicator */}
+            {/* Flash effect */}
             <motion.div
-                className="absolute font-bold text-2xl font-display"
+                className="absolute rounded-full"
+                style={{
+                    left: x,
+                    top: y,
+                    transform: 'translate(-50%, -50%)',
+                    background: isBuff
+                        ? 'radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(134, 239, 172, 0.6), transparent 60%)'
+                        : 'radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(252, 165, 165, 0.6), transparent 60%)',
+                }}
+                initial={{ width: 0, height: 0, opacity: 0 }}
+                animate={{ width: 80, height: 80, opacity: [0, 1, 0] }}
+                transition={{ duration: 0.3, delay: 0.85 }}
+            />
+
+            {/* Power change indicator - bigger and longer lasting */}
+            <motion.div
+                className="absolute font-bold text-4xl font-display"
                 style={{
                     left: x,
                     top: y,
                     color: isBuff ? '#4ade80' : '#f87171',
                     textShadow: isBuff
-                        ? '0 0 10px rgba(74, 222, 128, 0.8), 0 0 20px rgba(34, 197, 94, 0.6)'
-                        : '0 0 10px rgba(248, 113, 113, 0.8), 0 0 20px rgba(239, 68, 68, 0.6)',
+                        ? '0 0 15px rgba(74, 222, 128, 1), 0 0 30px rgba(34, 197, 94, 0.8), 0 0 45px rgba(22, 163, 74, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.5)'
+                        : '0 0 15px rgba(248, 113, 113, 1), 0 0 30px rgba(239, 68, 68, 0.8), 0 0 45px rgba(220, 38, 38, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.5)',
                 }}
-                initial={{ x: '-50%', y: '-50%', opacity: 0, scale: 0.5 }}
+                initial={{ x: '-50%', y: '-50%', opacity: 0, scale: 0.3 }}
                 animate={{
                     x: '-50%',
-                    y: ['-50%', '-150%'],
-                    opacity: [0, 1, 1, 0],
-                    scale: [0.5, 1.2, 1, 0.8],
+                    y: ['-50%', '-120%', '-180%'],
+                    opacity: [0, 1, 1, 1, 0],
+                    scale: [0.3, 1.5, 1.3, 1.1, 0.8],
                 }}
                 transition={{
-                    duration: 0.8,
-                    delay: 0.5,
-                    opacity: { times: [0, 0.2, 0.7, 1] },
+                    duration: 1.2,
+                    delay: 0.8,
+                    opacity: { times: [0, 0.15, 0.4, 0.8, 1] },
+                    scale: { times: [0, 0.15, 0.4, 0.8, 1] },
+                    y: { times: [0, 0.3, 1] },
                 }}
             >
                 {isBuff ? `+${powerChange}` : powerChange}
@@ -261,11 +321,11 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
                 setTargetPos(target);
                 setIsActive(true);
 
-                // Complete after 1 second
+                // Complete after 2.2 seconds (longer for more dramatic effect)
                 setTimeout(() => {
                     setIsActive(false);
                     onComplete();
-                }, 1000);
+                }, 2200);
             } else if (retryCount < maxRetries) {
                 retryCount++;
                 console.log(`[BuffDebuff] Retrying... (${retryCount}/${maxRetries})`);
@@ -290,13 +350,13 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
     const isBuff = event.newPower > event.oldPower;
     const powerChange = event.newPower - event.oldPower;
 
-    // Generate particle positions with slight randomness
-    const particles = Array.from({ length: 8 }, (_, i) => ({
+    // Generate particle positions with more randomness and staggered delays
+    const particles = Array.from({ length: 12 }, (_, i) => ({
         id: i,
-        delay: i * 0.06,
+        delay: i * 0.08,
         size: (['sm', 'md', 'lg'] as const)[i % 3],
-        offsetX: (Math.random() - 0.5) * 20,
-        offsetY: (Math.random() - 0.5) * 20,
+        offsetX: (Math.random() - 0.5) * 30,
+        offsetY: (Math.random() - 0.5) * 30,
     }));
 
     return (

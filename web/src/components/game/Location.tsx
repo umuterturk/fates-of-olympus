@@ -63,9 +63,9 @@ export function Location({
   const cardSize = isMobile ? 'loc' : 'sm';
 
   // Card dimensions for grid calculation (must match Card component sizes)
-  // loc: w-12 = 48px, sm: w-20 = 80px
-  const cardW = isMobile ? 48 : 80;
-  const cardH = isMobile ? 68 : 120;
+  // loc: w-14 = 56px, sm: w-20 = 80px
+  const cardW = isMobile ? 56 : 80;
+  const cardH = isMobile ? 80 : 120;
   const gap = isMobile ? 1 : 4;
 
   // 2x2 grid dimensions
@@ -80,7 +80,6 @@ export function Location({
         onClick && !disabled && 'cursor-pointer',
       )}
       onClick={disabled ? undefined : onClick}
-      layout
     >
       {/* Opponent cards (top) - 2x2 grid, cards fill from bottom row first */}
       <div
@@ -108,6 +107,7 @@ export function Location({
               >
                 {card && (
                   <motion.div
+                    key={card.instanceId}
                     initial={{ scale: 0, opacity: 0, y: -20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0, opacity: 0 }}
@@ -117,6 +117,7 @@ export function Location({
                       size={cardSize}
                       faceDown={!card.revealed}
                       showTooltip={card.revealed}
+                      isPending={false}
                     />
                   </motion.div>
                 )}
@@ -213,34 +214,36 @@ export function Location({
           const isPending = card ? (pendingCardIds?.has(card.instanceId) ?? false) : false;
           const isSelected = card ? selectedCard === card.instanceId : false;
 
-          return (
-            <div
-              key={slotIndex}
-              data-name={`location-${location.index}-player-slot-${slotIndex}`}
-              className="flex items-start justify-center"
-              style={{ width: cardW, height: cardH }}
-            >
-              {card && (
-                <div
-                  onClick={isPending && !disabled ? (e) => handleCardClick(card.instanceId, e) : undefined}
-                  className={clsx(
-                    'rounded-lg',
-                    isPending && !disabled && 'cursor-pointer',
-                    isPending && 'pending-card-glow',
-                    isSelected && 'ring-2 ring-olympus-gold',
-                  )}
-                >
-                  <Card
-                    card={card}
-                    size={cardSize}
-                    faceDown={!card.revealed}
-                    showTooltip={card.revealed}
-                    selected={isSelected}
-                  />
-                </div>
-              )}
-            </div>
-          );
+            return (
+              <div
+                key={slotIndex}
+                data-name={`location-${location.index}-player-slot-${slotIndex}`}
+                className="flex items-start justify-center"
+                style={{ width: cardW, height: cardH }}
+              >
+                {card && (
+                  <div
+                    key={card.instanceId}
+                    onClick={isPending && !disabled ? (e) => handleCardClick(card.instanceId, e) : undefined}
+                    className={clsx(
+                      'rounded-lg',
+                      isPending && !disabled && 'cursor-pointer',
+                      isPending && 'pending-card-glow',
+                      isSelected && 'ring-2 ring-olympus-gold',
+                    )}
+                  >
+                    <Card
+                      card={card}
+                      size={cardSize}
+                      faceDown={!card.revealed}
+                      showTooltip={card.revealed}
+                      selected={isSelected}
+                      isPending={isPending}
+                    />
+                  </div>
+                )}
+              </div>
+            );
         })}
       </div>
     </motion.div>

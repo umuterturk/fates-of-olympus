@@ -5,4 +5,5 @@ export { Board } from './Board';
 export { Hand } from './Hand';
 export { EnergyDisplay } from './EnergyDisplay';
 export { BuffDebuffAnimation } from './BuffDebuffAnimation';
+export { CardDestroyedAnimation } from './CardDestroyedAnimation';
 export { LocationWinAnimation } from './LocationWinAnimation';

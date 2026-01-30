@@ -5,7 +5,7 @@ import type { CardInstance } from '@engine/models';
 import { getEffectivePower } from '@engine/models';
 import { CardTooltip } from './CardTooltip';
 import { useGameStore } from '@store/gameStore';
-import type { PowerChangedEvent } from '@engine/events';
+import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
 
 interface CardProps {
   card: CardInstance;
@@ -17,6 +17,8 @@ interface CardProps {
   onClick?: () => void;
   draggable?: boolean;
   showTooltip?: boolean;
+  /** Whether this card was just played this turn (pending). Used to control layout animation. */
+  isPending?: boolean;
 }
 
 // Hook to detect mobile/touch devices
@@ -45,6 +47,7 @@ export function Card({
   onClick,
   draggable = false,
   showTooltip = true,
+  isPending = true, // Default true for cards in hand (always enable layout for hand-to-board transition)
 }: CardProps) {
   const [imageError, setImageError] = useState(false);
   const [isInfoHovered, setIsInfoHovered] = useState(false);
@@ -55,20 +58,33 @@ export function Card({
   const powerDiff = power - basePower;
 
   // Get current animation state
-  const { powerChangedEvents, currentAnimationIndex, isAnimating } = useGameStore();
+  const { powerChangedEvents, currentAnimationIndex, cardDestroyedEvents, currentDestroyAnimationIndex, isAnimating } = useGameStore();
   const currentEvent = isAnimating && powerChangedEvents.length > 0 && currentAnimationIndex < powerChangedEvents.length
     ? (powerChangedEvents[currentAnimationIndex] as PowerChangedEvent)
     : null;
 
   const isSourceOfEffect = currentEvent && currentEvent.sourceCardId === card.instanceId;
   const isTargetOfEffect = currentEvent && currentEvent.cardInstanceId === card.instanceId;
+  
+  // Disable layout animation when card is involved in buff/debuff animation to prevent conflicts
+  const isInBuffDebuffAnimation = isSourceOfEffect || isTargetOfEffect;
+
+  // Check if this card is being destroyed
+  const currentDestroyEvent = cardDestroyedEvents.length > 0 && currentDestroyAnimationIndex < cardDestroyedEvents.length
+    ? (cardDestroyedEvents[currentDestroyAnimationIndex] as CardDestroyedEvent)
+    : null;
+  const isBeingDestroyed = currentDestroyEvent && currentDestroyEvent.cardInstanceId === card.instanceId;
+
+  // Only enable layout for pending cards (just played) OR during animation resolution
+  // This allows cards to animate when they shift slots within a location or move between locations
+  const shouldEnableLayout = (isPending || isAnimating) && !isBeingDestroyed && !isInBuffDebuffAnimation;
 
   // Image path - use base URL for GitHub Pages compatibility
   const imagePath = `${import.meta.env.BASE_URL}cards/${card.cardDef.id}.png`;
 
   const sizeClasses = {
     xs: 'w-10 h-14 text-[8px]',
-    loc: 'w-12 h-[68px] text-[9px] border',  // Mobile location cards - 48x68px, thinner border
+    loc: 'w-14 h-20 text-[10px] border',     // Mobile location cards - 56x80px, thinner border
     sm: 'w-20 h-[120px] text-xs',            // Mobile hand cards - 80x120px
     md: 'w-28 h-[168px] text-sm',            // Desktop hand cards - 112x168px
     lg: 'w-32 h-48 text-base',
@@ -111,18 +127,18 @@ export function Card({
   // Get width for wrapper to match card size
   const wrapperSizeClasses = {
     xs: 'w-10',
-    loc: 'w-12',
+    loc: 'w-14',  // 56px to match loc size
     sm: 'w-20',   // 80px to match new sm size
     md: 'w-28',   // 112px to match new md size
     lg: 'w-32',
   };
 
-  const cardWidth = size === 'xs' ? 40 : size === 'loc' ? 48 : size === 'sm' ? 80 : size === 'md' ? 112 : 128;
+  const cardWidth = size === 'xs' ? 40 : size === 'loc' ? 56 : size === 'sm' ? 80 : size === 'md' ? 112 : 128;
 
   return (
     <motion.div
-      layout
-      layoutId={`card-${card.instanceId}`}
+      layout={shouldEnableLayout}
+      layoutId={isBeingDestroyed ? undefined : `card-${card.instanceId}`}
       data-card-id={card.instanceId}
       className={clsx("relative", wrapperSizeClasses[size])}
       transition={{
@@ -164,7 +180,12 @@ export function Card({
         )}
         onClick={disabled ? undefined : onClick}
         initial={false}
-        animate={isSourceOfEffect ? {
+        animate={isBeingDestroyed ? {
+          // Card grows bigger and fades out when being destroyed
+          scale: 30,
+          opacity: 0.01,
+          zIndex: 100,
+        } : isSourceOfEffect ? {
           scale: 1.2,
           y: -10,
           zIndex: 50,
@@ -176,11 +197,15 @@ export function Card({
           scale: 1,
           y: 0,
           zIndex: 1,
+          opacity: 1,
           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
         }}
-        whileHover={disabled ? undefined : { scale: 1.05, y: -4, zIndex: 100 }}
-        whileTap={disabled ? undefined : { scale: 0.98 }}
-        transition={{
+        whileHover={disabled || isBeingDestroyed ? undefined : { scale: 1.05, y: -4, zIndex: 100 }}
+        whileTap={disabled || isBeingDestroyed ? undefined : { scale: 0.98 }}
+        transition={isBeingDestroyed ? {
+          duration: 0.4,
+          ease: 'easeOut',
+        } : {
           type: 'spring',
           stiffness: 300,
           damping: 20,
@@ -284,7 +309,7 @@ export function Card({
           onMouseEnter={() => !isMobile && setIsInfoHovered(true)}
           onMouseLeave={() => !isMobile && setIsInfoHovered(false)}
           className={clsx(
-            'absolute z-20 rounded-full flex items-center justify-center font-bold text-black',
+            'absolute z-[110] rounded-full flex items-center justify-center font-bold text-black',
             'transition-all active:scale-90 select-none shadow-sm',
             isMobile ? 'opacity-85' : 'opacity-70 hover:opacity-100',
             (size === 'xs' || size === 'loc') ? 'w-2.5 h-2.5 text-[8px] -top-0.5 -right-0.5' :
