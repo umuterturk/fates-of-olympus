@@ -170,7 +170,6 @@ export function Game() {
     }
   };
 
-  const cardsPlayedThisTurn = playerActions.length;
   const pendingCardIds = new Set(playerActions.map(a => a.cardInstanceId));
 
   const isDisabled = isAnimating || isNpcThinking;
