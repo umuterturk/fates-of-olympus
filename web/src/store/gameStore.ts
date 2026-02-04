@@ -2,12 +2,14 @@
  * Game state management using Zustand.
  * 
  * Manages the complete game loop including NPC turns.
+ * Uses the DETERMINISTIC ability system for consistent behavior
+ * across browser/Firebase/replays.
  * 
  * Turn flow:
  * 1. Player can play multiple cards (each is applied immediately)
  * 2. Player clicks "Reveal Cards" to pass
  * 3. NPC plays all its cards
- * 4. Turn resolves (cards revealed, effects trigger)
+ * 4. Turn resolves using pre-computed timeline (cards revealed, effects trigger)
  * 5. Next turn starts
  */
 
@@ -15,7 +17,15 @@ import { create } from 'zustand';
 import type { GameState, PlayerAction, CardInstance, PlayCardAction } from '@engine/models';
 import type { GameEvent } from '@engine/events';
 import type { LocationIndex, PlayerId } from '@engine/types';
-import { createGame, resolveTurn, startNextTurn, validateAction } from '@engine/controller';
+import {
+  createGameWithSeed,
+  resolveTurnDeterministic,
+  startNextTurn,
+  validateAction,
+  type DeterministicResolutionResult,
+} from '@engine/controller';
+import { SeededRNG, generateGameSeed, generateTimestampSeed } from '@engine/rng';
+import type { ResolutionTimeline } from '@engine/timeline/types';
 import { computeGreedyAction } from '../ai/greedy';
 import {
   getPlayer,
@@ -24,10 +34,13 @@ import {
   getLocation,
   getTotalPower,
   withEnergy,
+  withHand,
   removeFromHand,
   spendEnergy,
   addCard,
 } from '@engine/models';
+import { getCardDef, createCardInstance, getAllCardDefs } from '@engine/cards';
+import type { CardId } from '@engine/types';
 
 /**
  * Apply a card play immediately to the game state.
@@ -87,9 +100,23 @@ interface GameStore {
   revealedNpcCardIds: Set<number>;
   /** All NPC card IDs that need to be revealed this turn (used to hide them initially) */
   pendingNpcCardIds: Set<number>;
+  
+  // Deterministic system state
+  /** Seeded RNG for deterministic game behavior */
+  rng: SeededRNG | null;
+  /** Game seed for replay/debugging */
+  gameSeed: number | null;
+  /** Current resolution timeline (for debugging/replay) */
+  currentTimeline: ResolutionTimeline | null;
+  
+  // Debug state
+  /** Persistent debug energy bonus (added each turn) */
+  debugEnergyBonus: number;
 
   // Actions
   initGame: () => void;
+  /** Initialize game with a specific seed (for testing/replay) */
+  initGameWithSeed: (seed: number) => void;
   /** Play a card from hand to location (doesn't end the turn) */
   playCard: (cardInstanceId: number, location: LocationIndex) => void;
   /** Move a pending card to a new location, or return to hand (null) */
@@ -111,6 +138,17 @@ interface GameStore {
   addEnergy: (playerId: PlayerId, amount: number) => void;
   /** Retreat from the game (concede) */
   retreat: () => void;
+  
+  // ==========================================================================
+  // Debug Functions (for testing)
+  // ==========================================================================
+  
+  /** Add a specific card to player's hand by card ID (e.g., 'ares', 'zeus') */
+  debugAddCardToHand: (cardId: CardId, playerId?: PlayerId) => void;
+  /** Replace player's entire hand with specific cards */
+  debugSetHand: (cardIds: CardId[], playerId?: PlayerId) => void;
+  /** Get all available card IDs for debugging */
+  debugGetAllCardIds: () => CardId[];
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -128,9 +166,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showGameResult: false,
   revealedNpcCardIds: new Set(),
   pendingNpcCardIds: new Set(),
+  rng: null,
+  gameSeed: null,
+  currentTimeline: null,
+  debugEnergyBonus: 0,
 
   initGame: () => {
-    const { state, events } = createGame();
+    // Generate a timestamp-based seed for single-player games
+    const seed = generateTimestampSeed();
+    get().initGameWithSeed(seed);
+  },
+
+  initGameWithSeed: (seed: number) => {
+    const { state, events, rng: newRng } = createGameWithSeed(seed);
     set({
       gameState: state,
       turnStartState: state,
@@ -146,6 +194,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showGameResult: false,
       revealedNpcCardIds: new Set(),
       pendingNpcCardIds: new Set(),
+      rng: newRng,
+      gameSeed: seed,
+      currentTimeline: null,
+      debugEnergyBonus: 0, // Reset debug bonus on new game
     });
   },
 
@@ -224,7 +276,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   endTurn: async () => {
-    const { gameState, turnStartState, playerActions } = get();
+    const { gameState, turnStartState, playerActions, gameSeed } = get();
     if (!gameState || !turnStartState) return;
     if (gameState.result !== 'IN_PROGRESS') return;
 
@@ -258,10 +310,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ isNpcThinking: false, isAnimating: true });
 
-      // Now resolve the turn using the original turn start state
+      // Create a deterministic RNG for this turn resolution
+      // Seed is based on game seed + turn number for reproducibility
+      const turnRng = new SeededRNG(
+        generateGameSeed(String(gameSeed ?? 0), turnStartState.turn)
+      );
+
+      // Now resolve the turn using the DETERMINISTIC system
       // Process player and NPC actions in pairs
       let resolvedState = turnStartState;
       let allEvents: GameEvent[] = [];
+      let lastTimeline: ResolutionTimeline | null = null;
 
       const maxPlays = Math.max(playerActions.length, npcActions.length);
 
@@ -269,21 +328,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const playerAction: PlayerAction = playerActions[i] ?? { type: 'Pass', playerId: 0 };
         const npcAction: PlayerAction = npcActions[i] ?? { type: 'Pass', playerId: 1 };
 
-        const { state: newState, events } = resolveTurn(resolvedState, playerAction, npcAction);
-        resolvedState = newState;
-        allEvents = [...allEvents, ...events];
+        // Use deterministic resolution with pre-computed timeline
+        const result: DeterministicResolutionResult = resolveTurnDeterministic(
+          resolvedState,
+          playerAction,
+          npcAction,
+          turnRng
+        );
+        
+        resolvedState = result.state;
+        allEvents = [...allEvents, ...result.events];
+        lastTimeline = result.timeline;
+        
+        if (!result.success) {
+          console.error('Turn resolution failed:', result.error);
+        }
       }
 
       // If no plays at all, still resolve an empty turn
       if (maxPlays === 0) {
-        const { state: newState, events } = resolveTurn(
+        const result: DeterministicResolutionResult = resolveTurnDeterministic(
           resolvedState,
           { type: 'Pass', playerId: 0 },
-          { type: 'Pass', playerId: 1 }
+          { type: 'Pass', playerId: 1 },
+          turnRng
         );
-        resolvedState = newState;
-        allEvents = [...allEvents, ...events];
+        resolvedState = result.state;
+        allEvents = [...allEvents, ...result.events];
+        lastTimeline = result.timeline;
       }
+      
+      // Store the timeline for debugging/replay
+      set({ currentTimeline: lastTimeline });
 
       // Filter out PowerChanged events that target different cards (buff/debuff effects)
       const powerChangedEvents = allEvents.filter(
@@ -424,9 +500,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // If game is still in progress, start next turn
       if (resolvedState.result === 'IN_PROGRESS') {
         const { state: nextState, events: nextEvents } = startNextTurn(resolvedState);
+        
+        // Apply debug energy bonus if set
+        const { debugEnergyBonus } = get();
+        let finalNextState = nextState;
+        if (debugEnergyBonus > 0) {
+          const player = getPlayer(nextState, 0);
+          finalNextState = withPlayer(nextState, 0, withEnergy(player, player.energy + debugEnergyBonus));
+        }
+        
         set({
-          gameState: nextState,
-          turnStartState: nextState,
+          gameState: finalNextState,
+          turnStartState: finalNextState,
           events: nextEvents,
           isAnimating: false,
           revealedNpcCardIds: new Set(), // Reset for next turn
@@ -483,13 +568,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   addEnergy: (playerId: PlayerId, amount: number) => {
-    const { gameState } = get();
+    const { gameState, turnStartState, debugEnergyBonus } = get();
     if (!gameState) return;
 
     const player = getPlayer(gameState, playerId);
+    const newGameState = withPlayer(gameState, playerId, withEnergy(player, player.energy + amount));
+    
+    // Also update turnStartState so changes persist through turn resolution
+    let newTurnStartState = turnStartState;
+    if (turnStartState) {
+      const turnStartPlayer = getPlayer(turnStartState, playerId);
+      newTurnStartState = withPlayer(turnStartState, playerId, withEnergy(turnStartPlayer, turnStartPlayer.energy + amount));
+    }
+    
+    // For player 0, also set the persistent debug energy bonus
+    const newDebugBonus = playerId === 0 ? debugEnergyBonus + amount : debugEnergyBonus;
+    
     set({
-      gameState: withPlayer(gameState, playerId, withEnergy(player, player.energy + amount)),
+      gameState: newGameState,
+      turnStartState: newTurnStartState,
+      debugEnergyBonus: newDebugBonus,
     });
+    
+    console.log(`[Debug] Added ${amount} energy. Persistent bonus is now +${newDebugBonus}`);
   },
 
   retreat: () => {
@@ -506,4 +607,168 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showGameResult: true,
     });
   },
+
+  // ==========================================================================
+  // Debug Functions
+  // ==========================================================================
+
+  debugAddCardToHand: (cardId: CardId, playerId: PlayerId = 0) => {
+    const { gameState, turnStartState } = get();
+    if (!gameState) {
+      console.warn('[Debug] No game state');
+      return;
+    }
+
+    const cardDef = getCardDef(cardId);
+    if (!cardDef) {
+      console.warn(`[Debug] Card not found: ${cardId}`);
+      console.log('[Debug] Available cards:', getAllCardDefs().map(c => c.id).join(', '));
+      return;
+    }
+
+    // Create a new card instance with a unique ID
+    const newCard = createCardInstance(cardDef, playerId, gameState.nextInstanceId);
+    const player = getPlayer(gameState, playerId);
+    const newHand = [...player.hand, newCard];
+    
+    const newGameState = {
+      ...withPlayer(gameState, playerId, withHand(player, newHand)),
+      nextInstanceId: gameState.nextInstanceId + 1,
+    };
+
+    // Also update turnStartState if it exists (so the card can be played)
+    let newTurnStartState = turnStartState;
+    if (turnStartState) {
+      const turnStartPlayer = getPlayer(turnStartState, playerId);
+      const turnStartNewHand = [...turnStartPlayer.hand, newCard];
+      newTurnStartState = {
+        ...withPlayer(turnStartState, playerId, withHand(turnStartPlayer, turnStartNewHand)),
+        nextInstanceId: turnStartState.nextInstanceId + 1,
+      };
+    }
+
+    set({ 
+      gameState: newGameState,
+      turnStartState: newTurnStartState,
+    });
+    console.log(`[Debug] Added ${cardDef.name} (${cardId}) to Player ${playerId}'s hand`);
+  },
+
+  debugSetHand: (cardIds: CardId[], playerId: PlayerId = 0) => {
+    const { gameState, turnStartState } = get();
+    if (!gameState) {
+      console.warn('[Debug] No game state');
+      return;
+    }
+
+    const newCards: CardInstance[] = [];
+    let nextId = gameState.nextInstanceId;
+
+    for (const cardId of cardIds) {
+      const cardDef = getCardDef(cardId);
+      if (!cardDef) {
+        console.warn(`[Debug] Card not found: ${cardId}`);
+        continue;
+      }
+      newCards.push(createCardInstance(cardDef, playerId, nextId));
+      nextId++;
+    }
+
+    const player = getPlayer(gameState, playerId);
+    const newGameState = {
+      ...withPlayer(gameState, playerId, withHand(player, newCards)),
+      nextInstanceId: nextId,
+    };
+
+    // Also update turnStartState if it exists
+    let newTurnStartState = turnStartState;
+    if (turnStartState) {
+      const turnStartPlayer = getPlayer(turnStartState, playerId);
+      newTurnStartState = {
+        ...withPlayer(turnStartState, playerId, withHand(turnStartPlayer, newCards)),
+        nextInstanceId: nextId,
+      };
+    }
+
+    set({ 
+      gameState: newGameState,
+      turnStartState: newTurnStartState,
+    });
+    console.log(`[Debug] Set Player ${playerId}'s hand to:`, cardIds);
+  },
+
+  debugGetAllCardIds: () => {
+    return getAllCardDefs().map(c => c.id);
+  },
 }));
+
+// =============================================================================
+// Debug Console Helpers
+// =============================================================================
+
+// Expose debug functions on window for easy console access
+if (typeof window !== 'undefined') {
+  const debug = {
+    /** Add a card to player's hand: debug.addCard('ares') */
+    addCard: (cardId: string, playerId: PlayerId = 0) => {
+      useGameStore.getState().debugAddCardToHand(cardId, playerId);
+    },
+    /** Set player's entire hand: debug.setHand(['ares', 'zeus', 'hoplite']) */
+    setHand: (cardIds: string[], playerId: PlayerId = 0) => {
+      useGameStore.getState().debugSetHand(cardIds, playerId);
+    },
+    /** Add energy (persists across turns): debug.addEnergy(10) */
+    addEnergy: (amount: number, playerId: PlayerId = 0) => {
+      useGameStore.getState().addEnergy(playerId, amount);
+    },
+    /** Reset energy bonus to 0 */
+    resetEnergy: () => {
+      useGameStore.setState({ debugEnergyBonus: 0 });
+      console.log('[Debug] Energy bonus reset to 0');
+    },
+    /** List all available card IDs */
+    listCards: () => {
+      const cards = useGameStore.getState().debugGetAllCardIds();
+      console.log('Available cards:', cards.join(', '));
+      return cards;
+    },
+    /** Get current game state */
+    getState: () => useGameStore.getState().gameState,
+    /** Get player's hand */
+    getHand: (playerId: PlayerId = 0) => {
+      const state = useGameStore.getState().gameState;
+      if (!state) return [];
+      return getPlayer(state, playerId).hand.map(c => ({
+        id: c.cardDef.id,
+        name: c.cardDef.name,
+        cost: c.cardDef.cost,
+        power: c.cardDef.basePower,
+        instanceId: c.instanceId,
+      }));
+    },
+    /** Get current debug energy bonus */
+    getEnergyBonus: () => {
+      const bonus = useGameStore.getState().debugEnergyBonus;
+      console.log(`[Debug] Current energy bonus: +${bonus}`);
+      return bonus;
+    },
+    /** Show help */
+    help: () => {
+      console.log(`
+Debug Commands:
+  debug.addCard('ares')           - Add Ares to your hand
+  debug.addCard('zeus', 1)        - Add Zeus to NPC's hand
+  debug.setHand(['ares', 'zeus']) - Replace your hand with specific cards
+  debug.addEnergy(10)             - Add 10 energy (persists across turns!)
+  debug.resetEnergy()             - Reset energy bonus to 0
+  debug.getEnergyBonus()          - Show current energy bonus
+  debug.listCards()               - Show all available card IDs
+  debug.getHand()                 - Show your current hand
+  debug.getState()                - Get the full game state
+      `);
+    },
+  };
+
+  (window as unknown as { debug: typeof debug }).debug = debug;
+  console.log('[Debug] Debug tools loaded. Type debug.help() for commands.');
+}

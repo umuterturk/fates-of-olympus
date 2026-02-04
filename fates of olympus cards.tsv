@@ -1,0 +1,73 @@
+Deck Group	Idealogy	Type	Card Name	Special Abilities	Special Abilities Enums	Energy	Power
+2	Law of Order	Hero	Achilles	None	NONE	5	8
+2	Law of Order	God	Apollo	On Reveal: If you have exactly 1 other allied card here, give that card +3 Power	ON_REVEAL,CONDITIONAL_EXACTLY_ONE_OTHER_ALLY_HERE,BUFF_OTHER_ALLY_HERE_PLUS3	3	3
+1	Law of Order	God	Ares	Ongoing: If this location is full, your cards here have +1 Power	ONGOING,CONDITIONAL_LOCATION_FULL,BUFF_ALLIES_HERE_PLUS1	3	3
+1	Law of Order	Army	Argive Scout	None	NONE	2	3
+3	Law of Order	Hero	Ariadne	On Reveal: Move 1 other allied card to this location. Give it +1 Power	ON_REVEAL,MOVE_ONE_OTHER_ALLY_TO_HERE,BUFF_MOVED_ALLY_PLUS1	2	2
+2	Law of Order	God	Artemis	On Reveal: If the enemy has more cards here, give 1 enemy card here -2 Power	ON_REVEAL,CONDITIONAL_ENEMY_MORE_CARDS_HERE,DEBUFF_ONE_ENEMY_HERE_MINUS2	3	2
+3	Path of Descent	Artifact	Ashen Offering	On Reveal: Destroy 1 other allied card here to give 1 allied card at another location +2 Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,BUFF_ONE_ALLY_OTHER_LOCATION_PLUS2	3	0
+1	Law of Order	God	Athena	On Reveal: Give your other cards here +1 Power	ON_REVEAL,BUFF_ALLIES_HERE_EXCEPT_SELF_PLUS1	3	2
+3	Law of Order	God	Athena Parthenos	On Reveal: Give your other cards here +2 Power	ON_REVEAL,BUFF_ALLIES_HERE_EXCEPT_SELF_PLUS2	4	3
+3	Path of Descent	Artifact	Bronze Coin	On Reveal: Destroy this. Give 1 allied card at another location +2 Power	ON_REVEAL,DESTROY_SELF,BUFF_ONE_ALLY_OTHER_LOCATION_PLUS2	1	0
+1	Path of Descent	Monster	Cerberus	On Reveal: If you destroyed a card this game, this has +4 Power	ON_REVEAL,CONDITIONAL_DESTROYED_THIS_GAME,SELF_BUFF_PLUS4	5	6
+2	Path of Descent	Spirit	Charon	On Reveal: Move 1 other allied card to this location. If you moved a card, this has +2 Power	ON_REVEAL,MOVE_ONE_OTHER_ALLY_TO_HERE,CONDITIONAL_MOVED_BY_YOU_THIS_TURN,SELF_BUFF_PLUS2	4	3
+2	Fractured	Monster	Chimera	None	NONE	4	6
+1	Law of Order	Monster	Cyclops	None	NONE	5	7
+2	Law of Order	Mortal	Daedalus	On Reveal: Move 1 other allied card here to another location	ON_REVEAL,MOVE_ONE_OTHER_ALLY_FROM_HERE_TO_OTHER_LOCATION	2	2
+2	Law of Order	Mortal	Delphic Scribe	None	NONE	2	3
+3	Way of Motion	God	Dionysus	Ongoing: Your cards here have +1 Power for each empty slot here	ONGOING,BUFF_ALLIES_HERE_PER_EMPTY_SLOT_PLUS1	5	4
+2	Path of Descent	Spirit	Erinyes	Ongoing: Enemy cards here with BUFF-tag effects have -1 Power	ONGOING,DEBUFF_ENEMY_BUFF_TAGGED_HERE_MINUS1	2	2
+1	Law of Order	Artifact	Gorgon Glare	Ongoing: Enemy cards here lose their Ongoing abilities	ONGOING,SILENCE_ENEMY_ONGOING_HERE	2	0
+1	Path of Descent	God	Hades	On Reveal: Destroy 1 other allied card here. This gains its Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,GAIN_DESTROYED_CARD_POWER	5	4
+1	Way of Motion	Monster	Harpies	On Reveal: Give 1 enemy card here -1 Power	ON_REVEAL,DEBUFF_ONE_ENEMY_HERE_MINUS1	1	1
+1	Path of Descent	God	Hecate	On Reveal: Destroy 1 other allied card here to give 1 enemy card here -3 Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,DEBUFF_ONE_ENEMY_HERE_MINUS3	4	3
+2	Law of Order	God	Hephaestus	On Reveal: Give your cards here +2 Power, then destroy 1 other allied card here	ON_REVEAL,BUFF_ALLIES_HERE_PLUS2,DESTROY_ONE_OTHER_ALLY_HERE	5	4
+2	Law of Order	God	Hera	Ongoing: If you have exactly 2 cards here, your cards here have +1 Power	ONGOING,CONDITIONAL_EXACTLY_TWO_ALLIES_HERE,BUFF_ALLIES_HERE_PLUS1	4	4
+3	Law of Order	Hero	Heracles	None	NONE	5	8
+1	Way of Motion	God	Hermes	On Reveal: Move 1 other allied card here to another location	ON_REVEAL,MOVE_ONE_OTHER_ALLY_FROM_HERE_TO_OTHER_LOCATION	2	2
+1	Law of Order	Army	Hoplite	None	NONE	1	2
+3	Law of Order	Army	Hoplite Phalanx	None	NONE	3	4
+3	Path of Descent	God	Hypnos	On Reveal: Move this to another location. Give 1 enemy card there -1 Power	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION,DEBUFF_ONE_ENEMY_AT_DESTINATION_MINUS1	3	2
+2	Way of Motion	Hero	Icarus	On Reveal: Move this to another location	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION	3	4
+1	Way of Motion	God	Iris	On Reveal: Move this to another location	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION	2	2
+2	Path of Descent	Titan	Kronos	On Reveal: Destroy 1 other allied card here. If you do, this has +4 Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,CONDITIONAL_DESTROYED_THIS,SELF_BUFF_PLUS4	6	7
+3	Law of Order	Location	Labyrinth Wall	None	NONE	4	6
+3	Path of Descent	Monster	Lamia	On Reveal: If the enemy has 3+ cards here, give 1 enemy card here -2 Power	ON_REVEAL,CONDITIONAL_ENEMY_3PLUS_HERE,DEBUFF_ONE_ENEMY_HERE_MINUS2	2	2
+3	Law of Order	Artifact	Laurel Wreath	On Reveal: Give another allied card here +2 Power	ON_REVEAL,BUFF_OTHER_ALLY_HERE_PLUS2	1	0
+2	Path of Descent	Monster	Lernaean Hydra	On Reveal: Destroy this. Give your cards at other locations +1 Power	ON_REVEAL,DESTROY_SELF,BUFF_ALLIES_OTHER_LOCATIONS_PLUS1	4	3
+2	Way of Motion	Mortal	Maenad	Ongoing: If this location is full, your cards here have +1 Power	ONGOING,CONDITIONAL_LOCATION_FULL,BUFF_ALLIES_HERE_PLUS1	1	1
+1	Path of Descent	Monster	Medusa	On Reveal: Give enemy cards here -1 Power	ON_REVEAL,DEBUFF_ENEMIES_HERE_MINUS1	3	2
+1	Path of Descent	Monster	Minotaur	None	NONE	4	5
+3	Fractured	God	Moira, Atropos	On Reveal: Destroy 1 other allied card here to give this +4 Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,SELF_BUFF_PLUS4	3	2
+3	Fractured	God	Moira, Clotho	Ongoing: Enemy Ongoing cards here have -1 Power	ONGOING,DEBUFF_ENEMY_ONGOING_HERE_MINUS1	3	2
+1	Law of Order	Army	Myrmidon	None	NONE	3	4
+1	Way of Motion	Spirit	Naiad Nymph	Ongoing: While here, your other cards here have +1 Power	ONGOING,BUFF_ALLIES_HERE_EXCEPT_SELF_PLUS1	1	1
+2	Law of Order	God	Nemesis	On Reveal: If an enemy card here has the highest Power here, give it -4 Power	ON_REVEAL,CONDITIONAL_ENEMY_HIGHEST_POWER_HERE,DEBUFF_ONE_ENEMY_HERE_MINUS4	5	5
+2	Way of Motion	Spirit	Nereid	None	NONE	2	3
+3	Way of Motion	God	Nereus	Ongoing: If you moved a card this turn, your cards here have +1 Power	ONGOING,CONDITIONAL_MOVED_BY_YOU_THIS_TURN,BUFF_ALLIES_HERE_PLUS1	4	3
+3	Law of Order	God	Nike	On Reveal: Move this to another location. If you moved, this has +2 Power	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION,CONDITIONAL_MOVED_BY_YOU_THIS_TURN,SELF_BUFF_PLUS2	2	2
+3	Path of Descent	God	Nyx	Ongoing: Enemy cards here have -1 Power	ONGOING,DEBUFF_ENEMIES_HERE_MINUS1	6	7
+3	Transitional	Mortal	Oracle of Delphi	On Reveal: If you are losing here, give your cards here +2 Power	ON_REVEAL,CONDITIONAL_LOSING_LOCATION,BUFF_ALLIES_HERE_PLUS2	5	5
+1	Way of Motion	Hero	Pegasus Rider	On Reveal: Move 1 other allied card here to another location	ON_REVEAL,MOVE_ONE_OTHER_ALLY_FROM_HERE_TO_OTHER_LOCATION	4	5
+2	Transitional	God	Persephone	On Reveal: If you destroyed a card this game, give another allied card here +2 Power	ON_REVEAL,CONDITIONAL_DESTROYED_THIS_GAME,BUFF_OTHER_ALLY_HERE_PLUS2	2	3
+1	Way of Motion	Hero	Phaethon	On Reveal: Move this to another location	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION	2	3
+1	Way of Motion	God	Poseidon	On Reveal: If you moved a card this turn, give your cards here +2 Power	ON_REVEAL,CONDITIONAL_MOVED_BY_YOU_THIS_TURN,BUFF_ALLIES_HERE_PLUS2	4	3
+3	Way of Motion	Concept	Poseidon’s Wrath	On Reveal: If you moved a card this turn, this has +6 Power	ON_REVEAL,CONDITIONAL_MOVED_BY_YOU_THIS_TURN,SELF_BUFF_PLUS6	6	6
+3	Law of Order	Mortal	Priest of Hestia	On Reveal: If you have an empty slot here, this has +2 Power	ON_REVEAL,CONDITIONAL_EMPTY_SLOT_HERE,SELF_BUFF_PLUS2	2	2
+1	Way of Motion	Spirit	Satyr	On Reveal: Give another allied card here +1 Power	ON_REVEAL,BUFF_OTHER_ALLY_HERE_PLUS1	1	1
+1	Path of Descent	Spirit	Shade	On Reveal: Destroy this. Give another allied card here +2 Power	ON_REVEAL,DESTROY_SELF,BUFF_OTHER_ALLY_HERE_PLUS2	1	0
+2	Way of Motion	Monster	Sirens	Ongoing: If this location is full, enemy cards here have -1 Power	ONGOING,CONDITIONAL_LOCATION_FULL,DEBUFF_ENEMIES_HERE_MINUS1	3	3
+3	Path of Descent	Spirit	Skeletal Servitor	None	NONE	1	2
+2	Path of Descent	Artifact	Stygian Candle	On Reveal: Destroy this. Give 1 enemy card here -2 Power	ON_REVEAL,DESTROY_SELF,DEBUFF_ONE_ENEMY_HERE_MINUS2	1	0
+3	Way of Motion	Animal	Swift Dove	On Reveal: Move this to another location	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION	1	1
+3	Law of Order	Construct	Talos	On Reveal: Destroy 1 other allied card here. This gains its Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,GAIN_DESTROYED_CARD_POWER	4	4
+2	Law of Order	Mortal	Temple Acolyte	On Reveal: Give another allied card here +1 Power	ON_REVEAL,BUFF_OTHER_ALLY_HERE_PLUS1	1	1
+1	Law of Order	Titan	Titan Atlas	None	NONE	6	9
+3	Way of Motion	Spirit	Triton	None	NONE	2	3
+2	Fractured	Monster	Typhon	Ongoing: If this location is full, this has -4 Power	ONGOING,CONDITIONAL_LOCATION_FULL,SELF_DEBUFF_MINUS4	6	10
+1	Path of Descent	Location	Underworld Gate	Ongoing: Your DESTROY-effect cards have +1 Power (wherever they are)	ONGOING,BUFF_DESTROY_CARDS_GLOBAL_PLUS1	3	2
+2	Law of Order	Army	War Drummers	None	NONE	1	2
+2	Way of Motion	Artifact	Winged Sandals	On Reveal: Move this to another location	ON_REVEAL,MOVE_SELF_TO_OTHER_LOCATION	1	0
+3	Law of Order	Army	Young Hoplite	None	NONE	1	2
+2	Path of Descent	God	Zagreus	On Reveal: Destroy 1 other allied card here to give 1 allied card at another location +3 Power	ON_REVEAL,DESTROY_ONE_OTHER_ALLY_HERE,BUFF_ONE_ALLY_OTHER_LOCATION_PLUS3	3	2
+1	Law of Order	God	Zeus	On Reveal: If this is your only card here, this has +4 Power	ON_REVEAL,CONDITIONAL_ONLY_CARD_HERE,SELF_BUFF_PLUS4	6	7

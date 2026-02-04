@@ -3,15 +3,29 @@
  * 
  * Simple strategy: evaluate each legal action and pick the one
  * that maximizes immediate board state value.
+ * 
+ * Uses the DETERMINISTIC resolution system for accurate simulation.
  */
 
 import type { GameState, PlayerAction, PassAction } from '@engine/models';
 import { getLocation, getPlayer, getTotalPower, getCardCount } from '@engine/models';
 import type { PlayerId, LocationIndex } from '@engine/types';
-import { getLegalActions, resolveTurn } from '@engine/controller';
+import { getLegalActions, resolveTurnDeterministic } from '@engine/controller';
+import { SeededRNG } from '@engine/rng';
+
+// Simulation RNG for AI evaluation (seeded for consistency within a game)
+let simulationRng = new SeededRNG(12345);
+
+/**
+ * Reset the simulation RNG (call at start of each turn for consistency).
+ */
+export function resetSimulationRng(seed: number = 12345): void {
+  simulationRng = new SeededRNG(seed);
+}
 
 /**
  * Compute the best action for the NPC using greedy evaluation.
+ * Uses deterministic simulation for accurate predictions.
  */
 export function computeGreedyAction(state: GameState, playerId: PlayerId): PlayerAction {
   const legalActions = getLegalActions(state, playerId);
@@ -41,20 +55,24 @@ export function computeGreedyAction(state: GameState, playerId: PlayerId): Playe
       continue;
     }
     
-    // Simulate this action (opponent passes)
+    // Simulate this action (opponent passes) using DETERMINISTIC resolution
     const opponentId = (1 - playerId) as PlayerId;
     const opponentPass: PassAction = { type: 'Pass', playerId: opponentId };
     
-    const { state: simState } = resolveTurn(
+    // Clone RNG state for simulation to avoid affecting the real game
+    const simRng = simulationRng.clone();
+    
+    const result = resolveTurnDeterministic(
       state,
       playerId === 0 ? action : opponentPass,
       playerId === 1 ? action : opponentPass,
+      simRng
     );
     
-    const score = evaluateState(simState, playerId);
+    const score = evaluateState(result.state, playerId);
     
-    // Add some randomness to avoid predictable play
-    const randomBonus = Math.random() * 0.5;
+    // Add some randomness to avoid predictable play (using seeded RNG)
+    const randomBonus = simulationRng.next() * 0.5;
     
     if (score + randomBonus > bestScore) {
       bestScore = score + randomBonus;

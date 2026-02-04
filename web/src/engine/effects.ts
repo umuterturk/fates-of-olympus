@@ -27,7 +27,7 @@ export interface ConditionalOngoingPowerEffect {
   readonly type: 'ConditionalOngoingPowerEffect';
   readonly target: TargetFilter;
   readonly amount: Power;
-  readonly condition: 'location_full';
+  readonly condition: string; // Various conditions like 'location_full', 'exactly_two_allies_here', 'moved_this_turn', etc.
 }
 
 export interface MoveCardEffect {
@@ -90,6 +90,42 @@ export interface AddEnergyNextTurnEffect {
   readonly amount: number;
 }
 
+export interface DestroyAndGainPowerEffect {
+  readonly type: 'DestroyAndGainPowerEffect';
+  readonly destroyTarget: TargetFilter;
+  readonly gainTarget: TargetFilter;
+}
+
+export interface GlobalOngoingPowerEffect {
+  readonly type: 'GlobalOngoingPowerEffect';
+  readonly target: TargetFilter;
+  readonly amount: Power;
+}
+
+export interface MoveAndSelfBuffEffect {
+  readonly type: 'MoveAndSelfBuffEffect';
+  readonly moveTarget: TargetFilter;
+  readonly buffAmount: Power;
+}
+
+export interface DestroyAndSelfBuffEffect {
+  readonly type: 'DestroyAndSelfBuffEffect';
+  readonly destroyTarget: TargetFilter;
+  readonly buffAmount: Power;
+}
+
+export interface MoveAndBuffEffect {
+  readonly type: 'MoveAndBuffEffect';
+  readonly moveTarget: TargetFilter;
+  readonly buffTarget: TargetFilter;
+  readonly buffAmount: Power;
+}
+
+export interface MoveAndDebuffDestinationEffect {
+  readonly type: 'MoveAndDebuffDestinationEffect';
+  readonly debuffAmount: Power;
+}
+
 // Union of all effect types
 export type Effect =
   | AddPowerEffect
@@ -104,7 +140,13 @@ export type Effect =
   | ScalingOngoingPowerEffect
   | ScalingPowerEffect
   | ReviveEffect
-  | AddEnergyNextTurnEffect;
+  | AddEnergyNextTurnEffect
+  | DestroyAndGainPowerEffect
+  | GlobalOngoingPowerEffect
+  | MoveAndSelfBuffEffect
+  | DestroyAndSelfBuffEffect
+  | MoveAndBuffEffect
+  | MoveAndDebuffDestinationEffect;
 
 // =============================================================================
 // Effect Type Guards

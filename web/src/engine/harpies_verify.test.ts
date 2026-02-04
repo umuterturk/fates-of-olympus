@@ -10,10 +10,25 @@ import {
     type CardDef,
     type CardInstance,
 } from './models';
-import { resolveTurn } from './controller';
+import { resolveTurnDeterministic } from './controller';
+import { SeededRNG } from './rng';
 import { getCardDef } from './cards';
 import type { PlayerId, TurnNumber, InstanceId as TInstanceId } from './types';
 import type { PlayCardAction, PassAction } from './models';
+import type { GameEvent } from './events';
+
+/**
+ * Helper to resolve turn using deterministic system with a fixed seed.
+ */
+function resolveTurn(
+    state: GameState,
+    action0: PlayCardAction | PassAction,
+    action1: PlayCardAction | PassAction
+): { state: GameState; events: GameEvent[] } {
+    const rng = new SeededRNG(42);
+    const result = resolveTurnDeterministic(state, action0, action1, rng);
+    return { state: result.state, events: result.events };
+}
 
 /**
  * Create a CardInstance for testing.

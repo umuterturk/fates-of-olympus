@@ -288,6 +288,61 @@ export interface GameState {
 
   // Bonus energy for next turn (from effects like Iris)
   readonly bonusEnergyNextTurn: PlayerTuple<number>;
+
+  // Active effects with duration tracking (for new ability system)
+  readonly activeEffects?: readonly ActiveEffect[];
+
+  // RNG seed for deterministic replay (optional for backward compatibility)
+  readonly rngSeed?: number;
+
+  // Active player this turn (alternates each turn)
+  readonly activePlayerThisTurn?: PlayerId;
+}
+
+// =============================================================================
+// Active Effect Tracking (for deterministic ability system)
+// =============================================================================
+
+/**
+ * Duration scope for effects with finite durations.
+ */
+export type EffectDurationScope =
+  | 'INSTANT'                    // Permanent, one-time application
+  | 'UNTIL_END_OF_TURN'          // Expires at end of current turn
+  | 'UNTIL_START_OF_NEXT_TURN'   // Expires at start of next turn
+  | 'WHILE_IN_PLAY'              // Lasts while source card is in play
+  | 'UNTIL_DESTROYED';           // Lasts until target is destroyed
+
+/**
+ * Tracks an active effect with duration.
+ */
+export interface ActiveEffect {
+  /** ID of the effect (for tracking) */
+  readonly effectId: number;
+  
+  /** Card that created this effect */
+  readonly sourceCardId: InstanceId;
+  
+  /** Card(s) affected by this effect */
+  readonly targetCardIds: readonly InstanceId[];
+  
+  /** Type of effect */
+  readonly effectType: string;
+  
+  /** Numeric value of the effect */
+  readonly value: number;
+  
+  /** How long the effect lasts */
+  readonly durationScope: EffectDurationScope;
+  
+  /** Turn when this effect expires (for turn-based durations) */
+  readonly expiresAtTurn?: TurnNumber;
+  
+  /** Phase when this effect expires */
+  readonly expiresAtPhase?: 'START_OF_TURN' | 'END_OF_TURN';
+  
+  /** Whether the effect is currently active */
+  readonly isActive: boolean;
 }
 
 // State update helpers
@@ -352,6 +407,51 @@ export function getBonusEnergyNextTurn(state: GameState, playerId: PlayerId): nu
 
 export function clearBonusEnergyNextTurn(state: GameState): GameState {
   return { ...state, bonusEnergyNextTurn: [0, 0] };
+}
+
+// Active effect helpers
+export function withActiveEffect(state: GameState, effect: ActiveEffect): GameState {
+  const currentEffects = state.activeEffects ?? [];
+  return { ...state, activeEffects: [...currentEffects, effect] };
+}
+
+export function removeActiveEffect(state: GameState, effectId: number): GameState {
+  const currentEffects = state.activeEffects ?? [];
+  return { ...state, activeEffects: currentEffects.filter(e => e.effectId !== effectId) };
+}
+
+export function getActiveEffects(state: GameState): readonly ActiveEffect[] {
+  return state.activeEffects ?? [];
+}
+
+export function getActiveEffectsForCard(state: GameState, cardInstanceId: InstanceId): readonly ActiveEffect[] {
+  return (state.activeEffects ?? []).filter(
+    e => e.targetCardIds.includes(cardInstanceId) && e.isActive
+  );
+}
+
+export function expireEffectsAtTurnEnd(state: GameState): GameState {
+  const currentEffects = state.activeEffects ?? [];
+  const activeEffects = currentEffects.filter(
+    e => e.durationScope !== 'UNTIL_END_OF_TURN' || e.expiresAtTurn !== state.turn
+  );
+  return { ...state, activeEffects };
+}
+
+export function expireEffectsAtTurnStart(state: GameState): GameState {
+  const currentEffects = state.activeEffects ?? [];
+  const activeEffects = currentEffects.filter(
+    e => e.durationScope !== 'UNTIL_START_OF_NEXT_TURN' || e.expiresAtTurn !== state.turn
+  );
+  return { ...state, activeEffects };
+}
+
+export function withRngSeed(state: GameState, seed: number): GameState {
+  return { ...state, rngSeed: seed };
+}
+
+export function withActivePlayer(state: GameState, playerId: PlayerId): GameState {
+  return { ...state, activePlayerThisTurn: playerId };
 }
 
 // Query helpers

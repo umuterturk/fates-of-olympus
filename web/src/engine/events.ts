@@ -116,6 +116,104 @@ export interface ActionInvalidEvent {
   readonly reason: string;
 }
 
+// =============================================================================
+// New Event Types for Deterministic Ability System
+// =============================================================================
+
+/**
+ * Emitted when an ability is triggered during resolution.
+ */
+export interface AbilityTriggeredEvent {
+  readonly type: 'AbilityTriggered';
+  /** Card that owns the triggered ability */
+  readonly sourceCardId: InstanceId;
+  /** What triggered the ability */
+  readonly trigger: 'ON_PLAY' | 'ON_REVEAL' | 'ONGOING' | 'START_OF_TURN' | 'END_OF_TURN' | 'ON_DESTROYED' | 'ON_MOVED';
+  /** Cards affected by the ability */
+  readonly targets: readonly InstanceId[];
+  /** Effect type applied */
+  readonly effect: string;
+}
+
+/**
+ * Emitted when a move effect fails.
+ */
+export interface MoveFailedEvent {
+  readonly type: 'MoveFailed';
+  /** Card that failed to move */
+  readonly cardInstanceId: InstanceId;
+  /** Reason for failure */
+  readonly reason: 'DESTINATION_FULL' | 'NO_VALID_DESTINATION';
+}
+
+/**
+ * Emitted when location control changes.
+ */
+export interface LocationStateChangedEvent {
+  readonly type: 'LocationStateChanged';
+  /** Location that changed */
+  readonly locationIndex: LocationIndex;
+  /** New winner of the location (null if tied) */
+  readonly winnerId: PlayerId | null;
+  /** Power values [player0, player1] */
+  readonly powers: readonly [Power, Power];
+}
+
+/**
+ * Emitted at the start of Phase B (Resolution).
+ */
+export interface ResolutionStartedEvent {
+  readonly type: 'ResolutionStarted';
+  /** Turn number */
+  readonly turn: TurnNumber;
+  /** Total steps in the resolution timeline */
+  readonly totalSteps: number;
+}
+
+/**
+ * Emitted at the end of Phase B (Resolution).
+ */
+export interface ResolutionEndedEvent {
+  readonly type: 'ResolutionEnded';
+  /** Turn number */
+  readonly turn: TurnNumber;
+}
+
+/**
+ * Emitted during Phase C (Stabilization) when ongoing effects are recalculated.
+ */
+export interface OngoingRecalculatedEvent {
+  readonly type: 'OngoingRecalculated';
+  /** Cards whose ongoing modifiers changed */
+  readonly affectedCards: readonly InstanceId[];
+}
+
+/**
+ * Emitted when a card is silenced.
+ */
+export interface CardSilencedEvent {
+  readonly type: 'CardSilenced';
+  /** Card that was silenced */
+  readonly cardInstanceId: InstanceId;
+  /** Card that caused the silence */
+  readonly sourceCardId: InstanceId;
+}
+
+/**
+ * Emitted when a spirit or token is summoned.
+ */
+export interface CardSummonedEvent {
+  readonly type: 'CardSummoned';
+  /** Instance ID of the summoned card */
+  readonly cardInstanceId: InstanceId;
+  /** Location where it was summoned */
+  readonly location: LocationIndex;
+  /** Player who summoned it */
+  readonly playerId: PlayerId;
+  /** Card that caused the summon */
+  readonly sourceCardId: InstanceId;
+}
+
 // Union of all event types
 export type GameEvent =
   | GameStartedEvent
@@ -132,7 +230,16 @@ export type GameEvent =
   | CardDestroyedEvent
   | PowerChangedEvent
   | PlayerPassedEvent
-  | ActionInvalidEvent;
+  | ActionInvalidEvent
+  // New events for deterministic ability system
+  | AbilityTriggeredEvent
+  | MoveFailedEvent
+  | LocationStateChangedEvent
+  | ResolutionStartedEvent
+  | ResolutionEndedEvent
+  | OngoingRecalculatedEvent
+  | CardSilencedEvent
+  | CardSummonedEvent;
 
 // =============================================================================
 // Animation Configuration per Event Type
@@ -160,4 +267,13 @@ export const EVENT_ANIMATIONS: Record<GameEvent['type'], AnimationConfig> = {
   PowerChanged: { duration: 1.0, interruptible: false },
   PlayerPassed: { duration: 0.2, interruptible: true },
   ActionInvalid: { duration: 0.3, interruptible: true },
+  // New events for deterministic ability system
+  AbilityTriggered: { duration: 0.3, interruptible: false },
+  MoveFailed: { duration: 0.4, interruptible: true },
+  LocationStateChanged: { duration: 0.5, interruptible: true },
+  ResolutionStarted: { duration: 0.2, interruptible: true },
+  ResolutionEnded: { duration: 0.2, interruptible: true },
+  OngoingRecalculated: { duration: 0.3, interruptible: true },
+  CardSilenced: { duration: 0.4, interruptible: false },
+  CardSummoned: { duration: 0.6, interruptible: false },
 };

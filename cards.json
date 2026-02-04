@@ -1,256 +1,62 @@
 {
+  "_meta": {
+    "version": "2.0.0",
+    "description": "Card definitions for Fates of Olympus",
+    "abilitySystemVersion": "deterministic-v1",
+    "ideologyTypes": ["NOMOS", "KATABASIS", "KINESIS", "TRANSITIONAL", "FRACTURED", "NEUTRAL"],
+    "migrationNotes": "Legacy 'effects' array is supported for backward compatibility. New 'abilities' array uses the deterministic ability system format."
+  },
   "cards": [
     {
-      "id": "hoplite",
-      "name": "Hoplite",
-      "cost": 1,
-      "base_power": 2,
+      "id": "achilles",
+      "name": "Achilles",
+      "cost": 5,
+      "base_power": 8,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": [
-        "Vanilla"
-      ],
+      "ideology": "NOMOS",
+      "type": "Hero",
+      "deck_group": 2,
+      "tags": ["Vanilla"],
       "effects": [],
-      "depiction": "Armored Greek hoplite with round shield and spear",
-      "mood": "Steadfast, disciplined",
-      "environment": "Sunlit training yard beside a marble colonnade"
+      "depiction": "A single bronze-clad champion with spear, stance flawless, pride blazing brighter than the surf",
+      "mood": "Proud, unstoppable",
+      "environment": "Windswept beach"
     },
     {
-      "id": "satyr",
-      "name": "Satyr",
-      "cost": 1,
-      "base_power": 2,
-      "text": "On Reveal: Give another allied card here +1 Power.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Buff"
-      ],
-      "effects": [
-        {
-          "type": "AddPowerEffect",
-          "target": "ONE_SAME_LOCATION_FRIENDLY",
-          "amount": 1
-        }
-      ],
-      "depiction": "Horned satyr with a flute and a mischievous grin",
-      "mood": "Playful, rowdy",
-      "environment": "Moonlit vineyard with tangled grapevines"
-    },
-    {
-      "id": "naiad_nymph",
-      "name": "Naiad Nymph",
-      "cost": 1,
-      "base_power": 1,
-      "text": "Ongoing: Your other cards here have +1 Power.",
-      "ability_type": "ONGOING",
-      "tags": [
-        "Ongoing",
-        "Buff"
-      ],
-      "effects": [
-        {
-          "type": "AddOngoingPowerEffect",
-          "target": "SAME_LOCATION_FRIENDLY",
-          "amount": 1
-        }
-      ],
-      "depiction": "River nymph with flowing hair and water-sheen skin",
-      "mood": "Serene, nurturing",
-      "environment": "Crystal stream under a stone bridge with lilies"
-    },
-    {
-      "id": "shade",
-      "name": "Shade",
-      "cost": 1,
-      "base_power": 2,
-      "text": "On Reveal: Steal 2 Power from an enemy card here, then destroy this.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Destroy",
-        "Drain"
-      ],
-      "effects": [
-        {
-          "type": "StealPowerEffect",
-          "target": "ONE_SAME_LOCATION_ENEMY",
-          "amount": 2
-        },
-        {
-          "type": "DestroyCardEffect",
-          "target": "SELF"
-        }
-      ],
-      "depiction": "Pale underworld spirit with tattered cloak and hollow eyes",
-      "mood": "Quiet, haunting",
-      "environment": "Foggy necropolis path lined with broken stelae"
-    },
-    {
-      "id": "harpies",
-      "name": "Harpies",
-      "cost": 1,
-      "base_power": 2,
-      "text": "On Reveal: Give an enemy card here -1 Power.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Debuff",
-        "Tech"
-      ],
-      "effects": [
-        {
-          "type": "AddPowerEffect",
-          "target": "ONE_SAME_LOCATION_ENEMY",
-          "amount": -1
-        }
-      ],
-      "depiction": "Winged harpies with sharp talons and wild hair",
-      "mood": "Mean, harrying",
-      "environment": "Wind-torn cliffside overlooking a stormy sea"
-    },
-    {
-      "id": "argive_scout",
-      "name": "Argive Scout",
-      "cost": 2,
-      "base_power": 3,
-      "text": "",
-      "ability_type": "VANILLA",
-      "tags": [
-        "Vanilla"
-      ],
-      "effects": [],
-      "depiction": "Lightly armored runner with a short spear and cloak",
-      "mood": "Alert, cautious",
-      "environment": "Rocky mountain pass with distant beacon fires"
-    },
-    {
-      "id": "iris",
-      "name": "Iris",
-      "cost": 2,
-      "base_power": 3,
-      "text": "On Reveal: Move this to another location. +1 Energy next turn.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Move"
-      ],
-      "effects": [
-        {
-          "type": "MoveCardEffect",
-          "target": "SELF",
-          "to_other_location": true
-        },
-        {
-          "type": "AddEnergyNextTurnEffect",
-          "amount": 1
-        }
-      ],
-      "depiction": "Rainbow-winged goddess-messenger with a bright sash",
-      "mood": "Swift, bright",
-      "environment": "High archway where sunlight breaks into prismatic mist"
-    },
-    {
-      "id": "hermes",
-      "name": "Hermes",
-      "cost": 2,
-      "base_power": 3,
-      "text": "On Reveal: Move one other allied card here to another location.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Move"
-      ],
-      "effects": [
-        {
-          "type": "MoveCardEffect",
-          "target": "ONE_SAME_LOCATION_FRIENDLY",
-          "to_other_location": true
-        }
-      ],
-      "depiction": "Youthful messenger god with winged sandals, holding a caduceus",
-      "mood": "Swift, clever, mischievous",
-      "environment": "Marble temple rooftop above clouds"
-    },
-    {
-      "id": "phaethon",
-      "name": "Phaethon",
-      "cost": 2,
-      "base_power": 3,
-      "text": "On Reveal: Move this to another location.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Move"
-      ],
-      "effects": [
-        {
-          "type": "MoveCardEffect",
-          "target": "SELF",
-          "to_other_location": true
-        }
-      ],
-      "depiction": "Reckless charioteer with scorched cloak and blazing reins",
-      "mood": "Daring, impulsive",
-      "environment": "Sky-road of glowing sunstone over a burning horizon"
-    },
-    {
-      "id": "gorgon_glare",
-      "name": "Gorgon Glare",
-      "cost": 2,
-      "base_power": 3,
-      "text": "Ongoing: Enemy cards here lose Ongoing abilities.",
-      "ability_type": "ONGOING",
-      "tags": [
-        "Ongoing",
-        "Tech"
-      ],
-      "effects": [
-        {
-          "type": "SilenceOngoingEffect",
-          "target": "SAME_LOCATION_ENEMY"
-        }
-      ],
-      "depiction": "Stone mask of a gorgon with serpent motifs",
-      "mood": "Ominous, chilling",
-      "environment": "Shadowy shrine with cracked statues and torchlight"
-    },
-    {
-      "id": "athena",
-      "name": "Athena",
+      "id": "apollo",
+      "name": "Apollo",
       "cost": 3,
-      "base_power": 2,
-      "text": "Ongoing: Your other cards here have +1 Power for each other friendly card here.",
-      "ability_type": "ONGOING",
-      "tags": [
-        "Ongoing",
-        "Buff",
-        "Build-Around"
-      ],
+      "base_power": 3,
+      "text": "On Reveal: If you have exactly 1 other allied card here, give that card +3 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Buff", "Build-Around"],
       "effects": [
         {
-          "type": "ScalingOngoingPowerEffect",
-          "target": "SAME_LOCATION_FRIENDLY",
-          "per_card_amount": 1,
-          "count_filter": "SAME_LOCATION_FRIENDLY"
+          "type": "ConditionalPowerEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY",
+          "amount": 3,
+          "condition": "exactly_one_other_ally_here"
         }
       ],
-      "depiction": "Armored goddess with owl crest and calm gaze",
-      "mood": "Strategic, composed",
-      "environment": "Library-temple with carved friezes and hanging lamps"
+      "depiction": "A single radiant god with lyre and bow, light pooling around him like a promise kept",
+      "mood": "Confident, luminous",
+      "environment": "Cliffside amphitheater"
     },
     {
       "id": "ares",
       "name": "Ares",
       "cost": 3,
-      "base_power": 4,
-      "text": "Ongoing: Your cards here have +1 Power if this location is full.",
+      "base_power": 3,
+      "text": "Ongoing: If this location is full, your cards here have +1 Power.",
       "ability_type": "ONGOING",
-      "tags": [
-        "Ongoing",
-        "Buff",
-        "Build-Around"
-      ],
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["Ongoing", "Buff", "Build-Around"],
       "effects": [
         {
           "type": "ConditionalOngoingPowerEffect",
@@ -264,168 +70,171 @@
       "environment": "Dusty battlefield with shattered shields and banners"
     },
     {
-      "id": "medusa",
-      "name": "Medusa",
-      "cost": 3,
+      "id": "argive_scout",
+      "name": "Argive Scout",
+      "cost": 2,
       "base_power": 3,
-      "text": "On Reveal: Give enemy cards here -1 Power.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Debuff",
-        "Tech"
-      ],
-      "effects": [
-        {
-          "type": "AddPowerEffect",
-          "target": "SAME_LOCATION_ENEMY",
-          "amount": -1
-        }
-      ],
-      "depiction": "Gorgon with serpent hair, eyes half-veiled",
-      "mood": "Menacing, cold",
-      "environment": "Ruined courtyard littered with cracked stone figures"
-    },
-    {
-      "id": "myrmidon",
-      "name": "Myrmidon",
-      "cost": 3,
-      "base_power": 4,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": [
-        "Vanilla"
-      ],
+      "ideology": "NOMOS",
+      "type": "Army",
+      "deck_group": 1,
+      "tags": ["Vanilla"],
       "effects": [],
-      "depiction": "Elite spear-soldier with ant-emblem shield",
-      "mood": "Loyal, relentless",
-      "environment": "Spartan-style camp with disciplined ranks at dawn"
+      "depiction": "Lightly armored runner with a short spear and cloak",
+      "mood": "Alert, cautious",
+      "environment": "Rocky mountain pass with distant beacon fires"
     },
     {
-      "id": "underworld_gate",
-      "name": "Underworld Gate",
+      "id": "ariadne",
+      "name": "Ariadne",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: Move 1 other allied card to this location. Give it +1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "Hero",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Move", "Buff"],
+      "effects": [
+        {
+          "type": "MoveAndBuffEffect",
+          "move_target": "ONE_OTHER_LOCATION_FRIENDLY_TO_HERE",
+          "buff_target": "MOVED_CARD",
+          "buff_amount": 1
+        }
+      ],
+      "depiction": "Princess with golden thread guiding through shadow",
+      "mood": "Clever, determined",
+      "environment": "Labyrinth entrance with torchlight"
+    },
+    {
+      "id": "artemis",
+      "name": "Artemis",
       "cost": 3,
       "base_power": 2,
-      "text": "On Reveal: +2 Power for each card destroyed this game.",
+      "text": "On Reveal: If the enemy has more cards here, give 1 enemy card here -2 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Build-Around"
-      ],
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Debuff", "Tech"],
       "effects": [
         {
-          "type": "ScalingPowerEffect",
-          "target": "SELF",
-          "per_destroyed_amount": 2
+          "type": "ConditionalPowerEffect",
+          "target": "ONE_SAME_LOCATION_ENEMY",
+          "amount": -2,
+          "condition": "enemy_more_cards_here"
         }
       ],
-      "depiction": "Obsidian arch with faint green fire and chained motifs",
-      "mood": "Foreboding, tempting",
-      "environment": "Cavern mouth descending into mist and river-stone"
+      "depiction": "A single huntress with crescent bow, posture still as moonlit air, eyes tracking an unseen target",
+      "mood": "Cool, precise",
+      "environment": "Moonlit forest"
     },
     {
-      "id": "pegasus_rider",
-      "name": "Pegasus Rider",
-      "cost": 4,
-      "base_power": 5,
-      "text": "On Reveal: Move one other allied card here to another location.",
+      "id": "ashen_offering",
+      "name": "Ashen Offering",
+      "cost": 3,
+      "base_power": 0,
+      "text": "On Reveal: Destroy 1 other allied card here to give 1 allied card at another location +2 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Move"
-      ],
-      "effects": [
-        {
-          "type": "MoveCardEffect",
-          "target": "ONE_SAME_LOCATION_FRIENDLY",
-          "to_other_location": true
-        }
-      ],
-      "depiction": "Hero astride a white winged horse, cloak streaming",
-      "mood": "Dashing, free",
-      "environment": "Open sky above rolling islands and bright sea"
-    },
-    {
-      "id": "minotaur",
-      "name": "Minotaur",
-      "cost": 4,
-      "base_power": 5,
-      "text": "",
-      "ability_type": "VANILLA",
-      "tags": [
-        "Vanilla"
-      ],
-      "effects": [],
-      "depiction": "Bull-headed monster with a heavy axe",
-      "mood": "Brutal, stubborn",
-      "environment": "Torchlit labyrinth corridor of carved stone"
-    },
-    {
-      "id": "hecate",
-      "name": "Hecate",
-      "cost": 4,
-      "base_power": 4,
-      "text": "On Reveal: Destroy one other allied card here to give an enemy card here -4 Power.",
-      "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Destroy",
-        "Debuff",
-        "Tech"
-      ],
+      "ideology": "KATABASIS",
+      "type": "Artifact",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Destroy", "Buff"],
       "effects": [
         {
           "type": "DestroyAndBuffEffect",
           "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
-          "buff_target": "ONE_SAME_LOCATION_ENEMY",
-          "buff_amount": -4
+          "buff_target": "ONE_OTHER_LOCATION_FRIENDLY",
+          "buff_amount": 2
         }
       ],
-      "depiction": "Triple-aspected witch-goddess with lantern and keys",
-      "mood": "Cunning, eerie",
-      "environment": "Crossroads at night with pale flame and owls"
+      "depiction": "Smoldering offering bowl with ash and ember",
+      "mood": "Solemn, sacrificial",
+      "environment": "Shadowy altar"
     },
     {
-      "id": "poseidon",
-      "name": "Poseidon",
-      "cost": 4,
-      "base_power": 4,
-      "text": "On Reveal: If you moved a card this game, give your cards here +2 Power.",
+      "id": "athena",
+      "name": "Athena",
+      "cost": 3,
+      "base_power": 2,
+      "text": "On Reveal: Give your other cards here +1 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Buff",
-        "Build-Around"
-      ],
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Buff"],
       "effects": [
         {
-          "type": "ConditionalPowerEffect",
-          "target": "SAME_LOCATION_FRIENDLY",
-          "amount": 2,
-          "condition": "moved_this_game"
-        },
-        {
-          "type": "ConditionalPowerEffect",
-          "target": "SELF",
-          "amount": 2,
-          "condition": "moved_this_game"
+          "type": "AddPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 1
         }
       ],
-      "depiction": "Sea god with trident, sea-spray crown",
-      "mood": "Tempestuous, proud",
-      "environment": "Coastal temple as waves crash up marble steps"
+      "depiction": "Armored goddess with owl crest and calm gaze",
+      "mood": "Strategic, composed",
+      "environment": "Library-temple with carved friezes and hanging lamps"
+    },
+    {
+      "id": "athena_parthenos",
+      "name": "Athena Parthenos",
+      "cost": 4,
+      "base_power": 3,
+      "text": "On Reveal: Give your other cards here +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Buff"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 2
+        }
+      ],
+      "depiction": "Towering golden statue of Athena with spear and shield",
+      "mood": "Majestic, protective",
+      "environment": "Grand temple interior"
+    },
+    {
+      "id": "bronze_coin",
+      "name": "Bronze Coin",
+      "cost": 1,
+      "base_power": 0,
+      "text": "On Reveal: Destroy this. Give 1 allied card at another location +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Artifact",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Destroy", "Buff"],
+      "effects": [
+        {
+          "type": "DestroyCardEffect",
+          "target": "SELF"
+        },
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_OTHER_LOCATION_FRIENDLY",
+          "amount": 2
+        }
+      ],
+      "depiction": "Ancient coin with underworld markings",
+      "mood": "Transactional, eerie",
+      "environment": "River Styx shore"
     },
     {
       "id": "cerberus",
       "name": "Cerberus",
       "cost": 5,
-      "base_power": 5,
-      "text": "On Reveal: If you destroyed a card this game, +4 Power.",
+      "base_power": 6,
+      "text": "On Reveal: If you destroyed a card this game, this has +4 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Build-Around"
-      ],
+      "ideology": "KATABASIS",
+      "type": "Monster",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Build-Around"],
       "effects": [
         {
           "type": "ConditionalPowerEffect",
@@ -439,24 +248,43 @@
       "environment": "Underworld gatehouse with black stone and embers"
     },
     {
-      "id": "hades",
-      "name": "Hades",
-      "cost": 5,
-      "base_power": 4,
-      "text": "On Reveal: If a card was destroyed this game, summon a Spirit here with Power equal to 2 + cards destroyed.",
+      "id": "charon",
+      "name": "Charon",
+      "cost": 4,
+      "base_power": 3,
+      "text": "On Reveal: Move 1 other allied card to this location. If you moved a card, this has +2 Power.",
       "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Build-Around"
-      ],
+      "ideology": "KATABASIS",
+      "type": "Spirit",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Move", "Build-Around"],
       "effects": [
         {
-          "type": "ReviveEffect"
+          "type": "MoveAndBuffEffect",
+          "move_target": "ONE_OTHER_LOCATION_FRIENDLY_TO_HERE",
+          "buff_target": "SELF",
+          "buff_amount": 2
         }
       ],
-      "depiction": "Underworld king with dark crown and scepter",
-      "mood": "Stern, inevitable",
-      "environment": "Throne hall of obsidian with drifting ash"
+      "depiction": "A single ferryman with oar and hood, posture unchanged as the black river pulls at the dock",
+      "mood": "Stern, tireless",
+      "environment": "Black river dock"
+    },
+    {
+      "id": "chimera",
+      "name": "Chimera",
+      "cost": 4,
+      "base_power": 6,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "FRACTURED",
+      "type": "Monster",
+      "deck_group": 2,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "A single lion-goat-serpent beast, three natures snarling at once as smoke leaks from its throat",
+      "mood": "Ferocious",
+      "environment": "Burnt hillside"
     },
     {
       "id": "cyclops",
@@ -465,36 +293,1065 @@
       "base_power": 7,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": [
-        "Vanilla"
-      ],
+      "ideology": "NOMOS",
+      "type": "Monster",
+      "deck_group": 1,
+      "tags": ["Vanilla"],
       "effects": [],
       "depiction": "One-eyed giant smith with a massive hammer",
       "mood": "Blunt, powerful",
       "environment": "Volcanic forge with sparks and molten channels"
     },
     {
-      "id": "zeus",
-      "name": "Zeus",
-      "cost": 6,
-      "base_power": 8,
-      "text": "On Reveal: If this is your only card here, +6 Power.",
+      "id": "daedalus",
+      "name": "Daedalus",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: Move 1 other allied card here to another location.",
       "ability_type": "ON_REVEAL",
-      "tags": [
-        "On-Reveal",
-        "Build-Around"
+      "ideology": "NOMOS",
+      "type": "Mortal",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY",
+          "to_other_location": true
+        }
       ],
+      "depiction": "A single inventor with folded bronze wings and meticulous tools, eyes narrowed in restless thought",
+      "mood": "Focused, calculating",
+      "environment": "Labyrinth workshop"
+    },
+    {
+      "id": "delphic_scribe",
+      "name": "Delphic Scribe",
+      "cost": 2,
+      "base_power": 3,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Mortal",
+      "deck_group": 2,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "A circle of calm scribes with papyrus and feather pens, recording prophecies as laurel smoke curls overhead",
+      "mood": "Patient, observant",
+      "environment": "Oracle antechamber"
+    },
+    {
+      "id": "dionysus",
+      "name": "Dionysus",
+      "cost": 5,
+      "base_power": 4,
+      "text": "Ongoing: Your cards here have +1 Power for each empty slot here.",
+      "ability_type": "ONGOING",
+      "ideology": "KINESIS",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["Ongoing", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "ScalingOngoingPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "per_slot_amount": 1,
+          "count_filter": "EMPTY_SLOTS_HERE"
+        }
+      ],
+      "depiction": "God of wine with ivy crown and thyrsus",
+      "mood": "Ecstatic, wild",
+      "environment": "Vineyard festival"
+    },
+    {
+      "id": "erinyes",
+      "name": "Erinyes",
+      "cost": 2,
+      "base_power": 2,
+      "text": "Ongoing: Enemy cards here with BUFF-tag effects have -1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "KATABASIS",
+      "type": "Spirit",
+      "deck_group": 2,
+      "tags": ["Ongoing", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "AddOngoingPowerEffect",
+          "target": "SAME_LOCATION_ENEMY_BUFF_TAGGED",
+          "amount": -1
+        }
+      ],
+      "depiction": "A triad of winged Furies with torches, circling like judgment given flesh, faces carved in wrath",
+      "mood": "Vengeful, relentless",
+      "environment": "Underworld iron hall"
+    },
+    {
+      "id": "gorgon_glare",
+      "name": "Gorgon Glare",
+      "cost": 2,
+      "base_power": 0,
+      "text": "Ongoing: Enemy cards here lose their Ongoing abilities.",
+      "ability_type": "ONGOING",
+      "ideology": "NOMOS",
+      "type": "Artifact",
+      "deck_group": 1,
+      "tags": ["Ongoing", "Tech"],
+      "effects": [
+        {
+          "type": "SilenceOngoingEffect",
+          "target": "SAME_LOCATION_ENEMY"
+        }
+      ],
+      "depiction": "Stone mask of a gorgon with serpent motifs",
+      "mood": "Ominous, chilling",
+      "environment": "Shadowy shrine with cracked statues and torchlight"
+    },
+    {
+      "id": "hades",
+      "name": "Hades",
+      "cost": 5,
+      "base_power": 4,
+      "text": "On Reveal: Destroy 1 other allied card here. This gains its Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Destroy", "Build-Around"],
+      "effects": [
+        {
+          "type": "DestroyAndGainPowerEffect",
+          "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
+          "gain_target": "SELF"
+        }
+      ],
+      "depiction": "Underworld king with dark crown and scepter",
+      "mood": "Stern, inevitable",
+      "environment": "Throne hall of obsidian with drifting ash"
+    },
+    {
+      "id": "harpies",
+      "name": "Harpies",
+      "cost": 1,
+      "base_power": 1,
+      "text": "On Reveal: Give 1 enemy card here -1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Monster",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_SAME_LOCATION_ENEMY",
+          "amount": -1
+        }
+      ],
+      "depiction": "Winged harpies with sharp talons and wild hair",
+      "mood": "Mean, harrying",
+      "environment": "Wind-torn cliffside overlooking a stormy sea"
+    },
+    {
+      "id": "hecate",
+      "name": "Hecate",
+      "cost": 4,
+      "base_power": 3,
+      "text": "On Reveal: Destroy 1 other allied card here to give 1 enemy card here -3 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Destroy", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "DestroyAndBuffEffect",
+          "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
+          "buff_target": "ONE_SAME_LOCATION_ENEMY",
+          "buff_amount": -3
+        }
+      ],
+      "depiction": "Triple-aspected witch-goddess with lantern and keys",
+      "mood": "Cunning, eerie",
+      "environment": "Crossroads at night with pale flame and owls"
+    },
+    {
+      "id": "hephaestus",
+      "name": "Hephaestus",
+      "cost": 5,
+      "base_power": 4,
+      "text": "On Reveal: Give your cards here +2 Power, then destroy 1 other allied card here.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Buff", "Destroy", "Build-Around"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "amount": 2
+        },
+        {
+          "type": "DestroyCardEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY"
+        }
+      ],
+      "depiction": "A single smith god with molten hammer, sparks haloing his patient strength as metal bends to will",
+      "mood": "Steady, creative",
+      "environment": "Fiery forge"
+    },
+    {
+      "id": "hera",
+      "name": "Hera",
+      "cost": 4,
+      "base_power": 4,
+      "text": "Ongoing: If you have exactly 2 cards here, your cards here have +1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["Ongoing", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalOngoingPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "amount": 1,
+          "condition": "exactly_two_allies_here"
+        }
+      ],
+      "depiction": "A single regal goddess with peacock feathers and a storm in her eyes, elegance sharpened into command",
+      "mood": "Imperious, jealous",
+      "environment": "Stormy palace balcony"
+    },
+    {
+      "id": "heracles",
+      "name": "Heracles",
+      "cost": 5,
+      "base_power": 8,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Hero",
+      "deck_group": 3,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Muscular hero with lion pelt and club",
+      "mood": "Powerful, heroic",
+      "environment": "Temple steps"
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: Move 1 other allied card here to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "Youthful messenger god with winged sandals, holding a caduceus",
+      "mood": "Swift, clever, mischievous",
+      "environment": "Marble temple rooftop above clouds"
+    },
+    {
+      "id": "hoplite",
+      "name": "Hoplite",
+      "cost": 1,
+      "base_power": 2,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Army",
+      "deck_group": 1,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Armored Greek hoplite with round shield and spear",
+      "mood": "Steadfast, disciplined",
+      "environment": "Sunlit training yard beside a marble colonnade"
+    },
+    {
+      "id": "hoplite_phalanx",
+      "name": "Hoplite Phalanx",
+      "cost": 3,
+      "base_power": 4,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Army",
+      "deck_group": 3,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Formation of armored hoplites with interlocked shields",
+      "mood": "Disciplined, unyielding",
+      "environment": "Battlefield formation"
+    },
+    {
+      "id": "hypnos",
+      "name": "Hypnos",
+      "cost": 3,
+      "base_power": 2,
+      "text": "On Reveal: Move this to another location. Give 1 enemy card there -1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Move", "Debuff"],
+      "effects": [
+        {
+          "type": "MoveAndDebuffDestinationEffect",
+          "debuff_amount": -1
+        }
+      ],
+      "depiction": "God of sleep with drooping wings and poppies",
+      "mood": "Drowsy, mysterious",
+      "environment": "Cave of dreams"
+    },
+    {
+      "id": "icarus",
+      "name": "Icarus",
+      "cost": 3,
+      "base_power": 4,
+      "text": "On Reveal: Move this to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Hero",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "SELF",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "A single youth with scorched wings, falling through a blazing sky, determination mixing with fear",
+      "mood": "Tragic, daring",
+      "environment": "Blazing sky"
+    },
+    {
+      "id": "iris",
+      "name": "Iris",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: Move this to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "SELF",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "Rainbow-winged goddess-messenger with a bright sash",
+      "mood": "Swift, bright",
+      "environment": "High archway where sunlight breaks into prismatic mist"
+    },
+    {
+      "id": "kronos",
+      "name": "Kronos",
+      "cost": 6,
+      "base_power": 7,
+      "text": "On Reveal: Destroy 1 other allied card here. If you do, this has +4 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Titan",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Destroy", "Build-Around"],
+      "effects": [
+        {
+          "type": "DestroyAndSelfBuffEffect",
+          "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
+          "buff_amount": 4
+        }
+      ],
+      "depiction": "A single titan with sickle and timeworn crown, the air around him feeling late, heavy, inevitable",
+      "mood": "Inevitable, grim",
+      "environment": "Twilight throne"
+    },
+    {
+      "id": "labyrinth_wall",
+      "name": "Labyrinth Wall",
+      "cost": 4,
+      "base_power": 6,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Location",
+      "deck_group": 3,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Towering maze walls of ancient stone",
+      "mood": "Imposing, mysterious",
+      "environment": "Labyrinth interior"
+    },
+    {
+      "id": "lamia",
+      "name": "Lamia",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: If the enemy has 3+ cards here, give 1 enemy card here -2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Monster",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "ONE_SAME_LOCATION_ENEMY",
+          "amount": -2,
+          "condition": "enemy_3plus_here"
+        }
+      ],
+      "depiction": "Serpent-woman with hypnotic gaze",
+      "mood": "Predatory, cunning",
+      "environment": "Shadowy grotto"
+    },
+    {
+      "id": "laurel_wreath",
+      "name": "Laurel Wreath",
+      "cost": 1,
+      "base_power": 0,
+      "text": "On Reveal: Give another allied card here +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "Artifact",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Buff"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 2
+        }
+      ],
+      "depiction": "Golden laurel crown glowing with divine light",
+      "mood": "Victorious, blessed",
+      "environment": "Temple altar"
+    },
+    {
+      "id": "lernaean_hydra",
+      "name": "Lernaean Hydra",
+      "cost": 4,
+      "base_power": 3,
+      "text": "On Reveal: Destroy this. Give your cards at other locations +1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Monster",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Destroy", "Buff"],
+      "effects": [
+        {
+          "type": "DestroyCardEffect",
+          "target": "SELF"
+        },
+        {
+          "type": "AddPowerEffect",
+          "target": "OTHER_LOCATIONS_FRIENDLY",
+          "amount": 1
+        }
+      ],
+      "depiction": "A single multi-headed swamp serpent, heads rising and recoiling in a constant, hungry argument",
+      "mood": "Persistent, gnashing",
+      "environment": "Murky marsh"
+    },
+    {
+      "id": "maenad",
+      "name": "Maenad",
+      "cost": 1,
+      "base_power": 1,
+      "text": "Ongoing: If this location is full, your cards here have +1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "KINESIS",
+      "type": "Mortal",
+      "deck_group": 2,
+      "tags": ["Ongoing", "Buff"],
+      "effects": [
+        {
+          "type": "ConditionalOngoingPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "amount": 1,
+          "condition": "location_full"
+        }
+      ],
+      "depiction": "A whirl of Dionysian maenads with ivy crowns, ecstatic faces in torchlight as they spin and chant",
+      "mood": "Wild, joyful",
+      "environment": "Torchlit festival street"
+    },
+    {
+      "id": "medusa",
+      "name": "Medusa",
+      "cost": 3,
+      "base_power": 2,
+      "text": "On Reveal: Give enemy cards here -1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Monster",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "SAME_LOCATION_ENEMY",
+          "amount": -1
+        }
+      ],
+      "depiction": "Gorgon with serpent hair, eyes half-veiled",
+      "mood": "Menacing, cold",
+      "environment": "Ruined courtyard littered with cracked stone figures"
+    },
+    {
+      "id": "minotaur",
+      "name": "Minotaur",
+      "cost": 4,
+      "base_power": 5,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "KATABASIS",
+      "type": "Monster",
+      "deck_group": 1,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Bull-headed monster with a heavy axe",
+      "mood": "Brutal, stubborn",
+      "environment": "Torchlit labyrinth corridor of carved stone"
+    },
+    {
+      "id": "moira_atropos",
+      "name": "Moira, Atropos",
+      "cost": 3,
+      "base_power": 2,
+      "text": "On Reveal: Destroy 1 other allied card here to give this +4 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "FRACTURED",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Destroy", "Build-Around"],
+      "effects": [
+        {
+          "type": "DestroyAndSelfBuffEffect",
+          "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
+          "buff_amount": 4
+        }
+      ],
+      "depiction": "Fate goddess with shears, cutting the thread of life",
+      "mood": "Inexorable, cold",
+      "environment": "Hall of the Fates"
+    },
+    {
+      "id": "moira_clotho",
+      "name": "Moira, Clotho",
+      "cost": 3,
+      "base_power": 2,
+      "text": "Ongoing: Enemy Ongoing cards here have -1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "FRACTURED",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["Ongoing", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "AddOngoingPowerEffect",
+          "target": "SAME_LOCATION_ENEMY_ONGOING",
+          "amount": -1
+        }
+      ],
+      "depiction": "Fate goddess spinning the thread of life",
+      "mood": "Patient, inevitable",
+      "environment": "Hall of the Fates"
+    },
+    {
+      "id": "myrmidon",
+      "name": "Myrmidon",
+      "cost": 3,
+      "base_power": 4,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Army",
+      "deck_group": 1,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Elite spear-soldier with ant-emblem shield",
+      "mood": "Loyal, relentless",
+      "environment": "Spartan-style camp with disciplined ranks at dawn"
+    },
+    {
+      "id": "naiad_nymph",
+      "name": "Naiad Nymph",
+      "cost": 1,
+      "base_power": 1,
+      "text": "Ongoing: While here, your other cards here have +1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "KINESIS",
+      "type": "Spirit",
+      "deck_group": 1,
+      "tags": ["Ongoing", "Buff"],
+      "effects": [
+        {
+          "type": "AddOngoingPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 1
+        }
+      ],
+      "depiction": "River nymph with flowing hair and water-sheen skin",
+      "mood": "Serene, nurturing",
+      "environment": "Crystal stream under a stone bridge with lilies"
+    },
+    {
+      "id": "nemesis",
+      "name": "Nemesis",
+      "cost": 5,
+      "base_power": 5,
+      "text": "On Reveal: If an enemy card here has the highest Power here, give it -4 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Debuff", "Tech"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "HIGHEST_POWER_ENEMY_HERE",
+          "amount": -4,
+          "condition": "enemy_highest_power_here"
+        }
+      ],
+      "depiction": "A single hooded avenger with scales, presence heavy as consequence, gaze fixed on the proud",
+      "mood": "Unforgiving",
+      "environment": "Marble court"
+    },
+    {
+      "id": "nereid",
+      "name": "Nereid",
+      "cost": 2,
+      "base_power": 3,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "KINESIS",
+      "type": "Spirit",
+      "deck_group": 2,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "A single sea nymph with pearl jewelry and a conch, smiling as tidewater glitters around her",
+      "mood": "Gentle, bright",
+      "environment": "Tide pools"
+    },
+    {
+      "id": "nereus",
+      "name": "Nereus",
+      "cost": 4,
+      "base_power": 3,
+      "text": "Ongoing: If you moved a card this turn, your cards here have +1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "KINESIS",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["Ongoing", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalOngoingPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "amount": 1,
+          "condition": "moved_this_turn"
+        }
+      ],
+      "depiction": "Old man of the sea with seaweed beard",
+      "mood": "Wise, fluid",
+      "environment": "Underwater grotto"
+    },
+    {
+      "id": "nike",
+      "name": "Nike",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: Move this to another location. If you moved, this has +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Move", "Build-Around"],
+      "effects": [
+        {
+          "type": "MoveAndSelfBuffEffect",
+          "move_target": "SELF",
+          "buff_amount": 2
+        }
+      ],
+      "depiction": "Winged goddess of victory with palm branch",
+      "mood": "Triumphant, swift",
+      "environment": "Victory podium"
+    },
+    {
+      "id": "nyx",
+      "name": "Nyx",
+      "cost": 6,
+      "base_power": 7,
+      "text": "Ongoing: Enemy cards here have -1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "KATABASIS",
+      "type": "God",
+      "deck_group": 3,
+      "tags": ["Ongoing", "Debuff"],
+      "effects": [
+        {
+          "type": "AddOngoingPowerEffect",
+          "target": "SAME_LOCATION_ENEMY",
+          "amount": -1
+        }
+      ],
+      "depiction": "Primordial goddess of night in starry robes",
+      "mood": "Ancient, overwhelming",
+      "environment": "Void of night sky"
+    },
+    {
+      "id": "oracle_of_delphi",
+      "name": "Oracle of Delphi",
+      "cost": 5,
+      "base_power": 5,
+      "text": "On Reveal: If you are losing here, give your cards here +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "TRANSITIONAL",
+      "type": "Mortal",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Buff", "Tech"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "amount": 2,
+          "condition": "losing_location"
+        }
+      ],
+      "depiction": "Priestess on tripod breathing vapors",
+      "mood": "Entranced, prophetic",
+      "environment": "Temple of Apollo at Delphi"
+    },
+    {
+      "id": "pegasus_rider",
+      "name": "Pegasus Rider",
+      "cost": 4,
+      "base_power": 5,
+      "text": "On Reveal: Move 1 other allied card here to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Hero",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "Hero astride a white winged horse, cloak streaming",
+      "mood": "Dashing, free",
+      "environment": "Open sky above rolling islands and bright sea"
+    },
+    {
+      "id": "persephone",
+      "name": "Persephone",
+      "cost": 2,
+      "base_power": 3,
+      "text": "On Reveal: If you destroyed a card this game, give another allied card here +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "TRANSITIONAL",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 2,
+          "condition": "destroyed_this_game"
+        }
+      ],
+      "depiction": "A single queen holding pomegranate seeds, half-lit between spring bloom and underworld shadow",
+      "mood": "Bittersweet, poised",
+      "environment": "Threshold between spring garden and shadow realm"
+    },
+    {
+      "id": "phaethon",
+      "name": "Phaethon",
+      "cost": 2,
+      "base_power": 3,
+      "text": "On Reveal: Move this to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Hero",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "SELF",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "Reckless charioteer with scorched cloak and blazing reins",
+      "mood": "Daring, impulsive",
+      "environment": "Sky-road of glowing sunstone over a burning horizon"
+    },
+    {
+      "id": "poseidon",
+      "name": "Poseidon",
+      "cost": 4,
+      "base_power": 3,
+      "text": "On Reveal: If you moved a card this turn, give your cards here +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY",
+          "amount": 2,
+          "condition": "moved_this_turn"
+        }
+      ],
+      "depiction": "Sea god with trident, sea-spray crown",
+      "mood": "Tempestuous, proud",
+      "environment": "Coastal temple as waves crash up marble steps"
+    },
+    {
+      "id": "poseidons_wrath",
+      "name": "Poseidon's Wrath",
+      "cost": 6,
+      "base_power": 6,
+      "text": "On Reveal: If you moved a card this turn, this has +6 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Concept",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Build-Around"],
       "effects": [
         {
           "type": "ConditionalPowerEffect",
           "target": "SELF",
           "amount": 6,
-          "condition": "only_card_here"
+          "condition": "moved_this_turn"
         }
       ],
-      "depiction": "Thunder god with lightning gathered in his hand",
-      "mood": "Majestic, decisive",
-      "environment": "Storm-front balcony above the world, clouds roiling"
+      "depiction": "Massive tidal wave with divine fury",
+      "mood": "Cataclysmic, unstoppable",
+      "environment": "Stormy sea"
+    },
+    {
+      "id": "priest_of_hestia",
+      "name": "Priest of Hestia",
+      "cost": 2,
+      "base_power": 2,
+      "text": "On Reveal: If you have an empty slot here, this has +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "Mortal",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "SELF",
+          "amount": 2,
+          "condition": "empty_slot_here"
+        }
+      ],
+      "depiction": "Robed priest tending sacred hearth flame",
+      "mood": "Devoted, peaceful",
+      "environment": "Temple hearth"
+    },
+    {
+      "id": "satyr",
+      "name": "Satyr",
+      "cost": 1,
+      "base_power": 1,
+      "text": "On Reveal: Give another allied card here +1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Spirit",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Buff"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 1
+        }
+      ],
+      "depiction": "Horned satyr with a flute and a mischievous grin",
+      "mood": "Playful, rowdy",
+      "environment": "Moonlit vineyard with tangled grapevines"
+    },
+    {
+      "id": "shade",
+      "name": "Shade",
+      "cost": 1,
+      "base_power": 0,
+      "text": "On Reveal: Destroy this. Give another allied card here +2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Spirit",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Destroy", "Buff"],
+      "effects": [
+        {
+          "type": "DestroyCardEffect",
+          "target": "SELF"
+        },
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 2
+        }
+      ],
+      "depiction": "Pale underworld spirit with tattered cloak and hollow eyes",
+      "mood": "Quiet, haunting",
+      "environment": "Foggy necropolis path lined with broken stelae"
+    },
+    {
+      "id": "sirens",
+      "name": "Sirens",
+      "cost": 3,
+      "base_power": 3,
+      "text": "Ongoing: If this location is full, enemy cards here have -1 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "KINESIS",
+      "type": "Monster",
+      "deck_group": 2,
+      "tags": ["Ongoing", "Debuff"],
+      "effects": [
+        {
+          "type": "ConditionalOngoingPowerEffect",
+          "target": "SAME_LOCATION_ENEMY",
+          "amount": -1,
+          "condition": "location_full"
+        }
+      ],
+      "depiction": "A chorus of sirens on jagged rocks, multiple sea-singers with shimmering feathers and hypnotic poise",
+      "mood": "Seductive, ominous",
+      "environment": "Jagged sea rocks"
+    },
+    {
+      "id": "skeletal_servitor",
+      "name": "Skeletal Servitor",
+      "cost": 1,
+      "base_power": 2,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "KATABASIS",
+      "type": "Spirit",
+      "deck_group": 3,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Animated skeleton in tattered robes",
+      "mood": "Silent, obedient",
+      "environment": "Underworld depths"
+    },
+    {
+      "id": "stygian_candle",
+      "name": "Stygian Candle",
+      "cost": 1,
+      "base_power": 0,
+      "text": "On Reveal: Destroy this. Give 1 enemy card here -2 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "Artifact",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Destroy", "Debuff"],
+      "effects": [
+        {
+          "type": "DestroyCardEffect",
+          "target": "SELF"
+        },
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_SAME_LOCATION_ENEMY",
+          "amount": -2
+        }
+      ],
+      "depiction": "A black candle with green flame dripping shadow, its smoke forming faint grasping hands",
+      "mood": "Eerie, tempting",
+      "environment": "River Styx bank"
+    },
+    {
+      "id": "swift_dove",
+      "name": "Swift Dove",
+      "cost": 1,
+      "base_power": 1,
+      "text": "On Reveal: Move this to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Animal",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "SELF",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "White dove with golden-tipped feathers",
+      "mood": "Graceful, swift",
+      "environment": "Open sky"
+    },
+    {
+      "id": "talos",
+      "name": "Talos",
+      "cost": 4,
+      "base_power": 4,
+      "text": "On Reveal: Destroy 1 other allied card here. This gains its Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "Construct",
+      "deck_group": 3,
+      "tags": ["On-Reveal", "Destroy", "Build-Around"],
+      "effects": [
+        {
+          "type": "DestroyAndGainPowerEffect",
+          "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
+          "gain_target": "SELF"
+        }
+      ],
+      "depiction": "Giant bronze automaton guardian",
+      "mood": "Implacable, protective",
+      "environment": "Cretan coastline"
+    },
+    {
+      "id": "temple_acolyte",
+      "name": "Temple Acolyte",
+      "cost": 1,
+      "base_power": 1,
+      "text": "On Reveal: Give another allied card here +1 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "Mortal",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Buff"],
+      "effects": [
+        {
+          "type": "AddPowerEffect",
+          "target": "ONE_SAME_LOCATION_FRIENDLY_EXCEPT_SELF",
+          "amount": 1
+        }
+      ],
+      "depiction": "A small procession of robed acolytes with incense and blessing bowls, moving with solemn coordination",
+      "mood": "Earnest, reverent",
+      "environment": "Marble altar hall"
     },
     {
       "id": "titan_atlas",
@@ -503,13 +1360,175 @@
       "base_power": 9,
       "text": "",
       "ability_type": "VANILLA",
-      "tags": [
-        "Vanilla"
-      ],
+      "ideology": "NOMOS",
+      "type": "Titan",
+      "deck_group": 1,
+      "tags": ["Vanilla"],
       "effects": [],
       "depiction": "Titanic figure bearing the sky on his shoulders",
       "mood": "Enduring, solemn",
       "environment": "Edge of the world where stars touch dark mountains"
+    },
+    {
+      "id": "triton",
+      "name": "Triton",
+      "cost": 2,
+      "base_power": 3,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "KINESIS",
+      "type": "Spirit",
+      "deck_group": 3,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Merman herald with conch horn",
+      "mood": "Bold, loyal",
+      "environment": "Ocean waves"
+    },
+    {
+      "id": "typhon",
+      "name": "Typhon",
+      "cost": 6,
+      "base_power": 10,
+      "text": "Ongoing: If this location is full, this has -4 Power.",
+      "ability_type": "ONGOING",
+      "ideology": "FRACTURED",
+      "type": "Monster",
+      "deck_group": 2,
+      "tags": ["Ongoing"],
+      "effects": [
+        {
+          "type": "ConditionalOngoingPowerEffect",
+          "target": "SELF",
+          "amount": -4,
+          "condition": "location_full"
+        }
+      ],
+      "depiction": "A single colossal storm giant with serpent limbs, lightning trapped in his coils as the sky fractures",
+      "mood": "Cataclysmic",
+      "environment": "Thunderhead summit"
+    },
+    {
+      "id": "underworld_gate",
+      "name": "Underworld Gate",
+      "cost": 3,
+      "base_power": 2,
+      "text": "Ongoing: Your DESTROY-effect cards have +1 Power (wherever they are).",
+      "ability_type": "ONGOING",
+      "ideology": "KATABASIS",
+      "type": "Location",
+      "deck_group": 1,
+      "tags": ["Ongoing", "Build-Around"],
+      "effects": [
+        {
+          "type": "GlobalOngoingPowerEffect",
+          "target": "ALL_FRIENDLY_DESTROY_TAGGED",
+          "amount": 1
+        }
+      ],
+      "depiction": "Obsidian arch with faint green fire and chained motifs",
+      "mood": "Foreboding, tempting",
+      "environment": "Cavern mouth descending into mist and river-stone"
+    },
+    {
+      "id": "war_drummers",
+      "name": "War Drummers",
+      "cost": 1,
+      "base_power": 2,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Army",
+      "deck_group": 2,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "A stomping troupe of armored Kouretes beating war drums in unison, shields flashing as they dance",
+      "mood": "Energetic, steadfast",
+      "environment": "Mountain shrine steps"
+    },
+    {
+      "id": "winged_sandals",
+      "name": "Winged Sandals",
+      "cost": 1,
+      "base_power": 0,
+      "text": "On Reveal: Move this to another location.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KINESIS",
+      "type": "Artifact",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Move"],
+      "effects": [
+        {
+          "type": "MoveCardEffect",
+          "target": "SELF",
+          "to_other_location": true
+        }
+      ],
+      "depiction": "A single pair of floating winged sandals trailing silver wind, hovering like a playful omen",
+      "mood": "Playful, swift",
+      "environment": "Open sky above temples"
+    },
+    {
+      "id": "young_hoplite",
+      "name": "Young Hoplite",
+      "cost": 1,
+      "base_power": 2,
+      "text": "",
+      "ability_type": "VANILLA",
+      "ideology": "NOMOS",
+      "type": "Army",
+      "deck_group": 3,
+      "tags": ["Vanilla"],
+      "effects": [],
+      "depiction": "Young soldier with basic armor and hopeful eyes",
+      "mood": "Eager, brave",
+      "environment": "Training grounds"
+    },
+    {
+      "id": "zagreus",
+      "name": "Zagreus",
+      "cost": 3,
+      "base_power": 2,
+      "text": "On Reveal: Destroy 1 other allied card here to give 1 allied card at another location +3 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "KATABASIS",
+      "type": "God",
+      "deck_group": 2,
+      "tags": ["On-Reveal", "Destroy", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "DestroyAndBuffEffect",
+          "destroy_target": "ONE_SAME_LOCATION_FRIENDLY",
+          "buff_target": "ONE_OTHER_LOCATION_FRIENDLY",
+          "buff_amount": 3
+        }
+      ],
+      "depiction": "A single shadowy underworld prince, blade and intent held close, moving like a secret through basalt halls",
+      "mood": "Ruthless, intent",
+      "environment": "Basalt corridor"
+    },
+    {
+      "id": "zeus",
+      "name": "Zeus",
+      "cost": 6,
+      "base_power": 7,
+      "text": "On Reveal: If this is your only card here, this has +4 Power.",
+      "ability_type": "ON_REVEAL",
+      "ideology": "NOMOS",
+      "type": "God",
+      "deck_group": 1,
+      "tags": ["On-Reveal", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "SELF",
+          "amount": 4,
+          "condition": "only_card_here"
+        }
+      ],
+      "depiction": "Thunder god with lightning gathered in his hand",
+      "mood": "Majestic, decisive",
+      "environment": "Storm-front balcony above the world, clouds roiling"
     }
   ],
   "decks": {
@@ -537,7 +1556,31 @@
       "hades",
       "cyclops",
       "zeus",
-      "titan_atlas"
+      "titan_atlas",
+      "war_drummers",
+      "temple_acolyte",
+      "maenad",
+      "winged_sandals",
+      "stygian_candle",
+      "delphic_scribe",
+      "nereid",
+      "persephone",
+      "daedalus",
+      "erinyes",
+      "icarus",
+      "apollo",
+      "artemis",
+      "sirens",
+      "zagreus",
+      "hera",
+      "charon",
+      "chimera",
+      "lernaean_hydra",
+      "nemesis",
+      "hephaestus",
+      "achilles",
+      "kronos",
+      "typhon"
     ],
     "destroy": [
       "hoplite",

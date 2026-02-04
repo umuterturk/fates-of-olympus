@@ -21,6 +21,7 @@ interface RawEffect {
   destroy_target?: string;
   buff_target?: string;
   buff_amount?: number;
+  debuff_amount?: number;
   condition?: string;
   per_card_amount?: number;
   count_filter?: string;
@@ -57,7 +58,7 @@ function parseEffect(raw: RawEffect): Effect {
         type: 'ConditionalOngoingPowerEffect',
         target: (raw.target ?? 'SAME_LOCATION_FRIENDLY') as TargetFilter,
         amount: raw.amount ?? 0,
-        condition: 'location_full',
+        condition: raw.condition ?? 'location_full',
       };
     case 'MoveCardEffect':
       return {
@@ -117,6 +118,42 @@ function parseEffect(raw: RawEffect): Effect {
       return {
         type: 'AddEnergyNextTurnEffect',
         amount: raw.amount ?? 1,
+      };
+    case 'DestroyAndGainPowerEffect':
+      return {
+        type: 'DestroyAndGainPowerEffect',
+        destroyTarget: (raw.destroy_target ?? 'ONE_SAME_LOCATION_FRIENDLY') as TargetFilter,
+        gainTarget: (raw.gain_target ?? 'SELF') as TargetFilter,
+      };
+    case 'GlobalOngoingPowerEffect':
+      return {
+        type: 'GlobalOngoingPowerEffect',
+        target: (raw.target ?? 'ALL_FRIENDLY_DESTROY_TAGGED') as TargetFilter,
+        amount: raw.amount ?? 0,
+      };
+    case 'MoveAndSelfBuffEffect':
+      return {
+        type: 'MoveAndSelfBuffEffect',
+        moveTarget: (raw.move_target ?? 'SELF') as TargetFilter,
+        buffAmount: raw.buff_amount ?? 0,
+      };
+    case 'DestroyAndSelfBuffEffect':
+      return {
+        type: 'DestroyAndSelfBuffEffect',
+        destroyTarget: (raw.destroy_target ?? 'ONE_SAME_LOCATION_FRIENDLY') as TargetFilter,
+        buffAmount: raw.buff_amount ?? 0,
+      };
+    case 'MoveAndBuffEffect':
+      return {
+        type: 'MoveAndBuffEffect',
+        moveTarget: (raw.move_target ?? 'ONE_OTHER_LOCATION_FRIENDLY_TO_HERE') as TargetFilter,
+        buffTarget: (raw.buff_target ?? 'MOVED_CARD') as TargetFilter,
+        buffAmount: raw.buff_amount ?? 0,
+      };
+    case 'MoveAndDebuffDestinationEffect':
+      return {
+        type: 'MoveAndDebuffDestinationEffect',
+        debuffAmount: raw.debuff_amount ?? -1,
       };
     default:
       // Unknown effect, return a no-op

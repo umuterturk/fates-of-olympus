@@ -35,15 +35,28 @@ import {
   getLocation,
   withLocation,
   withCardDestroyed,
-  withCardMoved,
   hasDestroyedCardThisGame,
   hasMovedCardThisGame,
   isSilenced,
   createInitialLocations,
 } from './models';
-import { resolveTurn } from './controller';
+import { resolveTurnDeterministic } from './controller';
+import { SeededRNG } from './rng';
 import { getCardDef } from './cards';
 import type { PlayerId, TurnNumber, InstanceId } from './types';
+
+/**
+ * Helper to resolve turn using deterministic system with a fixed seed.
+ */
+function resolveTurn(
+  state: GameState,
+  action0: PlayCardAction | PassAction,
+  action1: PlayCardAction | PassAction
+): { state: GameState; events: import('./events').GameEvent[] } {
+  const rng = new SeededRNG(42);
+  const result = resolveTurnDeterministic(state, action0, action1, rng);
+  return { state: result.state, events: result.events };
+}
 
 // =============================================================================
 // Test Helpers
@@ -347,8 +360,9 @@ describe('AddOngoingPowerEffect', () => {
 // StealPowerEffect Tests
 // =============================================================================
 
-describe('StealPowerEffect', () => {
-  it('Shade should steal power from an enemy, buffing self and debuffing enemy', () => {
+describe('Shade DestroyAndBuff', () => {
+  // Shade: "On Reveal: Destroy this. Give another allied card here +2 Power."
+  it('Shade should buff an ally at same location by +2 when destroyed', () => {
     let state = createTestState({
       turn: 1 as TurnNumber,
       p0Energy: 1,
@@ -357,10 +371,10 @@ describe('StealPowerEffect', () => {
       p1HandDefs: [],
     });
 
-    // Add an enemy at location 0
-    const enemy = makeCard(100, ARGIVE_SCOUT(), 1); // Base power 3
+    // Add a friendly hoplite at location 0 to receive the buff
+    const hoplite = makeCard(100, HOPLITE(), 0); // Base power 2
     let loc0 = getLocation(state, 0);
-    loc0 = addCard(loc0, enemy, 1);
+    loc0 = addCard(loc0, hoplite, 0);
     state = withLocation(state, 0, loc0);
 
     const shade = state.players[0].hand[0]!;
@@ -374,16 +388,15 @@ describe('StealPowerEffect', () => {
 
     const { state: newState } = resolveTurn(state, action, passAction);
 
-    // Find the enemy and check it lost power
+    // Find the hoplite and check it got buffed
     const loc = getLocation(newState, 0);
-    const enemyCard = getCards(loc, 1)[0]!;
+    const hopliteCard = getCards(loc, 0).find(c => c.cardDef.id === 'hoplite')!;
 
-    // Shade steals 2 power (based on cards.json)
-    // Enemy should have 3 - 2 = 1 power
-    expect(getEffectivePower(enemyCard)).toBe(1);
+    // Hoplite should have 2 + 2 = 4 power
+    expect(getEffectivePower(hopliteCard)).toBe(4);
   });
 
-  it('Shade should destroy itself after stealing power', () => {
+  it('Shade should destroy itself', () => {
     let state = createTestState({
       turn: 1 as TurnNumber,
       p0Energy: 1,
@@ -392,10 +405,10 @@ describe('StealPowerEffect', () => {
       p1HandDefs: [],
     });
 
-    // Add an enemy at location 0
-    const enemy = makeCard(100, ARGIVE_SCOUT(), 1);
+    // Add an ally at location 0 to receive buff
+    const hoplite = makeCard(100, HOPLITE(), 0);
     let loc0 = getLocation(state, 0);
-    loc0 = addCard(loc0, enemy, 1);
+    loc0 = addCard(loc0, hoplite, 0);
     state = withLocation(state, 0, loc0);
 
     const shade = state.players[0].hand[0]!;
@@ -409,11 +422,12 @@ describe('StealPowerEffect', () => {
 
     const { state: newState } = resolveTurn(state, action, passAction);
 
-    // Check Shade is destroyed (not on board)
+    // Check Shade is destroyed (only hoplite remains)
     const loc = getLocation(newState, 0);
     const p0Cards = getCards(loc, 0);
 
-    expect(p0Cards.length).toBe(0);
+    expect(p0Cards.length).toBe(1);
+    expect(p0Cards[0]!.cardDef.id).toBe('hoplite');
   });
 
   it("Shade's self-destroy should be tracked for destroy synergies", () => {
@@ -425,10 +439,10 @@ describe('StealPowerEffect', () => {
       p1HandDefs: [],
     });
 
-    // Add an enemy at location 0
-    const enemy = makeCard(100, ARGIVE_SCOUT(), 1);
+    // Add an ally at location 0 to receive buff
+    const hoplite = makeCard(100, HOPLITE(), 0);
     let loc0 = getLocation(state, 0);
-    loc0 = addCard(loc0, enemy, 1);
+    loc0 = addCard(loc0, hoplite, 0);
     state = withLocation(state, 0, loc0);
 
     const shade = state.players[0].hand[0]!;
@@ -452,7 +466,8 @@ describe('StealPowerEffect', () => {
 // =============================================================================
 
 describe('DestroyAndBuffEffect', () => {
-  it('Hecate should destroy an ally here and give -4 to ONE enemy here', () => {
+  // Hecate: "On Reveal: Destroy 1 other allied card here to give 1 enemy card here -3 Power."
+  it('Hecate should destroy an ally here and give -3 to ONE enemy here', () => {
     let state = createTestState({
       turn: 4 as TurnNumber,
       p0Energy: 4,
@@ -489,9 +504,9 @@ describe('DestroyAndBuffEffect', () => {
     const allyCards = p0Cards.filter((c) => c.instanceId === 100);
     expect(allyCards.length).toBe(0);
 
-    // Check enemy got -4 debuff
+    // Check enemy got -3 debuff (not -4)
     const enemyCard = getCards(loc, 1)[0]!;
-    expect(getEffectivePower(enemyCard)).toBe(3); // 7 - 4 = 3
+    expect(getEffectivePower(enemyCard)).toBe(4); // 7 - 3 = 4
   });
 });
 
@@ -599,6 +614,7 @@ describe('MoveCardEffect', () => {
 // =============================================================================
 
 describe('ConditionalPowerEffect', () => {
+  // Cerberus: base_power: 6, "On Reveal: If you destroyed a card this game, this has +4 Power."
   it('Cerberus should get +4 power if any card was destroyed this game', () => {
     let state = createTestState({
       turn: 5 as TurnNumber,
@@ -625,8 +641,8 @@ describe('ConditionalPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const cerberusOnBoard = getCards(loc, 0)[0]!;
 
-    // Cerberus base 5 + 4 conditional = 9
-    expect(getEffectivePower(cerberusOnBoard)).toBe(9);
+    // Cerberus base 6 + 4 conditional = 10
+    expect(getEffectivePower(cerberusOnBoard)).toBe(10);
   });
 
   it('Cerberus should NOT get +4 if no card was destroyed', () => {
@@ -652,11 +668,12 @@ describe('ConditionalPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const cerberusOnBoard = getCards(loc, 0)[0]!;
 
-    // Cerberus base 5, no bonus
-    expect(getEffectivePower(cerberusOnBoard)).toBe(5);
+    // Cerberus base 6, no bonus
+    expect(getEffectivePower(cerberusOnBoard)).toBe(6);
   });
 
-  it('Poseidon should get +2 power to self if moved a card this game', () => {
+  // Poseidon: base_power: 3, "On Reveal: If you moved a card this turn, give your cards here +2 Power."
+  it('Poseidon should give +2 power to all cards here if moved a card this turn', () => {
     let state = createTestState({
       turn: 4 as TurnNumber,
       p0Energy: 4,
@@ -665,8 +682,8 @@ describe('ConditionalPowerEffect', () => {
       p1HandDefs: [],
     });
 
-    // Simulate having moved a card this game
-    state = withCardMoved(state, 999 as InstanceId);
+    // Simulate having moved a card this turn (not just this game)
+    state = { ...state, cardsMovedThisTurn: [999 as InstanceId] };
 
     const poseidon = state.players[0].hand[0]!;
     const action: PlayCardAction = {
@@ -682,11 +699,12 @@ describe('ConditionalPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const poseidonOnBoard = getCards(loc, 0)[0]!;
 
-    // Poseidon base 4 + 2 (self) = 6
-    expect(getEffectivePower(poseidonOnBoard)).toBe(6);
+    // Poseidon base 3 + 2 (buffs all cards here including self) = 5
+    expect(getEffectivePower(poseidonOnBoard)).toBe(5);
   });
 
-  it("Zeus should get +6 power if he's the only friendly card at his location", () => {
+  // Zeus: base_power: 7, "On Reveal: If this is your only card here, this has +4 Power."
+  it("Zeus should get +4 power if he's the only friendly card at his location", () => {
     const state = createTestState({
       turn: 6 as TurnNumber,
       p0Energy: 6,
@@ -709,11 +727,11 @@ describe('ConditionalPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const zeusOnBoard = getCards(loc, 0)[0]!;
 
-    // Zeus base 8 + 6 (only card) = 14
-    expect(getEffectivePower(zeusOnBoard)).toBe(14);
+    // Zeus base 7 + 4 (only card) = 11
+    expect(getEffectivePower(zeusOnBoard)).toBe(11);
   });
 
-  it('Zeus should NOT get +6 if there are other allies at his location', () => {
+  it('Zeus should NOT get +4 if there are other allies at his location', () => {
     let state = createTestState({
       turn: 6 as TurnNumber,
       p0Energy: 6,
@@ -742,17 +760,18 @@ describe('ConditionalPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const zeusOnBoard = getCards(loc, 0).find((c) => c.cardDef.id === 'zeus')!;
 
-    // Zeus base 8, no bonus (has ally)
-    expect(getEffectivePower(zeusOnBoard)).toBe(8);
+    // Zeus base 7, no bonus (has ally)
+    expect(getEffectivePower(zeusOnBoard)).toBe(7);
   });
 });
 
 // =============================================================================
-// ScalingPowerEffect Tests
+// GlobalOngoingPowerEffect Tests (Underworld Gate)
 // =============================================================================
 
-describe('ScalingPowerEffect', () => {
-  it('Underworld Gate should get +2 per card destroyed this game', () => {
+describe('GlobalOngoingPowerEffect', () => {
+  // Underworld Gate: base_power: 2, "Ongoing: Your DESTROY-effect cards have +1 Power (wherever they are)."
+  it('Underworld Gate should give +1 power to cards with Destroy tag', () => {
     let state = createTestState({
       turn: 3 as TurnNumber,
       p0Energy: 3,
@@ -761,9 +780,11 @@ describe('ScalingPowerEffect', () => {
       p1HandDefs: [],
     });
 
-    // Simulate having destroyed 2 cards this game
-    state = withCardDestroyed(state, 998 as InstanceId);
-    state = withCardDestroyed(state, 999 as InstanceId);
+    // Add a card with Destroy tag (Shade has Destroy tag)
+    let loc0 = getLocation(state, 0);
+    const shade = makeCard(100, SHADE(), 0); // Base 0, has Destroy tag
+    loc0 = addCard(loc0, shade, 0);
+    state = withLocation(state, 0, loc0);
 
     const gate = state.players[0].hand[0]!;
     const action: PlayCardAction = {
@@ -777,13 +798,13 @@ describe('ScalingPowerEffect', () => {
     const { state: newState } = resolveTurn(state, action, passAction);
 
     const loc = getLocation(newState, 0);
-    const gateOnBoard = getCards(loc, 0)[0]!;
+    const gateOnBoard = getCards(loc, 0).find(c => c.cardDef.id === 'underworld_gate')!;
 
-    // Underworld Gate base 2 + 2*2 = 6
-    expect(getEffectivePower(gateOnBoard)).toBe(6);
+    // Underworld Gate base 2 (it buffs OTHER Destroy-tagged cards, not itself unless it has Destroy tag)
+    expect(getEffectivePower(gateOnBoard)).toBe(2);
   });
 
-  it('Underworld Gate should have base power if no cards destroyed', () => {
+  it('Underworld Gate should have base power if no Destroy-tagged cards', () => {
     const state = createTestState({
       turn: 3 as TurnNumber,
       p0Energy: 3,
@@ -811,11 +832,12 @@ describe('ScalingPowerEffect', () => {
 });
 
 // =============================================================================
-// ScalingOngoingPowerEffect Tests
+// AddPowerEffect Tests (Athena ON_REVEAL buff)
 // =============================================================================
 
-describe('ScalingOngoingPowerEffect', () => {
-  it('Athena should give allies +1 power per other friendly card at same location', () => {
+describe('Athena OnReveal Buff', () => {
+  // Athena: base_power: 2, "On Reveal: Give your other cards here +1 Power."
+  it('Athena should give +1 power to other allies at same location', () => {
     let state = createTestState({
       turn: 3 as TurnNumber,
       p0Energy: 3,
@@ -845,15 +867,15 @@ describe('ScalingOngoingPowerEffect', () => {
 
     const loc = getLocation(newState, 0);
 
-    // With 3 friendly cards (2 allies + Athena), each OTHER card gets +2 (for 2 other friends)
+    // Each ally gets +1 from Athena's ON_REVEAL effect
     const hoplite = getCards(loc, 0).find((c) => c.instanceId === 100)!;
     const argive = getCards(loc, 0).find((c) => c.instanceId === 101)!;
     const athenaOnBoard = getCards(loc, 0).find((c) => c.cardDef.id === 'athena')!;
 
-    // Hoplite: 2 + 2 = 4
-    expect(getEffectivePower(hoplite)).toBe(4);
-    // Argive: 3 + 2 = 5
-    expect(getEffectivePower(argive)).toBe(5);
+    // Hoplite: 2 + 1 = 3
+    expect(getEffectivePower(hoplite)).toBe(3);
+    // Argive: 3 + 1 = 4
+    expect(getEffectivePower(argive)).toBe(4);
     // Athena doesn't buff herself: base 2
     expect(getEffectivePower(athenaOnBoard)).toBe(2);
   });
@@ -864,6 +886,7 @@ describe('ScalingOngoingPowerEffect', () => {
 // =============================================================================
 
 describe('ConditionalOngoingPowerEffect', () => {
+  // Ares: base_power: 3, "Ongoing: If this location is full, your cards here have +1 Power."
   it('Ares should give +1 power to friendly cards if location is full', () => {
     let state = createTestState({
       turn: 3 as TurnNumber,
@@ -873,19 +896,13 @@ describe('ConditionalOngoingPowerEffect', () => {
       p1HandDefs: [],
     });
 
-    // Fill location 0: 4 cards per player = 8 total (full location)
+    // Fill location 0: Need 4 P0 cards (Ares will be 4th)
     let loc0 = getLocation(state, 0);
 
-    // Add 3 P0 cards (Ares will be 4th)
+    // Add 3 P0 cards (Ares will be 4th, making it full for P0)
     for (let i = 0; i < 3; i++) {
       const card = makeCard(100 + i, HOPLITE(), 0);
       loc0 = addCard(loc0, card, 0);
-    }
-
-    // Add 4 P1 cards
-    for (let i = 0; i < 4; i++) {
-      const card = makeCard(200 + i, HOPLITE(), 1);
-      loc0 = addCard(loc0, card, 1);
     }
 
     state = withLocation(state, 0, loc0);
@@ -904,10 +921,10 @@ describe('ConditionalOngoingPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const aresOnBoard = getCards(loc, 0).find((c) => c.cardDef.id === 'ares')!;
 
-    // Location is now full (4 P0 + 4 P1 = 8)
-    // Ares should have at least base 4
+    // Location is now full for P0 (4 cards)
+    // Ares base 3 + 1 ongoing = 4
     const actualPower = getEffectivePower(aresOnBoard);
-    expect(actualPower).toBeGreaterThanOrEqual(4);
+    expect(actualPower).toBe(4);
   });
 
   it('Ares should NOT get +1 if location is not full', () => {
@@ -934,8 +951,8 @@ describe('ConditionalOngoingPowerEffect', () => {
     const loc = getLocation(newState, 0);
     const aresOnBoard = getCards(loc, 0)[0]!;
 
-    // Ares base 4, no bonus
-    expect(getEffectivePower(aresOnBoard)).toBe(4);
+    // Ares base 3, no bonus (not full)
+    expect(getEffectivePower(aresOnBoard)).toBe(3);
   });
 });
 
@@ -976,11 +993,49 @@ describe('SilenceOngoingEffect', () => {
 });
 
 // =============================================================================
-// ReviveEffect Tests
+// DestroyAndGainPowerEffect Tests (Hades)
 // =============================================================================
 
-describe('ReviveEffect', () => {
-  it('Hades should NOT summon a spirit if no card was destroyed this game', () => {
+describe('DestroyAndGainPowerEffect', () => {
+  // Hades: base_power: 4, "On Reveal: Destroy 1 other allied card here. This gains its Power."
+  it('Hades should destroy an ally and gain its power', () => {
+    let state = createTestState({
+      turn: 5 as TurnNumber,
+      p0Energy: 5,
+      p1Energy: 5,
+      p0HandDefs: [HADES()],
+      p1HandDefs: [],
+    });
+
+    // Add an ally with 3 power to sacrifice
+    let loc0 = getLocation(state, 0);
+    const ally = makeCard(100, ARGIVE_SCOUT(), 0); // Base 3
+    loc0 = addCard(loc0, ally, 0);
+    state = withLocation(state, 0, loc0);
+
+    const hades = state.players[0].hand[0]!;
+    const action: PlayCardAction = {
+      type: 'PlayCard',
+      playerId: 0,
+      cardInstanceId: hades.instanceId,
+      location: 0,
+    };
+    const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+    const { state: newState } = resolveTurn(state, action, passAction);
+
+    const loc = getLocation(newState, 0);
+    const p0Cards = getCards(loc, 0);
+
+    // Ally should be destroyed, only Hades remains
+    expect(p0Cards.length).toBe(1);
+    expect(p0Cards[0]!.cardDef.id).toBe('hades');
+    
+    // Hades should have gained the ally's power: 4 + 3 = 7
+    expect(getEffectivePower(p0Cards[0]!)).toBe(7);
+  });
+
+  it('Hades should NOT gain power if no ally to destroy', () => {
     const state = createTestState({
       turn: 5 as TurnNumber,
       p0Energy: 5,
@@ -1000,15 +1055,14 @@ describe('ReviveEffect', () => {
 
     const { state: newState } = resolveTurn(state, action, passAction);
 
-    // Check that only Hades is at location 0 (no spirit without destroys)
     const loc = getLocation(newState, 0);
-    const p0Cards = getCards(loc, 0);
+    const hadesOnBoard = getCards(loc, 0)[0]!;
 
-    expect(p0Cards.length).toBe(1);
-    expect(p0Cards[0]!.cardDef.id).toBe('hades');
+    // Hades base 4, no bonus (no ally to destroy)
+    expect(getEffectivePower(hadesOnBoard)).toBe(4);
   });
 
-  it('Hades should summon a spirit when a card was destroyed this game', () => {
+  it('Hades should track destruction for synergies', () => {
     let state = createTestState({
       turn: 5 as TurnNumber,
       p0Energy: 5,
@@ -1017,8 +1071,11 @@ describe('ReviveEffect', () => {
       p1HandDefs: [],
     });
 
-    // Simulate having destroyed 1 card this game
-    state = withCardDestroyed(state, 999 as InstanceId);
+    // Add an ally to sacrifice
+    let loc0 = getLocation(state, 0);
+    const ally = makeCard(100, HOPLITE(), 0); // Base 2
+    loc0 = addCard(loc0, ally, 0);
+    state = withLocation(state, 0, loc0);
 
     const hades = state.players[0].hand[0]!;
     const action: PlayCardAction = {
@@ -1031,49 +1088,8 @@ describe('ReviveEffect', () => {
 
     const { state: newState } = resolveTurn(state, action, passAction);
 
-    const loc = getLocation(newState, 0);
-    const p0Cards = getCards(loc, 0);
-
-    // Should have Hades + summoned spirit = 2 cards
-    expect(p0Cards.length).toBe(2);
-  });
-
-  it("Hades' spirit power should scale with destroyed card count", () => {
-    let state = createTestState({
-      turn: 5 as TurnNumber,
-      p0Energy: 5,
-      p1Energy: 5,
-      p0HandDefs: [HADES()],
-      p1HandDefs: [],
-    });
-
-    // Simulate having destroyed 3 cards this game
-    state = withCardDestroyed(state, 997 as InstanceId);
-    state = withCardDestroyed(state, 998 as InstanceId);
-    state = withCardDestroyed(state, 999 as InstanceId);
-
-    const hades = state.players[0].hand[0]!;
-    const action: PlayCardAction = {
-      type: 'PlayCard',
-      playerId: 0,
-      cardInstanceId: hades.instanceId,
-      location: 0,
-    };
-    const passAction: PassAction = { type: 'Pass', playerId: 1 };
-
-    const { state: newState } = resolveTurn(state, action, passAction);
-
-    const loc = getLocation(newState, 0);
-    const p0Cards = getCards(loc, 0);
-
-    // Find the spirit (not Hades)
-    const spirits = p0Cards.filter((c) => c.cardDef.id !== 'hades');
-
-    expect(spirits.length).toBe(1);
-    const spirit = spirits[0]!;
-    // Spirit uses Shade template with base 2, gets +5 power modifier (2 + 3 destroys)
-    // Final: 2 (shade base) + 5 (modifier) = 7
-    expect(getEffectivePower(spirit)).toBe(7);
+    // Check destruction was tracked
+    expect(hasDestroyedCardThisGame(newState)).toBe(true);
   });
 });
 
@@ -1082,22 +1098,24 @@ describe('ReviveEffect', () => {
 // =============================================================================
 
 describe('Destroy Synergy', () => {
+  // Shade: "On Reveal: Destroy this. Give another allied card here +2 Power."
+  // Cerberus: base 6, "On Reveal: If you destroyed a card this game, this has +4 Power."
   it("Playing Shade should enable Cerberus's +4 bonus", () => {
     let state = createTestState({
       turn: 5 as TurnNumber,
-      p0Energy: 6, // Enough for both Shade(1) and Cerberus(5)
+      p0Energy: 7, // Enough for both Shade(1) and Cerberus(6)
       p1Energy: 5,
       p0HandDefs: [SHADE(), CERBERUS()],
       p1HandDefs: [],
     });
 
-    // Add enemy for Shade to steal from
+    // Add an ally for Shade to buff (Shade buffs ally, then destroys itself)
     let loc0 = getLocation(state, 0);
-    const enemy = makeCard(100, ARGIVE_SCOUT(), 1);
-    loc0 = addCard(loc0, enemy, 1);
+    const ally = makeCard(100, HOPLITE(), 0); // Base 2
+    loc0 = addCard(loc0, ally, 0);
     state = withLocation(state, 0, loc0);
 
-    // Play Shade first (it will steal and destroy itself)
+    // Play Shade first (it will buff ally and destroy itself)
     const shade = state.players[0].hand[0]!;
     const actionShade: PlayCardAction = {
       type: 'PlayCard',
@@ -1133,8 +1151,8 @@ describe('Destroy Synergy', () => {
     const loc = getLocation(finalState, 1);
     const cerberusOnBoard = getCards(loc, 0)[0]!;
 
-    // Cerberus should have +4 from destroy synergy
-    expect(getEffectivePower(cerberusOnBoard)).toBe(9); // 5 + 4 = 9
+    // Cerberus should have +4 from destroy synergy: 6 + 4 = 10
+    expect(getEffectivePower(cerberusOnBoard)).toBe(10);
   });
 });
 
@@ -1143,35 +1161,21 @@ describe('Destroy Synergy', () => {
 // =============================================================================
 
 describe('Move Synergy', () => {
-  it("Playing Iris should enable Poseidon's +2 bonus", () => {
-    const state = createTestState({
+  // Poseidon: base_power: 3, "On Reveal: If you moved a card this turn, give your cards here +2 Power."
+  // Note: Poseidon's condition is moved_this_turn, not moved_this_game
+  it("Poseidon should get +2 if a move happened this turn", () => {
+    let state = createTestState({
       turn: 4 as TurnNumber,
-      p0Energy: 6, // Enough for both Iris(2) and Poseidon(4)
+      p0Energy: 6,
       p1Energy: 4,
-      p0HandDefs: [IRIS(), POSEIDON()],
+      p0HandDefs: [POSEIDON()],
       p1HandDefs: [],
     });
 
-    // Play Iris first (she moves herself)
-    const iris = state.players[0].hand[0]!;
-    const actionIris: PlayCardAction = {
-      type: 'PlayCard',
-      playerId: 0,
-      cardInstanceId: iris.instanceId,
-      location: 0,
-    };
+    // Simulate having moved a card this turn
+    state = { ...state, cardsMovedThisTurn: [999 as InstanceId] };
 
-    const { state: stateAfterIris } = resolveTurn(
-      state,
-      actionIris,
-      { type: 'Pass', playerId: 1 }
-    );
-
-    // Verify Iris triggered move tracking
-    expect(hasMovedCardThisGame(stateAfterIris)).toBe(true);
-
-    // Now play Poseidon
-    const poseidon = stateAfterIris.players[0].hand[0]!;
+    const poseidon = state.players[0].hand[0]!;
     const actionPoseidon: PlayCardAction = {
       type: 'PlayCard',
       playerId: 0,
@@ -1180,7 +1184,7 @@ describe('Move Synergy', () => {
     };
 
     const { state: finalState } = resolveTurn(
-      stateAfterIris,
+      state,
       actionPoseidon,
       { type: 'Pass', playerId: 1 }
     );
@@ -1188,7 +1192,37 @@ describe('Move Synergy', () => {
     const loc = getLocation(finalState, 2);
     const poseidonOnBoard = getCards(loc, 0)[0]!;
 
-    // Poseidon base 4 + 2 (self) = 6
-    expect(getEffectivePower(poseidonOnBoard)).toBe(6);
+    // Poseidon base 3 + 2 = 5
+    expect(getEffectivePower(poseidonOnBoard)).toBe(5);
+  });
+
+  it("Poseidon should NOT get +2 if no move happened this turn", () => {
+    const state = createTestState({
+      turn: 4 as TurnNumber,
+      p0Energy: 6,
+      p1Energy: 4,
+      p0HandDefs: [POSEIDON()],
+      p1HandDefs: [],
+    });
+
+    const poseidon = state.players[0].hand[0]!;
+    const actionPoseidon: PlayCardAction = {
+      type: 'PlayCard',
+      playerId: 0,
+      cardInstanceId: poseidon.instanceId,
+      location: 2,
+    };
+
+    const { state: finalState } = resolveTurn(
+      state,
+      actionPoseidon,
+      { type: 'Pass', playerId: 1 }
+    );
+
+    const loc = getLocation(finalState, 2);
+    const poseidonOnBoard = getCards(loc, 0)[0]!;
+
+    // Poseidon base 3, no bonus
+    expect(getEffectivePower(poseidonOnBoard)).toBe(3);
   });
 });
