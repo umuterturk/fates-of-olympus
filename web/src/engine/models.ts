@@ -27,6 +27,11 @@ import type { Effect } from './effects';
 // =============================================================================
 
 /**
+ * Card ideology type matching JSON format.
+ */
+export type CardIdeology = 'NOMOS' | 'KATABASIS' | 'KINESIS' | 'TRANSITIONAL' | 'FRACTURED' | 'NEUTRAL';
+
+/**
  * Immutable definition of a card type.
  * This is the "template" - multiple instances can exist in a game.
  */
@@ -39,6 +44,8 @@ export interface CardDef {
   readonly abilityType: AbilityType;
   readonly effects: readonly Effect[];
   readonly tags: readonly CardTag[];
+  readonly ideology?: CardIdeology;
+  readonly deckGroup?: number;
 }
 
 // =============================================================================

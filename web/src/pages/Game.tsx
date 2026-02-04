@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
@@ -8,6 +8,7 @@ import { BuffDebuffAnimation } from '@components/game/BuffDebuffAnimation';
 import { CardDestroyedAnimation } from '@components/game/CardDestroyedAnimation';
 import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
 import { useGameStore } from '@store/gameStore';
+import { usePlayerStore } from '@store/playerStore';
 import type { LocationIndex } from '@engine/types';
 import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
 
@@ -104,8 +105,13 @@ export function Game() {
     clearLocationWinners,
     addEnergy,
     retreat,
+    lastGameCredits,
+    lastGamePerfectWin,
   } = useGameStore();
 
+  const { shouldShowUnlockNotification } = usePlayerStore();
+
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   // Selected card can be from hand or a pending card on board
@@ -118,6 +124,18 @@ export function Game() {
   useEffect(() => {
     initGame();
   }, [initGame]);
+
+  // Navigate to card reveal screen when game ends and player can afford a new card
+  useEffect(() => {
+    if (showGameResult && shouldShowUnlockNotification()) {
+      // Delay slightly to let game end animation complete
+      const timer = setTimeout(() => {
+        navigate('/card-reveal');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showGameResult, shouldShowUnlockNotification, navigate]);
+
 
   if (!gameState) {
     return (
@@ -467,7 +485,7 @@ export function Game() {
                 data-name="game-over-message"
                 className={clsx(
                   "text-gray-300",
-                  isMobile ? "text-sm mb-4" : "mb-6"
+                  isMobile ? "text-sm mb-2" : "mb-4"
                 )}
               >
                 {gameState.result === 'PLAYER_0_WINS'
@@ -476,6 +494,31 @@ export function Game() {
                     ? 'The Fates were not in your favor...'
                     : 'An honorable stalemate!'}
               </p>
+
+              {/* Credits Earned */}
+              {lastGameCredits !== null && (
+                <motion.div
+                  data-name="credits-earned"
+                  className={clsx(
+                    "flex items-center justify-center gap-2 bg-yellow-500/20 rounded-lg mx-auto",
+                    isMobile ? "px-3 py-1.5 mb-4" : "px-4 py-2 mb-6"
+                  )}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.4, type: 'spring' }}
+                >
+                  <span className="text-yellow-400 text-xl">💰</span>
+                  <span className={clsx(
+                    "font-bold text-yellow-300",
+                    isMobile ? "text-lg" : "text-xl"
+                  )}>
+                    +{lastGameCredits} credits
+                  </span>
+                  {lastGamePerfectWin && (
+                    <span className="text-yellow-400 text-sm ml-1">Perfect!</span>
+                  )}
+                </motion.div>
+              )}
 
               <div
                 data-name="game-over-buttons"
@@ -530,6 +573,7 @@ export function Game() {
         onComplete={clearLocationWinners}
         onPointLanded={() => addEnergy(0, 1)}
       />
+
     </div>
   );
 }

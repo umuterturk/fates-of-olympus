@@ -41,6 +41,7 @@ import {
 } from '@engine/models';
 import { getCardDef, createCardInstance, getAllCardDefs } from '@engine/cards';
 import type { CardId } from '@engine/types';
+import { usePlayerStore } from './playerStore';
 
 /**
  * Apply a card play immediately to the game state.
@@ -113,6 +114,12 @@ interface GameStore {
   /** Persistent debug energy bonus (added each turn) */
   debugEnergyBonus: number;
 
+  // Game rewards
+  /** Credits earned from the last completed game */
+  lastGameCredits: number | null;
+  /** Whether the last game was a perfect win */
+  lastGamePerfectWin: boolean;
+
   // Actions
   initGame: () => void;
   /** Initialize game with a specific seed (for testing/replay) */
@@ -136,8 +143,10 @@ interface GameStore {
   clearLocationWinners: () => void;
   /** Add energy to a player */
   addEnergy: (playerId: PlayerId, amount: number) => void;
-  /** Retreat from the game (concede) */
-  retreat: () => void;
+  /** Retreat from the game (concede) - no credits awarded */
+  retreat: () => Promise<void>;
+  /** Process game end and award credits */
+  processGameEnd: () => Promise<void>;
   
   // ==========================================================================
   // Debug Functions (for testing)
@@ -170,6 +179,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameSeed: null,
   currentTimeline: null,
   debugEnergyBonus: 0,
+  lastGameCredits: null,
+  lastGamePerfectWin: false,
 
   initGame: () => {
     // Generate a timestamp-based seed for single-player games
@@ -198,6 +209,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameSeed: seed,
       currentTimeline: null,
       debugEnergyBonus: 0, // Reset debug bonus on new game
+      lastGameCredits: null,
+      lastGamePerfectWin: false,
     });
   },
 
@@ -520,6 +533,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       } else {
         // Game is over - show result after animations complete
         set({ isAnimating: false, showGameResult: true, revealedNpcCardIds: new Set(), pendingNpcCardIds: new Set() });
+        
+        // Award credits for the game
+        await get().processGameEnd();
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);
@@ -593,7 +609,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     console.log(`[Debug] Added ${amount} energy. Persistent bonus is now +${newDebugBonus}`);
   },
 
-  retreat: () => {
+  retreat: async () => {
     const { gameState } = get();
     if (!gameState || gameState.result !== 'IN_PROGRESS') return;
 
@@ -605,7 +621,44 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isAnimating: false,
       isNpcThinking: false,
       showGameResult: true,
+      lastGameCredits: null, // No credits for retreat
+      lastGamePerfectWin: false,
     });
+
+    // Update stats only (no credits for retreating)
+    const playerStore = usePlayerStore.getState();
+    if (playerStore.profile) {
+      await playerStore.updateGameStats(false, false);
+      console.log('[GameStore] Player retreated - stats updated, no credits awarded');
+    }
+  },
+
+  processGameEnd: async () => {
+    const { gameState, locationWinners } = get();
+    if (!gameState || gameState.result === 'IN_PROGRESS') return;
+
+    // Determine if player won
+    const playerWon = gameState.result === 'PLAYER_0_WINS';
+    
+    // Check for perfect win (all 3 locations won by player)
+    let isPerfectWin = false;
+    if (playerWon && locationWinners) {
+      isPerfectWin = locationWinners.every(winner => winner === 0);
+    }
+
+    // Award credits through player store
+    const playerStore = usePlayerStore.getState();
+    if (playerStore.profile) {
+      const credits = await playerStore.awardGameCredits(playerWon, isPerfectWin);
+      await playerStore.updateGameStats(playerWon, isPerfectWin);
+
+      set({
+        lastGameCredits: credits,
+        lastGamePerfectWin: isPerfectWin,
+      });
+
+      console.log(`[GameStore] Game ended. Won: ${playerWon}, Perfect: ${isPerfectWin}, Credits: ${credits}`);
+    }
   },
 
   // ==========================================================================
@@ -752,6 +805,18 @@ if (typeof window !== 'undefined') {
       console.log(`[Debug] Current energy bonus: +${bonus}`);
       return bonus;
     },
+    /** Add credits to player */
+    addCredits: async (amount: number) => {
+      await usePlayerStore.getState().addCredits(amount);
+      const profile = usePlayerStore.getState().profile;
+      console.log(`[Debug] Added ${amount} credits. Total: ${profile?.credits ?? 0}`);
+    },
+    /** Get player profile */
+    getProfile: () => {
+      const profile = usePlayerStore.getState().profile;
+      console.log('[Debug] Player profile:', profile);
+      return profile;
+    },
     /** Show help */
     help: () => {
       console.log(`
@@ -762,6 +827,8 @@ Debug Commands:
   debug.addEnergy(10)             - Add 10 energy (persists across turns!)
   debug.resetEnergy()             - Reset energy bonus to 0
   debug.getEnergyBonus()          - Show current energy bonus
+  debug.addCredits(100)           - Add 100 credits to player
+  debug.getProfile()              - Show player profile (credits, unlocks, etc.)
   debug.listCards()               - Show all available card IDs
   debug.getHand()                 - Show your current hand
   debug.getState()                - Get the full game state

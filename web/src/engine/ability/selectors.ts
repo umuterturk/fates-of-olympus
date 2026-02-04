@@ -462,6 +462,7 @@ export function describeTargetSelector(selector: TargetSelector): string {
     'FRIENDLY_WITH_DESTROY_TAG': 'allies with Destroy tag',
     'ENEMY_WITH_BUFF_TAG_HERE': 'enemies with Buff tag here',
     'ENEMY_WITH_ONGOING_HERE': 'enemies with Ongoing abilities here',
+    'MOVED_CARD': 'the moved card',
   };
   
   return descriptions[selector] ?? `unknown selector: ${selector}`;

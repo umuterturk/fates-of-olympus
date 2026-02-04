@@ -27,7 +27,8 @@
       "@engine/*": ["src/engine/*"],
       "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@store/*": ["src/store/*"]
+      "@store/*": ["src/store/*"],
+      "@storage/*": ["src/storage/*"]
     }
   },
   "include": ["src", "../cards.json"],

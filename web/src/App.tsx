@@ -3,6 +3,8 @@ import { Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Home } from './pages/Home';
 import { Game } from './pages/Game';
+import { Collection } from './pages/Collection';
+import { CardReveal } from './pages/CardReveal';
 import { LoadingScreen } from './components/LoadingScreen';
 
 function App() {
@@ -44,6 +46,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/game" element={<Game />} />
+              <Route path="/collection" element={<Collection />} />
+              <Route path="/card-reveal" element={<CardReveal />} />
             </Routes>
           )}
         </AnimatePresence>

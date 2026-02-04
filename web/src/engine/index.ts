@@ -8,3 +8,5 @@ export * from './effects';
 export * from './events';
 export * from './cards';
 export * from './controller';
+export * from './progression';
+export * from './starterDeck';

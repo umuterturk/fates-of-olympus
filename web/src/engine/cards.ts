@@ -19,6 +19,8 @@ interface RawEffect {
   amount?: number;
   to_other_location?: boolean;
   destroy_target?: string;
+  gain_target?: string;
+  move_target?: string;
   buff_target?: string;
   buff_amount?: number;
   debuff_amount?: number;
@@ -37,6 +39,8 @@ interface RawCard {
   ability_type: string;
   tags: string[];
   effects: RawEffect[];
+  ideology?: string;
+  deck_group?: number;
 }
 
 function parseEffect(raw: RawEffect): Effect {
@@ -175,6 +179,8 @@ function parseCard(raw: RawCard): CardDef {
     abilityType: raw.ability_type as AbilityType,
     effects: raw.effects.map(parseEffect),
     tags: raw.tags as CardTag[],
+    ideology: raw.ideology as CardDef['ideology'],
+    deckGroup: raw.deck_group,
   };
 }
 

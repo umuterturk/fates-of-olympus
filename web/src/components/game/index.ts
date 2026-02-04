@@ -7,3 +7,4 @@ export { EnergyDisplay } from './EnergyDisplay';
 export { BuffDebuffAnimation } from './BuffDebuffAnimation';
 export { CardDestroyedAnimation } from './CardDestroyedAnimation';
 export { LocationWinAnimation } from './LocationWinAnimation';
+export { UnlockReadyNotification } from './UnlockReadyNotification';
