@@ -5,7 +5,7 @@
  * Each effect type is tested to ensure it actually applies correctly.
  *
  * Tests cover:
- * - AddPowerEffect (Satyr, Harpies, Medusa)
+ * - AddPowerEffect (Satyr, Kobaloi, Medusa)
  * - AddOngoingPowerEffect (Naiad Nymph)
  * - ConditionalOngoingPowerEffect (Ares)
  * - ConditionalPowerEffect (Poseidon, Cerberus, Zeus)
@@ -156,7 +156,7 @@ function getTestCardDef(id: string): CardDef {
 
 // Card definitions for tests
 const SATYR = () => getTestCardDef('satyr');
-const HARPIES = () => getTestCardDef('harpies');
+const KOBALOI = () => getTestCardDef('kobaloi');
 const MEDUSA = () => getTestCardDef('medusa');
 const NAIAD_NYMPH = () => getTestCardDef('naiad_nymph');
 const ARES = () => getTestCardDef('ares');
@@ -214,12 +214,12 @@ describe('AddPowerEffect', () => {
     expect(getEffectivePower(hoplite!)).toBe(3); // 2 + 1 = 3
   });
 
-  it('Harpies should give -1 power to an enemy at same location', () => {
+  it('Kobaloi should give -1 power to an enemy at same location', () => {
     let state = createTestState({
       turn: 1 as TurnNumber,
       p0Energy: 1,
       p1Energy: 1,
-      p0HandDefs: [HARPIES()],
+      p0HandDefs: [KOBALOI()],
       p1HandDefs: [],
     });
 
@@ -229,11 +229,11 @@ describe('AddPowerEffect', () => {
     loc0 = addCard(loc0, enemy, 1);
     state = withLocation(state, 0, loc0);
 
-    const harpies = state.players[0].hand[0]!;
+    const kobaloi = state.players[0].hand[0]!;
     const action: PlayCardAction = {
       type: 'PlayCard',
       playerId: 0,
-      cardInstanceId: harpies.instanceId,
+      cardInstanceId: kobaloi.instanceId,
       location: 0,
     };
     const passAction: PassAction = { type: 'Pass', playerId: 1 };

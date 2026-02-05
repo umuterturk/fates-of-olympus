@@ -115,6 +115,7 @@ export type TargetSelector =
   | 'FRIENDLY_WITH_DESTROY_TAG'     // Allied cards with 'Destroy' tag
   | 'ENEMY_WITH_BUFF_TAG_HERE'      // Enemy cards with 'Buff' tag at this location
   | 'ENEMY_WITH_ONGOING_HERE'       // Enemy cards with ONGOING ability here
+  | 'ALLIES_HERE_ARMY_EXCEPT_SELF'  // Allied cards with 'Army' type at this location except self
   
   // Special markers for compound effects
   | 'MOVED_CARD';                   // The card that was just moved (used in MoveAndBuffEffect)
@@ -136,6 +137,7 @@ export const ALL_TARGET_SELECTORS: readonly TargetSelector[] = [
   'FRIENDLY_WITH_DESTROY_TAG',
   'ENEMY_WITH_BUFF_TAG_HERE',
   'ENEMY_WITH_ONGOING_HERE',
+  'ALLIES_HERE_ARMY_EXCEPT_SELF',
   'MOVED_CARD',
 ] as const;
 
@@ -181,6 +183,7 @@ export type EffectType =
   
   // Ability control
   | 'SILENCE_ENEMY_ONGOING_HERE'             // Silence enemy ongoing abilities
+  | 'PROTECT_ALLIES_FROM_DEBUFF'             // Protect allies from enemy debuffs (ongoing)
   
   // Global/tag-based
   | 'BUFF_DESTROY_CARDS_GLOBAL'              // Buff all Destroy-tagged cards
@@ -220,6 +223,7 @@ export const ALL_EFFECT_TYPES: readonly EffectType[] = [
   'GAIN_DESTROYED_CARD_POWER',
   'STEAL_POWER',
   'SILENCE_ENEMY_ONGOING_HERE',
+  'PROTECT_ALLIES_FROM_DEBUFF',
   'BUFF_DESTROY_CARDS_GLOBAL',
   'DESTROY_AND_BUFF',
   'DESTROY_AND_SELF_BUFF',
@@ -428,6 +432,7 @@ const LAW_OF_ORDER_EFFECTS: readonly EffectType[] = [
   'DEBUFF_ONE_ENEMY_HERE',
   'DEBUFF_ENEMIES_HERE',
   'SILENCE_ENEMY_ONGOING_HERE',
+  'PROTECT_ALLIES_FROM_DEBUFF',
 ];
 
 /**

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getCardDef } from '@engine/cards';
+import { getCardImagePath } from '@/utils/assets';
 import type { CardId } from '@engine/types';
 
 interface UnlockReadyNotificationProps {
@@ -65,7 +66,7 @@ export function UnlockReadyNotification({
 }: UnlockReadyNotificationProps) {
   const [particles] = useState(() => generateParticles(12));
   const cardDef = cardId ? getCardDef(cardId) : null;
-  const imagePath = cardDef ? `${import.meta.env.BASE_URL}cards/${cardDef.id}.png` : '';
+  const imagePath = cardDef ? getCardImagePath(cardDef.id) : '';
 
   if (!cardDef) return null;
 
@@ -212,16 +213,16 @@ export function UnlockReadyNotification({
               </motion.h2>
               <p className="text-xl text-white mb-1">{cardDef.name}</p>
               <p className="text-gray-400 text-sm mb-6">
-                You have enough credits to unlock this card!
+                You have enough Ichor to unlock this card!
               </p>
 
               {/* Action buttons */}
               <div className="flex gap-3 justify-center">
                 <Link
                   to="/collection"
-                  className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 
-                             text-black font-display rounded-lg shadow-lg shadow-yellow-500/30
-                             hover:shadow-yellow-500/50 hover:scale-105 transition-all"
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-violet-500 
+                             text-white font-display rounded-lg shadow-lg shadow-purple-500/30
+                             hover:shadow-purple-500/50 hover:scale-105 transition-all"
                 >
                   Unlock Now!
                 </Link>

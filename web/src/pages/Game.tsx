@@ -495,24 +495,24 @@ export function Game() {
                     : 'An honorable stalemate!'}
               </p>
 
-              {/* Credits Earned */}
+              {/* Ichor Earned */}
               {lastGameCredits !== null && (
                 <motion.div
-                  data-name="credits-earned"
+                  data-name="ichor-earned"
                   className={clsx(
-                    "flex items-center justify-center gap-2 bg-yellow-500/20 rounded-lg mx-auto",
+                    "flex items-center justify-center gap-2 bg-purple-500/20 rounded-lg mx-auto",
                     isMobile ? "px-3 py-1.5 mb-4" : "px-4 py-2 mb-6"
                   )}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.4, type: 'spring' }}
                 >
-                  <span className="text-yellow-400 text-xl">💰</span>
+                  <span className="text-purple-400 text-xl">✨</span>
                   <span className={clsx(
-                    "font-bold text-yellow-300",
+                    "font-bold text-purple-300",
                     isMobile ? "text-lg" : "text-xl"
                   )}>
-                    +{lastGameCredits} credits
+                    +{lastGameCredits} Ichor
                   </span>
                   {lastGamePerfectWin && (
                     <span className="text-yellow-400 text-sm ml-1">Perfect!</span>

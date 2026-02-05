@@ -37,6 +37,7 @@ interface RawCard {
   base_power: number;
   text: string;
   ability_type: string;
+  type?: string; // Card type (e.g., "Army", "God", "Monster", etc.)
   tags: string[];
   effects: RawEffect[];
   ideology?: string;
@@ -159,6 +160,11 @@ function parseEffect(raw: RawEffect): Effect {
         type: 'MoveAndDebuffDestinationEffect',
         debuffAmount: raw.debuff_amount ?? -1,
       };
+    case 'ProtectFromDebuffEffect':
+      return {
+        type: 'ProtectFromDebuffEffect',
+        target: (raw.target ?? 'SAME_LOCATION_FRIENDLY_EXCEPT_SELF') as TargetFilter,
+      };
     default:
       // Unknown effect, return a no-op
       return {
@@ -179,6 +185,7 @@ function parseCard(raw: RawCard): CardDef {
     abilityType: raw.ability_type as AbilityType,
     effects: raw.effects.map(parseEffect),
     tags: raw.tags as CardTag[],
+    cardType: raw.type,
     ideology: raw.ideology as CardDef['ideology'],
     deckGroup: raw.deck_group,
   };
@@ -220,6 +227,19 @@ export function getDeckCardDefs(deckName: DeckName): CardDef[] {
   const ids = getDeckCardIds(deckName);
   const defs: CardDef[] = [];
   for (const id of ids) {
+    const def = getCardDef(id);
+    if (def) defs.push(def);
+  }
+  return defs;
+}
+
+/**
+ * Convert an array of card IDs to card definitions.
+ * Used when creating a deck from the player's custom deck selection.
+ */
+export function getCardDefsFromIds(cardIds: CardId[]): CardDef[] {
+  const defs: CardDef[] = [];
+  for (const id of cardIds) {
     const def = getCardDef(id);
     if (def) defs.push(def);
   }

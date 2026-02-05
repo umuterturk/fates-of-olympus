@@ -587,6 +587,23 @@ function mapLegacyEffectToAbility(
         },
       };
     
+    case 'ProtectFromDebuffEffect':
+      // Palladium effect: prevent enemy debuffs on other allies here
+      // The protection logic tracks which cards are protected from debuffs
+      return {
+        trigger: 'ONGOING',
+        condition: 'NONE',
+        targetSelector: mapTargetFilter(effect.target as string),
+        effect: 'PROTECT_ALLIES_FROM_DEBUFF',
+        value: 0, // No power modification - just protection
+        durationScope: 'WHILE_IN_PLAY',
+        visualMetadata: {
+          visualEffectType: 'GLOW',
+          intensity: 'LOW',
+          affectedEntities: [],
+        },
+      };
+    
     default:
       console.warn(`Unknown effect type: ${effect.type}`);
       return null;
@@ -605,6 +622,8 @@ function mapTargetFilter(target: string | undefined): import('../ability/types')
     'SAME_LOCATION_FRIENDLY': 'ALL_ALLIES_HERE',
     // SAME_LOCATION_FRIENDLY_EXCEPT_SELF excludes self - used by cards that say "other cards here"
     'SAME_LOCATION_FRIENDLY_EXCEPT_SELF': 'ALL_ALLIES_HERE_EXCEPT_SELF',
+    // SAME_LOCATION_FRIENDLY_ARMY_EXCEPT_SELF targets Army-type cards except self (Kouretes)
+    'SAME_LOCATION_FRIENDLY_ARMY_EXCEPT_SELF': 'ALLIES_HERE_ARMY_EXCEPT_SELF',
     'SAME_LOCATION_ENEMY': 'ALL_ENEMIES_HERE',
     // ONE_SAME_LOCATION_FRIENDLY always excludes self (picks ONE other ally)
     'ONE_SAME_LOCATION_FRIENDLY': 'ONE_OTHER_ALLY_HERE',

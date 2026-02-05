@@ -5,6 +5,7 @@ import type { CardInstance } from '@engine/models';
 import { getEffectivePower } from '@engine/models';
 import { CardTooltip } from './CardTooltip';
 import { useGameStore } from '@store/gameStore';
+import { getCardImagePath } from '@/utils/assets';
 import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
 
 interface CardProps {
@@ -80,7 +81,7 @@ export function Card({
   const shouldEnableLayout = (isPending || isAnimating) && !isBeingDestroyed && !isInBuffDebuffAnimation;
 
   // Image path - use base URL for GitHub Pages compatibility
-  const imagePath = `${import.meta.env.BASE_URL}cards/${card.cardDef.id}.png`;
+  const imagePath = getCardImagePath(card.cardDef.id);
 
   const sizeClasses = {
     xs: 'w-10 h-14 text-[8px]',

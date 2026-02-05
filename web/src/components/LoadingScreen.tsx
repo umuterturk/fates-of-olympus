@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAllCardDefs } from '@engine/cards';
+import { getCardImagePath } from '@/utils/assets';
 
 interface LoadingScreenProps {
   onLoadComplete: () => void;
@@ -8,7 +9,7 @@ interface LoadingScreenProps {
 
 // All card images to preload
 const CARD_IMAGES = getAllCardDefs().map(
-  (card) => `${import.meta.env.BASE_URL}cards/${card.id}.png`
+  (card) => getCardImagePath(card.id)
 );
 
 // Fonts to wait for

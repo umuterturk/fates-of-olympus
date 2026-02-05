@@ -37,7 +37,8 @@ import {
 import type { GameEvent } from './events';
 import type { PlayerId, LocationIndex, TurnNumber } from './types';
 import { MAX_TURNS, LOCATION_CAPACITY, STARTING_HAND_SIZE, MAX_HAND_SIZE, isValidLocationIndex } from './types';
-import { getDeckCardDefs, createDeck, shuffleDeckByCost } from './cards';
+import { getDeckCardDefs, createDeck, shuffleDeckByCost, getCardDefsFromIds } from './cards';
+import type { CardId } from './types';
 
 // Timeline-based deterministic resolution imports
 import { SeededRNG, generateGameSeed } from './rng';
@@ -533,13 +534,25 @@ export function resolveTurnDeterministic(
 
 /**
  * Create a game with a specific seed for deterministic behavior.
+ * 
+ * @param seed - Random seed for deterministic behavior
+ * @param playerDeckIds - Optional array of card IDs for player 0's deck (uses starter deck if not provided)
  */
-export function createGameWithSeed(seed: number): { state: GameState; events: GameEvent[]; rng: SeededRNG } {
+export function createGameWithSeed(
+  seed: number,
+  playerDeckIds?: CardId[]
+): { state: GameState; events: GameEvent[]; rng: SeededRNG } {
   const rng = new SeededRNG(seed);
   const events: GameEvent[] = [];
   
   // Create decks for both players (shuffled by cost - low cost cards drawn first)
-  const p0Defs = rng.shuffle(getDeckCardDefs('starter'));
+  // Player 0 uses the provided deck IDs or falls back to starter deck
+  const p0Defs = rng.shuffle(
+    playerDeckIds && playerDeckIds.length > 0
+      ? getCardDefsFromIds(playerDeckIds)
+      : getDeckCardDefs('starter')
+  );
+  // NPC always uses starter deck
   const p1Defs = rng.shuffle(getDeckCardDefs('starter'));
   
   // Sort by cost for early-game playability

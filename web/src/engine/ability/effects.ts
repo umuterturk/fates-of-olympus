@@ -241,6 +241,14 @@ export function applyEffect(
       break;
     }
     
+    case 'PROTECT_ALLIES_FROM_DEBUFF': {
+      // Mark targets as protected from debuffs
+      // This is handled during ongoing recalculation - the protection applies 
+      // as long as the source card (e.g., Palladium) is in play
+      // No immediate state change needed here, protection is checked in debuff effects
+      break;
+    }
+    
     // =======================================================================
     // Global/Tag-based Effects
     // =======================================================================
@@ -741,6 +749,7 @@ export function describeEffectType(effect: EffectType): string {
     'GAIN_DESTROYED_CARD_POWER': 'gain power from destroyed',
     'STEAL_POWER': 'steal power',
     'SILENCE_ENEMY_ONGOING_HERE': 'silence enemies',
+    'PROTECT_ALLIES_FROM_DEBUFF': 'protect allies from debuffs',
     'BUFF_DESTROY_CARDS_GLOBAL': 'buff Destroy cards',
     'DESTROY_AND_BUFF': 'destroy then buff',
     'DESTROY_AND_SELF_BUFF': 'destroy then self-buff',

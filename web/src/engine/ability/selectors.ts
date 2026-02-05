@@ -192,6 +192,14 @@ export function resolveTargets(
       return sortByDeterministicOrder(enemies).map(c => c.instanceId);
     }
     
+    case 'ALLIES_HERE_ARMY_EXCEPT_SELF': {
+      // Allied cards with 'Army' type at this location, except self
+      // Used by Kouretes: +1 to other Army cards here
+      const allies = getCards(location, sourcePlayer)
+        .filter(c => c.instanceId !== sourceCard.instanceId && c.cardDef.cardType === 'Army');
+      return sortByDeterministicOrder(allies).map(c => c.instanceId);
+    }
+    
     // =======================================================================
     // Default (unknown selector)
     // =======================================================================
@@ -462,6 +470,7 @@ export function describeTargetSelector(selector: TargetSelector): string {
     'FRIENDLY_WITH_DESTROY_TAG': 'allies with Destroy tag',
     'ENEMY_WITH_BUFF_TAG_HERE': 'enemies with Buff tag here',
     'ENEMY_WITH_ONGOING_HERE': 'enemies with Ongoing abilities here',
+    'ALLIES_HERE_ARMY_EXCEPT_SELF': 'other Army allies here',
     'MOVED_CARD': 'the moved card',
   };
   

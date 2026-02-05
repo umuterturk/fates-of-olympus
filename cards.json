@@ -429,14 +429,14 @@
       "environment": "Throne hall of obsidian with drifting ash"
     },
     {
-      "id": "harpies",
-      "name": "Harpies",
+      "id": "kobaloi",
+      "name": "Kobaloi",
       "cost": 1,
       "base_power": 1,
       "text": "On Reveal: Give 1 enemy card here -1 Power.",
       "ability_type": "ON_REVEAL",
       "ideology": "KINESIS",
-      "type": "Monster",
+      "type": "Spirit",
       "deck_group": 1,
       "tags": ["On-Reveal", "Debuff", "Tech"],
       "effects": [
@@ -446,9 +446,9 @@
           "amount": -1
         }
       ],
-      "depiction": "Winged harpies with sharp talons and wild hair",
-      "mood": "Mean, harrying",
-      "environment": "Wind-torn cliffside overlooking a stormy sea"
+      "depiction": "Cackling sprite-swarm with too-wide grins, fingers quick as thought",
+      "mood": "Mischievous, chaotic",
+      "environment": "Wine cellar where things go missing"
     },
     {
       "id": "hecate",
@@ -680,20 +680,25 @@
       "environment": "Twilight throne"
     },
     {
-      "id": "labyrinth_wall",
-      "name": "Labyrinth Wall",
+      "id": "palladium",
+      "name": "The Palladium",
       "cost": 4,
-      "base_power": 6,
-      "text": "",
-      "ability_type": "VANILLA",
+      "base_power": 3,
+      "text": "Ongoing: Your other cards here cannot have their Power reduced by enemy effects.",
+      "ability_type": "ONGOING",
       "ideology": "NOMOS",
-      "type": "Location",
+      "type": "Artifact",
       "deck_group": 3,
-      "tags": ["Vanilla"],
-      "effects": [],
-      "depiction": "Towering maze walls of ancient stone",
-      "mood": "Imposing, mysterious",
-      "environment": "Labyrinth interior"
+      "tags": ["Ongoing", "Tech"],
+      "effects": [
+        {
+          "type": "ProtectFromDebuffEffect",
+          "target": "SAME_LOCATION_FRIENDLY_EXCEPT_SELF"
+        }
+      ],
+      "depiction": "Sacred wooden statue of Athena, eyes burning with protective fire",
+      "mood": "Sacred, inviolable",
+      "environment": "Inner sanctum of Troy's citadel"
     },
     {
       "id": "lamia",
@@ -1129,14 +1134,14 @@
       "environment": "Coastal temple as waves crash up marble steps"
     },
     {
-      "id": "poseidons_wrath",
-      "name": "Poseidon's Wrath",
+      "id": "charybdis",
+      "name": "Charybdis",
       "cost": 6,
       "base_power": 6,
       "text": "On Reveal: If you moved a card this turn, this has +6 Power.",
       "ability_type": "ON_REVEAL",
       "ideology": "KINESIS",
-      "type": "Concept",
+      "type": "Monster",
       "deck_group": 3,
       "tags": ["On-Reveal", "Build-Around"],
       "effects": [
@@ -1147,9 +1152,9 @@
           "condition": "moved_this_turn"
         }
       ],
-      "depiction": "Massive tidal wave with divine fury",
-      "mood": "Cataclysmic, unstoppable",
-      "environment": "Stormy sea"
+      "depiction": "Massive whirlpool maw beneath churning waters, ships spiraling into the abyss",
+      "mood": "Inevitable, consuming",
+      "environment": "Narrow strait where currents collide"
     },
     {
       "id": "priest_of_hestia",
@@ -1288,14 +1293,14 @@
       "environment": "River Styx bank"
     },
     {
-      "id": "swift_dove",
-      "name": "Swift Dove",
+      "id": "aello",
+      "name": "Aello",
       "cost": 1,
       "base_power": 1,
       "text": "On Reveal: Move this to another location.",
       "ability_type": "ON_REVEAL",
       "ideology": "KINESIS",
-      "type": "Animal",
+      "type": "Spirit",
       "deck_group": 3,
       "tags": ["On-Reveal", "Move"],
       "effects": [
@@ -1305,9 +1310,9 @@
           "to_other_location": true
         }
       ],
-      "depiction": "White dove with golden-tipped feathers",
-      "mood": "Graceful, swift",
-      "environment": "Open sky"
+      "depiction": "Swift harpy with storm-dark wings and wind-tangled hair",
+      "mood": "Restless, fleeting",
+      "environment": "Gale-swept cliffs above a churning sea"
     },
     {
       "id": "talos",
@@ -1373,17 +1378,24 @@
       "id": "triton",
       "name": "Triton",
       "cost": 2,
-      "base_power": 3,
-      "text": "",
-      "ability_type": "VANILLA",
+      "base_power": 2,
+      "text": "On Reveal: If you moved a card this turn, this has +2 Power.",
+      "ability_type": "ON_REVEAL",
       "ideology": "KINESIS",
       "type": "Spirit",
       "deck_group": 3,
-      "tags": ["Vanilla"],
-      "effects": [],
-      "depiction": "Merman herald with conch horn",
-      "mood": "Bold, loyal",
-      "environment": "Ocean waves"
+      "tags": ["On-Reveal", "Build-Around"],
+      "effects": [
+        {
+          "type": "ConditionalPowerEffect",
+          "target": "SELF",
+          "amount": 2,
+          "condition": "moved_this_turn"
+        }
+      ],
+      "depiction": "Poseidon's herald rising from the waves, conch horn bellowing across the tides",
+      "mood": "Commanding, resonant",
+      "environment": "Cresting wave before a fleet of ships"
     },
     {
       "id": "typhon",
@@ -1431,46 +1443,52 @@
       "environment": "Cavern mouth descending into mist and river-stone"
     },
     {
-      "id": "war_drummers",
-      "name": "War Drummers",
+      "id": "kouretes",
+      "name": "Kouretes",
       "cost": 1,
-      "base_power": 2,
-      "text": "",
-      "ability_type": "VANILLA",
+      "base_power": 1,
+      "text": "Ongoing: Your other Army cards here have +1 Power.",
+      "ability_type": "ONGOING",
       "ideology": "NOMOS",
       "type": "Army",
       "deck_group": 2,
-      "tags": ["Vanilla"],
-      "effects": [],
-      "depiction": "A stomping troupe of armored Kouretes beating war drums in unison, shields flashing as they dance",
-      "mood": "Energetic, steadfast",
-      "environment": "Mountain shrine steps"
+      "tags": ["Ongoing", "Buff", "Build-Around"],
+      "effects": [
+        {
+          "type": "AddOngoingPowerEffect",
+          "target": "SAME_LOCATION_FRIENDLY_ARMY_EXCEPT_SELF",
+          "amount": 1
+        }
+      ],
+      "depiction": "Shield-clashing warriors in ritual dance, their synchronized strikes drowning all other sound",
+      "mood": "Ceremonial, thunderous",
+      "environment": "Sacred cave where infant Zeus was hidden"
     },
     {
-      "id": "winged_sandals",
-      "name": "Winged Sandals",
+      "id": "boreas",
+      "name": "Boreas",
       "cost": 1,
       "base_power": 0,
-      "text": "On Reveal: Move this to another location.",
+      "text": "On Reveal: Move 1 other allied card here to another location.",
       "ability_type": "ON_REVEAL",
       "ideology": "KINESIS",
-      "type": "Artifact",
+      "type": "Spirit",
       "deck_group": 2,
       "tags": ["On-Reveal", "Move"],
       "effects": [
         {
           "type": "MoveCardEffect",
-          "target": "SELF",
+          "target": "ONE_SAME_LOCATION_FRIENDLY",
           "to_other_location": true
         }
       ],
-      "depiction": "A single pair of floating winged sandals trailing silver wind, hovering like a playful omen",
-      "mood": "Playful, swift",
-      "environment": "Open sky above temples"
+      "depiction": "Fierce wind god with icy breath and storm-grey wings, hair whipping like frozen gales",
+      "mood": "Cold, relentless",
+      "environment": "Frozen mountain peak lashed by howling winds"
     },
     {
-      "id": "young_hoplite",
-      "name": "Young Hoplite",
+      "id": "peltast",
+      "name": "Peltast",
       "cost": 1,
       "base_power": 2,
       "text": "",
@@ -1480,9 +1498,9 @@
       "deck_group": 3,
       "tags": ["Vanilla"],
       "effects": [],
-      "depiction": "Young soldier with basic armor and hopeful eyes",
-      "mood": "Eager, brave",
-      "environment": "Training grounds"
+      "depiction": "Light infantry skirmisher with crescent shield and javelins",
+      "mood": "Alert, mobile",
+      "environment": "Rocky hillside with scattered brush"
     },
     {
       "id": "zagreus",
@@ -1537,7 +1555,7 @@
       "satyr",
       "naiad_nymph",
       "shade",
-      "harpies",
+      "kobaloi",
       "argive_scout",
       "iris",
       "hermes",
@@ -1557,10 +1575,10 @@
       "cyclops",
       "zeus",
       "titan_atlas",
-      "war_drummers",
+      "kouretes",
       "temple_acolyte",
       "maenad",
-      "winged_sandals",
+      "boreas",
       "stygian_candle",
       "delphic_scribe",
       "nereid",
@@ -1585,7 +1603,7 @@
     "destroy": [
       "hoplite",
       "shade",
-      "harpies",
+      "kobaloi",
       "argive_scout",
       "gorgon_glare",
       "athena",

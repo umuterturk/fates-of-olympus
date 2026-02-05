@@ -105,9 +105,9 @@ const getDef = (id: string) => getCardDef(id)!;
 
 describe('Systematic Effect Verification', () => {
 
-    describe('AddPowerEffect (Harpies, Satyr, Medusa)', () => {
-        it('Harpies: Should ONLY debuff ONE enemy at SAME location by EXACTLY -1', () => {
-            let state = createTestState({ p0HandDefs: [getDef('harpies')] });
+    describe('AddPowerEffect (Kobaloi, Satyr, Medusa)', () => {
+        it('Kobaloi: Should ONLY debuff ONE enemy at SAME location by EXACTLY -1', () => {
+            let state = createTestState({ p0HandDefs: [getDef('kobaloi')] });
 
             // Setup: 
             // Loc 0: 2 enemy Hoplites (base 2)
@@ -119,9 +119,9 @@ describe('Systematic Effect Verification', () => {
             state = withLocation(state, 0, addCard(addCard(getLocation(state, 0), e1, 1), e2, 1));
             state = withLocation(state, 1, addCard(getLocation(state, 1), e3, 1));
 
-            const harpies = state.players[0].hand[0]!;
+            const kobaloi = state.players[0].hand[0]!;
             const { state: nextState } = resolveTurn(state,
-                { type: 'PlayCard', playerId: 0, cardInstanceId: harpies.instanceId, location: 0 },
+                { type: 'PlayCard', playerId: 0, cardInstanceId: kobaloi.instanceId, location: 0 },
                 { type: 'Pass', playerId: 1 }
             );
 
@@ -138,14 +138,14 @@ describe('Systematic Effect Verification', () => {
             expect(getEffectivePower(loc1Enemies[0]!)).toBe(2);
         });
 
-        it('Harpies: Should hit UNREVEALED cards too (permanent modifier)', () => {
-            let state = createTestState({ p0HandDefs: [getDef('harpies')] });
+        it('Kobaloi: Should hit UNREVEALED cards too (permanent modifier)', () => {
+            let state = createTestState({ p0HandDefs: [getDef('kobaloi')] });
             const enemy = makeCard(101, getDef('hoplite'), 1, false); // Face Down
             state = withLocation(state, 0, addCard(getLocation(state, 0), enemy, 1));
 
-            const harpies = state.players[0].hand[0]!;
+            const kobaloi = state.players[0].hand[0]!;
             const { state: nextState } = resolveTurn(state,
-                { type: 'PlayCard', playerId: 0, cardInstanceId: harpies.instanceId, location: 0 },
+                { type: 'PlayCard', playerId: 0, cardInstanceId: kobaloi.instanceId, location: 0 },
                 { type: 'Pass', playerId: 1 }
             );
 
@@ -153,14 +153,14 @@ describe('Systematic Effect Verification', () => {
             expect(enemyOnBoard.permanentPowerModifier).toBe(-1);
         });
 
-        it('Harpies: Should NOT debuff anything if NO enemies are present', () => {
-            const state = createTestState({ p0HandDefs: [getDef('harpies')] });
-            const harpies = state.players[0].hand[0]!;
+        it('Kobaloi: Should NOT debuff anything if NO enemies are present', () => {
+            const state = createTestState({ p0HandDefs: [getDef('kobaloi')] });
+            const kobaloi = state.players[0].hand[0]!;
             const { state: nextState } = resolveTurn(state,
-                { type: 'PlayCard', playerId: 0, cardInstanceId: harpies.instanceId, location: 0 },
+                { type: 'PlayCard', playerId: 0, cardInstanceId: kobaloi.instanceId, location: 0 },
                 { type: 'Pass', playerId: 1 }
             );
-            // No crash, and P0 has Harpies on board
+            // No crash, and P0 has Kobaloi on board
             expect(getCards(getLocation(nextState, 0), 0).length).toBe(1);
         });
 
@@ -726,22 +726,22 @@ describe('Systematic Effect Verification', () => {
             expect(getEffectivePower(hoplite!)).toBe(4);
         });
 
-        it("Poseidon's Wrath: Should gain +6 if moved a card this turn", () => {
-            const state = createTestState({ p0Energy: 6, moved: [101], p0HandDefs: [getDef('poseidons_wrath')] }); // Poseidon's Wrath costs 6
+        it("Charybdis: Should gain +6 if moved a card this turn", () => {
+            const state = createTestState({ p0Energy: 6, moved: [101], p0HandDefs: [getDef('charybdis')] }); // Charybdis costs 6
 
-            const poseidonsWrath = state.players[0].hand[0]!;
+            const charybdis = state.players[0].hand[0]!;
             const action: PlayCardAction = {
                 type: 'PlayCard',
                 playerId: 0,
-                cardInstanceId: poseidonsWrath.instanceId,
+                cardInstanceId: charybdis.instanceId,
                 location: 0,
             };
             const passAction: PassAction = { type: 'Pass', playerId: 1 };
 
             const { state: nextState } = resolveTurn(state, action, passAction);
 
-            // Poseidon's Wrath base 6 + 6 = 12
-            const card = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'poseidons_wrath');
+            // Charybdis base 6 + 6 = 12
+            const card = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'charybdis');
             expect(card).toBeDefined();
             expect(getEffectivePower(card!)).toBe(12);
         });
@@ -1572,55 +1572,61 @@ describe('Systematic Effect Verification', () => {
             expect(nextState.cardsMovedThisGame.length).toBeGreaterThan(0);
         });
 
-        it('Swift Dove: Should move herself to another location', () => {
-            const state = createTestState({ p0Energy: 1, p0HandDefs: [getDef('swift_dove')] }); // cost 1
+        it('Aello: Should move herself to another location', () => {
+            const state = createTestState({ p0Energy: 1, p0HandDefs: [getDef('aello')] }); // cost 1
 
-            const swiftDove = state.players[0].hand[0]!;
+            const aello = state.players[0].hand[0]!;
             const action: PlayCardAction = {
                 type: 'PlayCard',
                 playerId: 0,
-                cardInstanceId: swiftDove.instanceId,
+                cardInstanceId: aello.instanceId,
                 location: 0,
             };
             const passAction: PassAction = { type: 'Pass', playerId: 1 };
 
             const { state: nextState } = resolveTurn(state, action, passAction);
 
-            // Swift Dove should NOT be at location 0
-            const doveAtLoc0 = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'swift_dove');
-            expect(doveAtLoc0).toBeUndefined();
+            // Aello should NOT be at location 0
+            const aelloAtLoc0 = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'aello');
+            expect(aelloAtLoc0).toBeUndefined();
 
-            // Swift Dove should be at another location
-            const doveAtOther = ([1, 2] as LocationIndex[]).flatMap(i => getCards(getLocation(nextState, i), 0)).find(c => c.cardDef.id === 'swift_dove');
-            expect(doveAtOther).toBeDefined();
-            expect(getEffectivePower(doveAtOther!)).toBe(1); // base 1
+            // Aello should be at another location
+            const aelloAtOther = ([1, 2] as LocationIndex[]).flatMap(i => getCards(getLocation(nextState, i), 0)).find(c => c.cardDef.id === 'aello');
+            expect(aelloAtOther).toBeDefined();
+            expect(getEffectivePower(aelloAtOther!)).toBe(1); // base 1
 
             // Move should be tracked
             expect(nextState.cardsMovedThisGame.length).toBeGreaterThan(0);
         });
 
-        it('Winged Sandals: Should move themselves to another location', () => {
-            const state = createTestState({ p0Energy: 1, p0HandDefs: [getDef('winged_sandals')] }); // cost 1
+        it('Boreas: Should move another allied card here to another location', () => {
+            let state = createTestState({ p0Energy: 1, p0HandDefs: [getDef('boreas')] }); // cost 1
 
-            const wingedSandals = state.players[0].hand[0]!;
+            // Setup: Add a hoplite at location 0 for Boreas to move
+            const hoplite = makeCard(101, getDef('hoplite'), 0);
+            state = withLocation(state, 0, addCard(getLocation(state, 0), hoplite, 0));
+
+            const boreas = state.players[0].hand[0]!;
             const action: PlayCardAction = {
                 type: 'PlayCard',
                 playerId: 0,
-                cardInstanceId: wingedSandals.instanceId,
+                cardInstanceId: boreas.instanceId,
                 location: 0,
             };
             const passAction: PassAction = { type: 'Pass', playerId: 1 };
 
             const { state: nextState } = resolveTurn(state, action, passAction);
 
-            // Winged Sandals should NOT be at location 0
-            const sandalsAtLoc0 = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'winged_sandals');
-            expect(sandalsAtLoc0).toBeUndefined();
+            // Boreas should stay at location 0
+            const boreasAtLoc0 = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'boreas');
+            expect(boreasAtLoc0).toBeDefined();
 
-            // Winged Sandals should be at another location
-            const sandalsAtOther = ([1, 2] as LocationIndex[]).flatMap(i => getCards(getLocation(nextState, i), 0)).find(c => c.cardDef.id === 'winged_sandals');
-            expect(sandalsAtOther).toBeDefined();
-            expect(getEffectivePower(sandalsAtOther!)).toBe(0); // base 0
+            // Hoplite should have moved to another location
+            const hopliteAtLoc0 = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'hoplite');
+            expect(hopliteAtLoc0).toBeUndefined();
+
+            const hopliteAtOther = ([1, 2] as LocationIndex[]).flatMap(i => getCards(getLocation(nextState, i), 0)).find(c => c.cardDef.id === 'hoplite');
+            expect(hopliteAtOther).toBeDefined();
 
             // Move should be tracked
             expect(nextState.cardsMovedThisGame.length).toBeGreaterThan(0);
@@ -1676,6 +1682,300 @@ describe('Systematic Effect Verification', () => {
             // Temple Acolyte should remain at base 1 (no self-buff)
             const acolyteCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'temple_acolyte');
             expect(getEffectivePower(acolyteCard!)).toBe(1);
+        });
+    });
+
+    describe('Ares - ConditionalOngoingPowerEffect (location_full)', () => {
+        it('Ares: Should buff allies when location is full', () => {
+            let state = createTestState({ p0Energy: 3, p0HandDefs: [getDef('ares')] }); // cost 3, base 3
+
+            // Fill location 0 with 3 cards (max capacity is 4, Ares will be the 4th)
+            const ally1 = makeCard(101, getDef('hoplite'), 0); // base 2
+            const ally2 = makeCard(102, getDef('hoplite'), 0); // base 2
+            const ally3 = makeCard(103, getDef('hoplite'), 0); // base 2
+            state = withLocation(state, 0, addCard(getLocation(state, 0), ally1, 0));
+            state = withLocation(state, 0, addCard(getLocation(state, 0), ally2, 0));
+            state = withLocation(state, 0, addCard(getLocation(state, 0), ally3, 0));
+
+            const ares = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: ares.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // All friendly cards at location 0 should have +1 Power from Ares ongoing
+            const allies = getCards(getLocation(nextState, 0), 0);
+            expect(allies.length).toBe(4); // 3 hoplites + Ares
+
+            // Each hoplite should have base 2 + 1 from Ares = 3
+            const hoplites = allies.filter(c => c.cardDef.id === 'hoplite');
+            hoplites.forEach(h => {
+                expect(getEffectivePower(h)).toBe(3); // 2 base + 1 from Ares
+            });
+
+            // Ares should also buff itself: base 3 + 1 = 4
+            const aresCard = allies.find(c => c.cardDef.id === 'ares');
+            expect(getEffectivePower(aresCard!)).toBe(4);
+        });
+
+        it('Ares: Should NOT buff if location not full', () => {
+            let state = createTestState({ p0Energy: 3, p0HandDefs: [getDef('ares')] }); // cost 3, base 3
+
+            // Only 1 ally at location 0 (Ares will be 2nd, location not full)
+            const ally1 = makeCard(101, getDef('hoplite'), 0); // base 2
+            state = withLocation(state, 0, addCard(getLocation(state, 0), ally1, 0));
+
+            const ares = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: ares.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Location not full, no buff
+            const hoplite = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'hoplite');
+            expect(getEffectivePower(hoplite!)).toBe(2); // base 2, no buff
+
+            const aresCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'ares');
+            expect(getEffectivePower(aresCard!)).toBe(3); // base 3, no buff
+        });
+    });
+
+    describe('Cerberus - ConditionalPowerEffect (destroyed_this_game)', () => {
+        it('Cerberus: Should get +4 Power if a card was destroyed this game', () => {
+            // Create state with a destroyed card tracked
+            const state = createTestState({ 
+                p0Energy: 5, 
+                p0HandDefs: [getDef('cerberus')], // cost 5, base 6
+                destroyed: [999] // A card was destroyed this game
+            });
+
+            const cerberus = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: cerberus.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Cerberus should have base 6 + 4 = 10 Power
+            const cerberusCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'cerberus');
+            expect(getEffectivePower(cerberusCard!)).toBe(10);
+        });
+
+        it('Cerberus: Should NOT get +4 if no card was destroyed', () => {
+            const state = createTestState({ 
+                p0Energy: 5, 
+                p0HandDefs: [getDef('cerberus')], // cost 5, base 6
+                destroyed: [] // No cards destroyed
+            });
+
+            const cerberus = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: cerberus.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Cerberus should have just base 6
+            const cerberusCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'cerberus');
+            expect(getEffectivePower(cerberusCard!)).toBe(6);
+        });
+    });
+
+    describe('Kouretes - AddOngoingPowerEffect (Army type targeting)', () => {
+        it('Kouretes: Should buff other Army cards at same location', () => {
+            let state = createTestState({ p0Energy: 1, p0HandDefs: [getDef('kouretes')] }); // cost 1, base 1
+
+            // Add two Army type cards - hoplite_phalanx and myrmidon are Army type
+            const hoplitePhalanx = makeCard(101, getDef('hoplite_phalanx'), 0); // Army type, base 4
+            const myrmidon = makeCard(102, getDef('myrmidon'), 0); // Army type, base 4
+            state = withLocation(state, 0, addCard(getLocation(state, 0), hoplitePhalanx, 0));
+            state = withLocation(state, 0, addCard(getLocation(state, 0), myrmidon, 0));
+
+            const kouretes = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: kouretes.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Hoplite Phalanx should have base 4 + 1 from Kouretes = 5
+            const phalanx = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'hoplite_phalanx');
+            expect(getEffectivePower(phalanx!)).toBe(5);
+
+            // Myrmidon should have base 4 + 1 from Kouretes = 5
+            const myrmidonCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'myrmidon');
+            expect(getEffectivePower(myrmidonCard!)).toBe(5);
+
+            // Kouretes itself is Army but should NOT buff self
+            const kouretesCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'kouretes');
+            expect(getEffectivePower(kouretesCard!)).toBe(1); // base 1, no self-buff
+        });
+
+        it('Kouretes: Should NOT buff non-Army cards', () => {
+            let state = createTestState({ p0Energy: 1, p0HandDefs: [getDef('kouretes')] }); // cost 1, base 1
+
+            // Add a non-Army card (hoplite is type "Army", let's use satyr which is "Nature")
+            const satyr = makeCard(101, getDef('satyr'), 0); // Nature type, base 1
+            state = withLocation(state, 0, addCard(getLocation(state, 0), satyr, 0));
+
+            const kouretes = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: kouretes.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Satyr should NOT be buffed (not Army type)
+            const satyrCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'satyr');
+            expect(getEffectivePower(satyrCard!)).toBe(1); // base 1, no buff
+        });
+    });
+
+    describe('Poseidon - ConditionalPowerEffect (moved_this_turn)', () => {
+        it('Poseidon: Should buff allies if a card moved this turn', () => {
+            // Create state with a card moved this turn
+            let state = createTestState({ 
+                p0Energy: 4, 
+                p0HandDefs: [getDef('poseidon')], // cost 4, base 3
+                moved: [999] // A card was moved this turn
+            });
+
+            // Add an ally to receive the buff
+            const hoplite = makeCard(101, getDef('hoplite'), 0); // base 2
+            state = withLocation(state, 0, addCard(getLocation(state, 0), hoplite, 0));
+
+            const poseidon = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: poseidon.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Hoplite should have base 2 + 2 from Poseidon = 4
+            const hopliteCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'hoplite');
+            expect(getEffectivePower(hopliteCard!)).toBe(4);
+
+            // Poseidon should also be buffed: base 3 + 2 = 5
+            const poseidonCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'poseidon');
+            expect(getEffectivePower(poseidonCard!)).toBe(5);
+        });
+
+        it('Poseidon: Should NOT buff if no card moved this turn', () => {
+            const state = createTestState({ 
+                p0Energy: 4, 
+                p0HandDefs: [getDef('poseidon')], // cost 4, base 3
+                moved: [] // No cards moved
+            });
+
+            const poseidon = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: poseidon.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Poseidon should have just base 3 (no buff)
+            const poseidonCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'poseidon');
+            expect(getEffectivePower(poseidonCard!)).toBe(3);
+        });
+    });
+
+    describe('Triton - ConditionalPowerEffect (moved_this_turn)', () => {
+        it('Triton: Should get +2 if a card moved this turn', () => {
+            const state = createTestState({ 
+                p0Energy: 2, 
+                p0HandDefs: [getDef('triton')], // cost 2, base 2
+                moved: [999] // A card was moved this turn
+            });
+
+            const triton = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: triton.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Triton should have base 2 + 2 = 4
+            const tritonCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'triton');
+            expect(getEffectivePower(tritonCard!)).toBe(4);
+        });
+
+        it('Triton: Should NOT get +2 if no card moved', () => {
+            const state = createTestState({ 
+                p0Energy: 2, 
+                p0HandDefs: [getDef('triton')], // cost 2, base 2
+                moved: [] // No cards moved
+            });
+
+            const triton = state.players[0].hand[0]!;
+            const action: PlayCardAction = {
+                type: 'PlayCard',
+                playerId: 0,
+                cardInstanceId: triton.instanceId,
+                location: 0,
+            };
+            const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+            const { state: nextState } = resolveTurn(state, action, passAction);
+
+            // Triton should have just base 2
+            const tritonCard = getCards(getLocation(nextState, 0), 0).find(c => c.cardDef.id === 'triton');
+            expect(getEffectivePower(tritonCard!)).toBe(2);
+        });
+    });
+
+    describe('Palladium - ProtectFromDebuffEffect', () => {
+        it('Palladium: Should exist with correct stats', () => {
+            const palladium = getDef('palladium');
+            expect(palladium).toBeDefined();
+            expect(palladium.cost).toBe(4);
+            expect(palladium.basePower).toBe(3);
+            expect(palladium.abilityType).toBe('ONGOING');
+        });
+
+        it('Palladium: Effect definition should be parsed correctly', () => {
+            const palladium = getDef('palladium');
+            expect(palladium.effects).toBeDefined();
+            expect(palladium.effects!.length).toBe(1);
+            expect(palladium.effects![0].type).toBe('ProtectFromDebuffEffect');
         });
     });
 });

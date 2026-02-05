@@ -1,14 +1,31 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import fs from 'fs';
+
+// Plugin to generate version.json for cache busting
+function versionPlugin(): Plugin {
+  return {
+    name: 'version-plugin',
+    writeBundle(options) {
+      const outDir = options.dir || 'dist';
+      const version = {
+        version: Date.now().toString(),
+        buildTime: new Date().toISOString(),
+      };
+      fs.writeFileSync(path.join(outDir, 'version.json'), JSON.stringify(version));
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/fates-of-olympus/',
   plugins: [
     react(),
+    versionPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'fates-of-olympus-logo.png', 'backgrounds/**/*', 'cards/**/*', 'locations/**/*'],
@@ -47,6 +64,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
         runtimeCaching: [
           {

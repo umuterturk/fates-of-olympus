@@ -36,6 +36,36 @@
         }
       }(window.location))
     </script>
+    
+    <!-- PWA Version Check - Clear cache on new version -->
+    <script>
+      (async function checkVersion() {
+        var STORAGE_KEY = 'app_version';
+        try {
+          var res = await fetch('/fates-of-olympus/version.json?t=' + Date.now(), { cache: 'no-store' });
+          var data = await res.json();
+          var version = data.version;
+          var storedVersion = localStorage.getItem(STORAGE_KEY);
+          
+          if (storedVersion && storedVersion !== version) {
+            // Clear all caches
+            if ('caches' in window) {
+              var keys = await caches.keys();
+              await Promise.all(keys.map(function(k) { return caches.delete(k); }));
+            }
+            // Unregister service workers
+            if ('serviceWorker' in navigator) {
+              var regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map(function(r) { return r.unregister(); }));
+            }
+            localStorage.setItem(STORAGE_KEY, version);
+            window.location.reload();
+            return;
+          }
+          localStorage.setItem(STORAGE_KEY, version);
+        } catch (e) { /* Network error, continue with cached version */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

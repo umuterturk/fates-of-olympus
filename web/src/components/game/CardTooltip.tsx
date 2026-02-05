@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import type { CardDef } from '@engine/models';
+import { getCardImagePath } from '@/utils/assets';
 
 interface CardTooltipProps {
   cardDef: CardDef;
@@ -92,7 +93,7 @@ function TooltipContent({ cardDef, power, powerDiff }: { cardDef: CardDef; power
       {/* Card image preview - cropped to avoid scrolling (10% top, 20% bottom) */}
       <div className="relative aspect-[20/21] overflow-hidden bg-gray-800">
         <img
-          src={`${import.meta.env.BASE_URL}cards/${cardDef.id}.png`}
+          src={getCardImagePath(cardDef.id)}
           alt={cardDef.name}
           className="absolute top-[-14.28%] left-0 w-full h-[142.8%] object-cover"
           onError={(e) => {

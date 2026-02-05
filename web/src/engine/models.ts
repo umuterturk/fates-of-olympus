@@ -44,6 +44,7 @@ export interface CardDef {
   readonly abilityType: AbilityType;
   readonly effects: readonly Effect[];
   readonly tags: readonly CardTag[];
+  readonly cardType?: string; // Card type (e.g., "Army", "God", "Monster", etc.)
   readonly ideology?: CardIdeology;
   readonly deckGroup?: number;
 }

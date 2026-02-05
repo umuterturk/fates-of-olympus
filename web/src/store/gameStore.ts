@@ -26,7 +26,7 @@ import {
 } from '@engine/controller';
 import { SeededRNG, generateGameSeed, generateTimestampSeed } from '@engine/rng';
 import type { ResolutionTimeline } from '@engine/timeline/types';
-import { computeGreedyAction } from '../ai/greedy';
+import { computeGreedyAction, getDifficultyForPosition } from '../ai/greedy';
 import {
   getPlayer,
   withPlayer,
@@ -123,7 +123,7 @@ interface GameStore {
   // Actions
   initGame: () => void;
   /** Initialize game with a specific seed (for testing/replay) */
-  initGameWithSeed: (seed: number) => void;
+  initGameWithSeed: (seed: number, playerDeckIds?: CardId[]) => void;
   /** Play a card from hand to location (doesn't end the turn) */
   playCard: (cardInstanceId: number, location: LocationIndex) => void;
   /** Move a pending card to a new location, or return to hand (null) */
@@ -185,11 +185,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   initGame: () => {
     // Generate a timestamp-based seed for single-player games
     const seed = generateTimestampSeed();
-    get().initGameWithSeed(seed);
+    
+    // Get the player's deck from playerStore
+    const playerProfile = usePlayerStore.getState().profile;
+    const playerDeckIds = playerProfile?.currentDeckIds;
+    
+    get().initGameWithSeed(seed, playerDeckIds);
   },
 
-  initGameWithSeed: (seed: number) => {
-    const { state, events, rng: newRng } = createGameWithSeed(seed);
+  initGameWithSeed: (seed: number, playerDeckIds?: CardId[]) => {
+    const { state, events, rng: newRng } = createGameWithSeed(seed, playerDeckIds);
     set({
       gameState: state,
       turnStartState: state,
@@ -296,6 +301,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ isNpcThinking: true });
 
     try {
+      // Get AI difficulty based on player's progression
+      const playerProfile = usePlayerStore.getState().profile;
+      const unlockPosition = playerProfile?.unlockPathPosition ?? 0;
+      const difficulty = getDifficultyForPosition(unlockPosition);
+
       // Let NPC make its decisions based on the turn start state
       // NPC plays multiple cards until it passes
       const npcActions: PlayCardAction[] = [];
@@ -307,7 +317,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // NPC plays cards until it passes
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const npcAction = computeGreedyAction(npcState, 1);
+        const npcAction = computeGreedyAction(npcState, 1, difficulty);
         if (npcAction.type === 'Pass') break;
 
         // Validate and apply NPC action

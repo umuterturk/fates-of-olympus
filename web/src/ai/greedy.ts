@@ -13,6 +13,64 @@ import type { PlayerId, LocationIndex } from '@engine/types';
 import { getLegalActions, resolveTurnDeterministic } from '@engine/controller';
 import { SeededRNG } from '@engine/rng';
 
+// =============================================================================
+// Difficulty Configuration
+// =============================================================================
+
+/**
+ * Configuration for AI difficulty levels.
+ * Higher randomness and blunder chance make the AI easier.
+ */
+export interface DifficultyConfig {
+  /** Multiplier for random bonus when selecting actions (0.5 is baseline) */
+  randomnessFactor: number;
+  /** Probability (0-1) to make a completely random move instead of optimal */
+  blunderChance: number;
+  /** Random noise added to state evaluations (masks true best plays) */
+  evaluationNoise: number;
+}
+
+/**
+ * Predefined difficulty levels for the AI.
+ * - easy: For new players (0-4 unlocks) - makes frequent mistakes
+ * - medium: For intermediate players (5-14 unlocks) - occasional mistakes
+ * - hard: For experienced players (15+ unlocks) - plays optimally
+ */
+export const DIFFICULTY_LEVELS: Record<'easy' | 'medium' | 'hard', DifficultyConfig> = {
+  easy: {
+    randomnessFactor: 3.0,
+    blunderChance: 0.3,
+    evaluationNoise: 200,
+  },
+  medium: {
+    randomnessFactor: 1.5,
+    blunderChance: 0.1,
+    evaluationNoise: 50,
+  },
+  hard: {
+    randomnessFactor: 0.5,
+    blunderChance: 0.0,
+    evaluationNoise: 0,
+  },
+};
+
+/**
+ * Get the appropriate difficulty level based on player's unlock progress.
+ * As players unlock more cards, they face a smarter AI.
+ */
+export function getDifficultyForPosition(unlockPosition: number): DifficultyConfig {
+  if (unlockPosition < 5) return DIFFICULTY_LEVELS.easy;
+  if (unlockPosition < 15) return DIFFICULTY_LEVELS.medium;
+  return DIFFICULTY_LEVELS.hard;
+}
+
+/** Default difficulty (hard) for backwards compatibility */
+const DEFAULT_DIFFICULTY: DifficultyConfig = DIFFICULTY_LEVELS.hard;
+
+// =============================================================================
+// AI Implementation
+// =============================================================================
+
 // Simulation RNG for AI evaluation (seeded for consistency within a game)
 let simulationRng = new SeededRNG(12345);
 
@@ -26,8 +84,16 @@ export function resetSimulationRng(seed: number = 12345): void {
 /**
  * Compute the best action for the NPC using greedy evaluation.
  * Uses deterministic simulation for accurate predictions.
+ * 
+ * @param state - Current game state
+ * @param playerId - The player ID making the decision (typically 1 for NPC)
+ * @param difficulty - Optional difficulty configuration (defaults to hard)
  */
-export function computeGreedyAction(state: GameState, playerId: PlayerId): PlayerAction {
+export function computeGreedyAction(
+  state: GameState,
+  playerId: PlayerId,
+  difficulty: DifficultyConfig = DEFAULT_DIFFICULTY
+): PlayerAction {
   const legalActions = getLegalActions(state, playerId);
   
   if (legalActions.length === 0) {
@@ -39,11 +105,23 @@ export function computeGreedyAction(state: GameState, playerId: PlayerId): Playe
     return legalActions[0]!;
   }
   
+  // Blunder check: with some probability, make a completely random move
+  // This makes the AI feel more human and helps beginners win
+  if (difficulty.blunderChance > 0 && simulationRng.next() < difficulty.blunderChance) {
+    // Pick a random non-pass action if available, otherwise pass
+    const nonPassActions = legalActions.filter(a => a.type !== 'Pass');
+    if (nonPassActions.length > 0) {
+      const randomIndex = Math.floor(simulationRng.next() * nonPassActions.length);
+      return nonPassActions[randomIndex]!;
+    }
+  }
+  
   let bestAction: PlayerAction = { type: 'Pass', playerId };
   let bestScore = -Infinity;
   
-  // Evaluate current state
-  const currentScore = evaluateState(state, playerId);
+  // Evaluate current state with noise
+  const currentScore = evaluateState(state, playerId) + 
+    (difficulty.evaluationNoise > 0 ? (simulationRng.next() - 0.5) * difficulty.evaluationNoise : 0);
   
   for (const action of legalActions) {
     if (action.type === 'Pass') {
@@ -69,10 +147,14 @@ export function computeGreedyAction(state: GameState, playerId: PlayerId): Playe
       simRng
     );
     
-    const score = evaluateState(result.state, playerId);
+    // Add evaluation noise to mask the true best plays (easier difficulties)
+    const evaluationNoise = difficulty.evaluationNoise > 0 
+      ? (simulationRng.next() - 0.5) * difficulty.evaluationNoise 
+      : 0;
+    const score = evaluateState(result.state, playerId) + evaluationNoise;
     
-    // Add some randomness to avoid predictable play (using seeded RNG)
-    const randomBonus = simulationRng.next() * 0.5;
+    // Add randomness to avoid predictable play (scaled by difficulty)
+    const randomBonus = simulationRng.next() * difficulty.randomnessFactor;
     
     if (score + randomBonus > bestScore) {
       bestScore = score + randomBonus;
@@ -153,10 +235,11 @@ export function computeGreedyActionWithDelay(
   state: GameState, 
   playerId: PlayerId,
   delayMs: number = 500,
+  difficulty: DifficultyConfig = DEFAULT_DIFFICULTY,
 ): Promise<PlayerAction> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(computeGreedyAction(state, playerId));
+      resolve(computeGreedyAction(state, playerId, difficulty));
     }, delayMs);
   });
 }

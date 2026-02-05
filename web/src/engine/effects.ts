@@ -126,6 +126,11 @@ export interface MoveAndDebuffDestinationEffect {
   readonly debuffAmount: Power;
 }
 
+export interface ProtectFromDebuffEffect {
+  readonly type: 'ProtectFromDebuffEffect';
+  readonly target: TargetFilter;
+}
+
 // Union of all effect types
 export type Effect =
   | AddPowerEffect
@@ -146,7 +151,8 @@ export type Effect =
   | MoveAndSelfBuffEffect
   | DestroyAndSelfBuffEffect
   | MoveAndBuffEffect
-  | MoveAndDebuffDestinationEffect;
+  | MoveAndDebuffDestinationEffect
+  | ProtectFromDebuffEffect;
 
 // =============================================================================
 // Effect Type Guards
@@ -172,5 +178,6 @@ export function isOngoingEffect(effect: Effect): boolean {
     'ConditionalOngoingPowerEffect',
     'ScalingOngoingPowerEffect',
     'SilenceOngoingEffect',
+    'ProtectFromDebuffEffect',
   ].includes(effect.type);
 }

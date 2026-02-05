@@ -59,29 +59,50 @@ export function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Compact Unlock Ready Link */}
+          {/* Compact Unlock Ready Link - Ancient Greek Chest */}
           {shouldShowUnlockNotification() && (
             <Link
               to="/card-reveal"
-              className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 
-                         border border-yellow-500/50 rounded-lg px-3 py-2 hover:border-yellow-400
-                         transition-all group"
+              className="relative group"
             >
+              {/* Outer glow */}
               <motion.div
-                className="absolute inset-0 bg-yellow-500/20 rounded-lg blur-md"
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                className="absolute -inset-3 bg-gradient-to-r from-yellow-500/50 via-amber-400/50 to-yellow-500/50 rounded-full blur-xl"
+                animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.9, 1.1, 0.9] }}
+                transition={{ duration: 2, repeat: Infinity }}
               />
-              <motion.span
-                className="text-xl relative z-10"
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+              
+              {/* Chest Container */}
+              <motion.div
+                className="relative w-14 h-14 cursor-pointer"
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                🎁
-              </motion.span>
-              <span className="text-sm font-medium text-yellow-300 relative z-10">
-                New card ready!
-              </span>
+                <img 
+                  src={`${import.meta.env.BASE_URL}icons/chest.png`}
+                  alt="" 
+                  className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,200,50,0.6)]"
+                />
+                
+                {/* Sparkle particles */}
+                <motion.div
+                  className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"
+                  animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                />
+                <motion.div
+                  className="absolute top-0 left-0 w-1.5 h-1.5 bg-amber-300 rounded-full"
+                  animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+                />
+                <motion.div
+                  className="absolute -top-2 left-1/2 w-1 h-1 bg-yellow-200 rounded-full"
+                  animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5], y: [0, -6, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+                />
+              </motion.div>
             </Link>
           )}
 
@@ -93,9 +114,9 @@ export function Home() {
             </div>
           )}
           
-          {/* Credits */}
+          {/* Ichor */}
           <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-lg">
-            <span className="text-yellow-400">💰</span>
+            <span className="text-purple-400">✨</span>
             <span className="font-bold text-olympus-gold">{profile.credits}</span>
           </div>
         </motion.div>
@@ -193,7 +214,7 @@ export function Home() {
               <div>
                 <p className="font-display text-lg">Daily Reward!</p>
                 <p className="text-sm opacity-90">
-                  +{dailyReward.creditsEarned} credits • 
+                  +{dailyReward.creditsEarned} Ichor • 
                   {dailyReward.wasReset ? ' Streak reset!' : ` ${dailyReward.newStreak} day streak`}
                 </p>
               </div>

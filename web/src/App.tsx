@@ -6,6 +6,7 @@ import { Game } from './pages/Game';
 import { Collection } from './pages/Collection';
 import { CardReveal } from './pages/CardReveal';
 import { LoadingScreen } from './components/LoadingScreen';
+import { UpdateNotification } from './components/UpdateNotification';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +17,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-olympus-navy text-white relative">
+      {/* PWA Update Notification */}
+      <UpdateNotification />
+      
       {/* Mobile background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden blur-xs"
