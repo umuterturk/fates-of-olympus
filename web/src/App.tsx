@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Home } from './pages/Home';
@@ -8,12 +8,30 @@ import { CardReveal } from './pages/CardReveal';
 import { LoadingScreen } from './components/LoadingScreen';
 import { UpdateNotification } from './components/UpdateNotification';
 
+/** Format build time as human-readable date */
+function formatBuildTime(isoString: string): string {
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return isoString;
+  }
+}
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleLoadComplete = useCallback(() => {
     setIsLoading(false);
   }, []);
+
+  const buildTimeDisplay = useMemo(() => formatBuildTime(__BUILD_TIME__), []);
 
   return (
     <div className="min-h-screen bg-olympus-navy text-white relative">
@@ -55,6 +73,13 @@ function App() {
             </Routes>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Build version at the very bottom */}
+      <div className="fixed bottom-1 left-0 right-0 text-center z-50 pointer-events-none">
+        <span className="text-[10px] text-gray-600/50">
+          Build: {buildTimeDisplay}
+        </span>
       </div>
     </div>
   );

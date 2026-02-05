@@ -20,9 +20,15 @@ function versionPlugin(): Plugin {
   };
 }
 
+// Build timestamp for version display
+const buildTime = new Date().toISOString();
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/fates-of-olympus/',
+  define: {
+    __BUILD_TIME__: JSON.stringify(buildTime),
+  },
   plugins: [
     react(),
     versionPlugin(),
