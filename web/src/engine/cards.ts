@@ -211,6 +211,29 @@ export function getAllCardDefs(): CardDef[] {
   return Array.from(ALL_CARDS.values());
 }
 
+/**
+ * Get all cards with a specific energy cost.
+ * Used for finding same-strength replacement cards.
+ */
+export function getCardsByCost(cost: number): CardDef[] {
+  return Array.from(ALL_CARDS.values()).filter(card => card.cost === cost);
+}
+
+/**
+ * Get cards grouped by cost for efficient lookups.
+ */
+export function getCardsByCostMap(): Map<number, CardDef[]> {
+  const byCost = new Map<number, CardDef[]>();
+  for (const card of ALL_CARDS.values()) {
+    const cost = card.cost;
+    if (!byCost.has(cost)) {
+      byCost.set(cost, []);
+    }
+    byCost.get(cost)!.push(card);
+  }
+  return byCost;
+}
+
 // =============================================================================
 // Deck Definitions
 // =============================================================================

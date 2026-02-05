@@ -37,7 +37,8 @@ import {
 import type { GameEvent } from './events';
 import type { PlayerId, LocationIndex, TurnNumber } from './types';
 import { MAX_TURNS, LOCATION_CAPACITY, STARTING_HAND_SIZE, MAX_HAND_SIZE, isValidLocationIndex } from './types';
-import { getDeckCardDefs, createDeck, shuffleDeckByCost, getCardDefsFromIds } from './cards';
+import { getDeckCardDefs, createDeck, shuffleDeckByCost, getCardDefsFromIds, getCardsByCostMap, getAllCardDefs } from './cards';
+import type { CardDef } from './models';
 import type { CardId } from './types';
 
 // Timeline-based deterministic resolution imports
@@ -532,28 +533,124 @@ export function resolveTurnDeterministic(
   };
 }
 
+// =============================================================================
+// NPC Deck Generation
+// =============================================================================
+
+/**
+ * Number of card swaps based on difficulty/unlock position.
+ * Lower positions = easier = fewer swaps (more similar to player's deck)
+ */
+function getNpcSwapCount(unlockPosition: number): number {
+  if (unlockPosition < 5) return 2;      // Easy: 2 random swaps
+  if (unlockPosition < 10) return 4;     // Medium-easy: 4 swaps
+  if (unlockPosition < 15) return 6;     // Medium: 6 swaps
+  if (unlockPosition < 25) return 8;     // Medium-hard: 8 swaps
+  return 10;                              // Hard: 10 swaps (more variety)
+}
+
+/**
+ * Generate NPC deck based on player's deck with random same-cost card swaps.
+ * 
+ * This creates a fair matchup where:
+ * - NPC has the same deck size as the player
+ * - NPC has similar card power distribution (same costs)
+ * - NPC has some variety through random swaps
+ * - Swap count increases with player progression (harder = more variety)
+ * 
+ * @param playerDeckIds - The player's current deck card IDs
+ * @param swapCount - Number of cards to randomly replace
+ * @param rng - Seeded RNG for deterministic swaps
+ * @returns Array of CardDefs for the NPC's deck
+ */
+function generateNpcDeck(
+  playerDeckIds: CardId[],
+  swapCount: number,
+  rng: SeededRNG
+): CardDef[] {
+  // Get player's deck definitions
+  const playerDeck = getCardDefsFromIds(playerDeckIds);
+  if (playerDeck.length === 0) {
+    // Fallback to starter deck if player deck is empty
+    return getDeckCardDefs('starter');
+  }
+
+  // Get all cards grouped by cost for finding replacements
+  const cardsByCost = getCardsByCostMap();
+  const playerCardIds = new Set(playerDeckIds);
+  
+  // Start with a copy of the player's deck
+  const npcDeck = [...playerDeck];
+  
+  // Track which indices we've already swapped to avoid double-swapping
+  const swappedIndices = new Set<number>();
+  
+  // Perform swaps
+  let swapsPerformed = 0;
+  let attempts = 0;
+  const maxAttempts = swapCount * 3; // Prevent infinite loops
+  
+  while (swapsPerformed < swapCount && attempts < maxAttempts) {
+    attempts++;
+    
+    // Pick a random card from the deck to swap
+    const indexToSwap = Math.floor(rng.next() * npcDeck.length);
+    
+    // Skip if already swapped this index
+    if (swappedIndices.has(indexToSwap)) continue;
+    
+    const cardToReplace = npcDeck[indexToSwap]!;
+    const cost = cardToReplace.cost;
+    
+    // Find all cards with the same cost that aren't in the current NPC deck
+    const currentNpcCardIds = new Set(npcDeck.map(c => c.id));
+    const sameCostCards = cardsByCost.get(cost) ?? [];
+    const availableReplacements = sameCostCards.filter(
+      card => !currentNpcCardIds.has(card.id)
+    );
+    
+    if (availableReplacements.length === 0) continue;
+    
+    // Pick a random replacement
+    const replacementIndex = Math.floor(rng.next() * availableReplacements.length);
+    const replacement = availableReplacements[replacementIndex]!;
+    
+    // Perform the swap
+    npcDeck[indexToSwap] = replacement;
+    swappedIndices.add(indexToSwap);
+    swapsPerformed++;
+  }
+  
+  return npcDeck;
+}
+
 /**
  * Create a game with a specific seed for deterministic behavior.
  * 
  * @param seed - Random seed for deterministic behavior
  * @param playerDeckIds - Optional array of card IDs for player 0's deck (uses starter deck if not provided)
+ * @param unlockPosition - Player's unlock position for difficulty scaling (defaults to 0)
  */
 export function createGameWithSeed(
   seed: number,
-  playerDeckIds?: CardId[]
+  playerDeckIds?: CardId[],
+  unlockPosition: number = 0
 ): { state: GameState; events: GameEvent[]; rng: SeededRNG } {
   const rng = new SeededRNG(seed);
   const events: GameEvent[] = [];
   
   // Create decks for both players (shuffled by cost - low cost cards drawn first)
   // Player 0 uses the provided deck IDs or falls back to starter deck
-  const p0Defs = rng.shuffle(
-    playerDeckIds && playerDeckIds.length > 0
-      ? getCardDefsFromIds(playerDeckIds)
-      : getDeckCardDefs('starter')
-  );
-  // NPC always uses starter deck
-  const p1Defs = rng.shuffle(getDeckCardDefs('starter'));
+  const effectivePlayerDeckIds = playerDeckIds && playerDeckIds.length > 0
+    ? playerDeckIds
+    : getDeckCardDefs('starter').map(c => c.id);
+  
+  const p0Defs = rng.shuffle(getCardDefsFromIds(effectivePlayerDeckIds));
+  
+  // NPC deck: based on player's deck with random same-cost swaps
+  // Swap count increases with player progression for more variety/challenge
+  const swapCount = getNpcSwapCount(unlockPosition);
+  const p1Defs = rng.shuffle(generateNpcDeck(effectivePlayerDeckIds, swapCount, rng));
   
   // Sort by cost for early-game playability
   p0Defs.sort((a, b) => a.cost - b.cost);

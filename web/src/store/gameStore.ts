@@ -123,7 +123,7 @@ interface GameStore {
   // Actions
   initGame: () => void;
   /** Initialize game with a specific seed (for testing/replay) */
-  initGameWithSeed: (seed: number, playerDeckIds?: CardId[]) => void;
+  initGameWithSeed: (seed: number, playerDeckIds?: CardId[], unlockPosition?: number) => void;
   /** Play a card from hand to location (doesn't end the turn) */
   playCard: (cardInstanceId: number, location: LocationIndex) => void;
   /** Move a pending card to a new location, or return to hand (null) */
@@ -146,7 +146,7 @@ interface GameStore {
   /** Retreat from the game (concede) - no credits awarded */
   retreat: () => Promise<void>;
   /** Process game end and award credits */
-  processGameEnd: () => Promise<void>;
+  processGameEnd: (finalLocationWinners?: readonly (PlayerId | null)[]) => Promise<void>;
   
   // ==========================================================================
   // Debug Functions (for testing)
@@ -186,15 +186,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Generate a timestamp-based seed for single-player games
     const seed = generateTimestampSeed();
     
-    // Get the player's deck from playerStore
+    // Get the player's deck and progression from playerStore
     const playerProfile = usePlayerStore.getState().profile;
     const playerDeckIds = playerProfile?.currentDeckIds;
+    const unlockPosition = playerProfile?.unlockPathPosition ?? 0;
     
-    get().initGameWithSeed(seed, playerDeckIds);
+    get().initGameWithSeed(seed, playerDeckIds, unlockPosition);
   },
 
-  initGameWithSeed: (seed: number, playerDeckIds?: CardId[]) => {
-    const { state, events, rng: newRng } = createGameWithSeed(seed, playerDeckIds);
+  initGameWithSeed: (seed: number, playerDeckIds?: CardId[], unlockPosition: number = 0) => {
+    const { state, events, rng: newRng } = createGameWithSeed(seed, playerDeckIds, unlockPosition);
     set({
       gameState: state,
       turnStartState: state,
@@ -545,7 +546,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ isAnimating: false, showGameResult: true, revealedNpcCardIds: new Set(), pendingNpcCardIds: new Set() });
         
         // Award credits for the game
-        await get().processGameEnd();
+        // Pass currentLocationWinners directly to avoid race condition with animation callback
+        await get().processGameEnd(currentLocationWinners);
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);
@@ -643,17 +645,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  processGameEnd: async () => {
+  processGameEnd: async (finalLocationWinners?: readonly (PlayerId | null)[]) => {
     const { gameState, locationWinners } = get();
     if (!gameState || gameState.result === 'IN_PROGRESS') return;
 
     // Determine if player won
     const playerWon = gameState.result === 'PLAYER_0_WINS';
     
+    // Use provided location winners (from endTurn) or fall back to state
+    // This prevents race condition where animation callback clears locationWinners
+    const effectiveLocationWinners = finalLocationWinners ?? locationWinners;
+    
     // Check for perfect win (all 3 locations won by player)
     let isPerfectWin = false;
-    if (playerWon && locationWinners) {
-      isPerfectWin = locationWinners.every(winner => winner === 0);
+    if (playerWon && effectiveLocationWinners) {
+      isPerfectWin = effectiveLocationWinners.every(winner => winner === 0);
     }
 
     // Award credits through player store
@@ -827,6 +833,42 @@ if (typeof window !== 'undefined') {
       console.log('[Debug] Player profile:', profile);
       return profile;
     },
+    /** Reset all - clears player profile (unlocks, credits, stats) and starts fresh */
+    resetAll: async () => {
+      // Import dynamically to avoid circular dependencies
+      const { getDefaultStarterDeck } = await import('@engine/starterDeck');
+      const starterDeck = getDefaultStarterDeck();
+      
+      // Reset player profile
+      await usePlayerStore.getState().resetProfile(starterDeck);
+      
+      // Reset game state
+      useGameStore.setState({
+        gameState: null,
+        turnStartState: null,
+        playerActions: [],
+        events: [],
+        powerChangedEvents: [],
+        cardDestroyedEvents: [],
+        currentAnimationIndex: 0,
+        currentDestroyAnimationIndex: 0,
+        isAnimating: false,
+        isNpcThinking: false,
+        locationWinners: null,
+        showGameResult: false,
+        revealedNpcCardIds: new Set(),
+        pendingNpcCardIds: new Set(),
+        rng: null,
+        gameSeed: null,
+        currentTimeline: null,
+        debugEnergyBonus: 0,
+        lastGameCredits: null,
+        lastGamePerfectWin: false,
+      });
+      
+      console.log('[Debug] All data reset! Player profile and game state cleared.');
+      console.log('[Debug] Refresh the page to start fresh.');
+    },
     /** Show help */
     help: () => {
       console.log(`
@@ -842,6 +884,7 @@ Debug Commands:
   debug.listCards()               - Show all available card IDs
   debug.getHand()                 - Show your current hand
   debug.getState()                - Get the full game state
+  debug.resetAll()                - Reset everything (profile, unlocks, credits, game)
       `);
     },
   };

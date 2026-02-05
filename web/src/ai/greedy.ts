@@ -32,20 +32,20 @@ export interface DifficultyConfig {
 
 /**
  * Predefined difficulty levels for the AI.
- * - easy: For new players (0-4 unlocks) - makes frequent mistakes
+ * - easy: For new players (0-4 unlocks) - makes frequent mistakes, very forgiving
  * - medium: For intermediate players (5-14 unlocks) - occasional mistakes
  * - hard: For experienced players (15+ unlocks) - plays optimally
  */
 export const DIFFICULTY_LEVELS: Record<'easy' | 'medium' | 'hard', DifficultyConfig> = {
   easy: {
-    randomnessFactor: 3.0,
-    blunderChance: 0.3,
-    evaluationNoise: 200,
+    randomnessFactor: 5.0,      // Much more random play selection
+    blunderChance: 0.45,        // 45% chance of random move (up from 30%)
+    evaluationNoise: 350,       // High noise masks optimal plays (up from 200)
   },
   medium: {
-    randomnessFactor: 1.5,
-    blunderChance: 0.1,
-    evaluationNoise: 50,
+    randomnessFactor: 2.0,      // Moderate randomness (up from 1.5)
+    blunderChance: 0.15,        // 15% blunder chance (up from 10%)
+    evaluationNoise: 100,       // Some noise (up from 50)
   },
   hard: {
     randomnessFactor: 0.5,
