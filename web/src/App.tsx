@@ -76,8 +76,8 @@ function App() {
       </div>
 
       {/* Build version at the very bottom */}
-      <div className="fixed bottom-1 left-0 right-0 text-center z-50 pointer-events-none">
-        <span className="text-[10px] text-gray-600/50">
+      <div className="fixed bottom-1 left-0 right-0 text-center z-[100] pointer-events-none">
+        <span className="text-[10px] text-gray-500">
           Build: {buildTimeDisplay}
         </span>
       </div>
