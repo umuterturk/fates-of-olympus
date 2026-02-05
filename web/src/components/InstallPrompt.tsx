@@ -25,6 +25,18 @@ declare global {
 const STORAGE_KEY = 'pwa-install-dismissed';
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+// Store the event globally in case it fires before React mounts
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+
+// Capture the event as early as possible
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('[PWA Install] beforeinstallprompt event captured globally');
+    e.preventDefault();
+    globalDeferredPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -50,21 +62,45 @@ export function InstallPrompt() {
   }, []);
 
   useEffect(() => {
+    const installed = isInstalled();
+    const dismissed = isDismissed();
+    
+    console.log('[PWA Install] Component mounted', {
+      isInstalled: installed,
+      isDismissed: dismissed,
+      hasGlobalPrompt: !!globalDeferredPrompt,
+      isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+    });
+
     // Don't show if already installed or dismissed
-    if (isInstalled() || isDismissed()) return;
+    if (installed || dismissed) {
+      console.log('[PWA Install] Skipping - already installed or dismissed');
+      return;
+    }
+
+    // Check if we already captured the event globally before React mounted
+    if (globalDeferredPrompt) {
+      console.log('[PWA Install] Using globally captured prompt event');
+      setDeferredPrompt(globalDeferredPrompt);
+      setTimeout(() => setShowPrompt(true), 2000);
+    }
 
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      console.log('[PWA Install] beforeinstallprompt event fired in component');
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Save the event for later use
       setDeferredPrompt(e);
+      globalDeferredPrompt = e;
       // Show our custom prompt after a short delay
       setTimeout(() => setShowPrompt(true), 2000);
     };
 
     const handleAppInstalled = () => {
+      console.log('[PWA Install] App was installed');
       // Clear the prompt when app is installed
       setDeferredPrompt(null);
+      globalDeferredPrompt = null;
       setShowPrompt(false);
     };
 
