@@ -7,6 +7,7 @@ import { Collection } from './pages/Collection';
 import { CardReveal } from './pages/CardReveal';
 import { LoadingScreen } from './components/LoadingScreen';
 import { UpdateNotification } from './components/UpdateNotification';
+import { InstallPrompt } from './components/InstallPrompt';
 
 /** Format build time as human-readable date */
 function formatBuildTime(isoString: string): string {
@@ -35,8 +36,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-olympus-navy text-white relative">
-      {/* PWA Update Notification */}
+      {/* PWA Notifications */}
       <UpdateNotification />
+      <InstallPrompt />
       
       {/* Mobile background image */}
       <div 
