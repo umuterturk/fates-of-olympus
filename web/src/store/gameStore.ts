@@ -22,6 +22,7 @@ import {
   resolveTurnDeterministic,
   startNextTurn,
   validateAction,
+  computeWinner,
   type DeterministicResolutionResult,
 } from '@engine/controller';
 import { SeededRNG, generateGameSeed, generateTimestampSeed } from '@engine/rng';
@@ -93,8 +94,8 @@ interface GameStore {
   currentDestroyAnimationIndex: number;
   isAnimating: boolean;
   isNpcThinking: boolean;
-  /** Location winners for end-game animation */
-  locationWinners: readonly (PlayerId | null)[] | null;
+  /** Location winners for end-game animation (UI-only state, do NOT use for game logic) */
+  animationLocationWinners: readonly (PlayerId | null)[] | null;
   /** Whether to show the game result (delayed until animations complete) */
   showGameResult: boolean;
   /** NPC card instance IDs that have been revealed (for staggered animation) */
@@ -139,14 +140,14 @@ interface GameStore {
   nextDestroyAnimation: () => void;
   /** Clear all pending animations */
   clearAnimations: () => void;
-  /** Clear location winners after animation */
-  clearLocationWinners: () => void;
+  /** Clear animation location winners after animation completes */
+  clearAnimationLocationWinners: () => void;
   /** Add energy to a player */
   addEnergy: (playerId: PlayerId, amount: number) => void;
   /** Retreat from the game (concede) - no credits awarded */
   retreat: () => Promise<void>;
-  /** Process game end and award credits */
-  processGameEnd: (finalLocationWinners?: readonly (PlayerId | null)[]) => Promise<void>;
+  /** Process game end and award credits - uses deterministic computeWinner for correctness */
+  processGameEnd: () => Promise<void>;
   
   // ==========================================================================
   // Debug Functions (for testing)
@@ -171,7 +172,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentDestroyAnimationIndex: 0,
   isAnimating: false,
   isNpcThinking: false,
-  locationWinners: null,
+  animationLocationWinners: null,
   showGameResult: false,
   revealedNpcCardIds: new Set(),
   pendingNpcCardIds: new Set(),
@@ -207,7 +208,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentDestroyAnimationIndex: 0,
       isAnimating: false,
       isNpcThinking: false,
-      locationWinners: null,
+      animationLocationWinners: null,
       showGameResult: false,
       revealedNpcCardIds: new Set(),
       pendingNpcCardIds: new Set(),
@@ -514,8 +515,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         await new Promise(resolve => setTimeout(resolve, 800)); // EVENT_ANIMATIONS.CardMoved is 0.7s
       }
 
-      // NOW trigger point animations
-      set({ locationWinners: currentLocationWinners });
+      // NOW trigger point animations (UI-only state)
+      set({ animationLocationWinners: currentLocationWinners });
 
       // Wait for point animations to complete
       const pointAnimationTime = 1500;
@@ -542,12 +543,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
           pendingNpcCardIds: new Set(),
         });
       } else {
-        // Game is over - show result after animations complete
-        set({ isAnimating: false, showGameResult: true, revealedNpcCardIds: new Set(), pendingNpcCardIds: new Set() });
+        // Game is over - award credits first, then show result
+        set({ isAnimating: false, revealedNpcCardIds: new Set(), pendingNpcCardIds: new Set() });
         
-        // Award credits for the game
-        // Pass currentLocationWinners directly to avoid race condition with animation callback
-        await get().processGameEnd(currentLocationWinners);
+        // Award credits for the game (uses deterministic computeWinner for correctness)
+        await get().processGameEnd();
+        
+        // Now show the result modal (after credits are calculated)
+        set({ showGameResult: true });
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);
@@ -591,8 +594,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
-  clearLocationWinners: () => {
-    set({ locationWinners: null });
+  clearAnimationLocationWinners: () => {
+    set({ animationLocationWinners: null });
   },
 
   addEnergy: (playerId: PlayerId, amount: number) => {
@@ -645,22 +648,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  processGameEnd: async (finalLocationWinners?: readonly (PlayerId | null)[]) => {
-    const { gameState, locationWinners } = get();
+  processGameEnd: async () => {
+    const { gameState } = get();
     if (!gameState || gameState.result === 'IN_PROGRESS') return;
 
+    // Use deterministic engine function to compute winner and location state
+    // This avoids race conditions with animation state and ensures correctness
+    const { result, locationWinners } = computeWinner(gameState);
+
     // Determine if player won
-    const playerWon = gameState.result === 'PLAYER_0_WINS';
-    
-    // Use provided location winners (from endTurn) or fall back to state
-    // This prevents race condition where animation callback clears locationWinners
-    const effectiveLocationWinners = finalLocationWinners ?? locationWinners;
+    const playerWon = result === 'PLAYER_0_WINS';
     
     // Check for perfect win (all 3 locations won by player)
-    let isPerfectWin = false;
-    if (playerWon && effectiveLocationWinners) {
-      isPerfectWin = effectiveLocationWinners.every(winner => winner === 0);
-    }
+    const isPerfectWin = playerWon && locationWinners.every(winner => winner === 0);
 
     // Award credits through player store
     const playerStore = usePlayerStore.getState();
@@ -854,7 +854,7 @@ if (typeof window !== 'undefined') {
         currentDestroyAnimationIndex: 0,
         isAnimating: false,
         isNpcThinking: false,
-        locationWinners: null,
+        animationLocationWinners: null,
         showGameResult: false,
         revealedNpcCardIds: new Set(),
         pendingNpcCardIds: new Set(),

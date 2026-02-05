@@ -94,7 +94,7 @@ export function Game() {
     currentDestroyAnimationIndex,
     isAnimating,
     isNpcThinking,
-    locationWinners,
+    animationLocationWinners,
     showGameResult,
     initGame,
     playCard,
@@ -102,7 +102,7 @@ export function Game() {
     endTurn,
     nextAnimation,
     nextDestroyAnimation,
-    clearLocationWinners,
+    clearAnimationLocationWinners,
     addEnergy,
     retreat,
     lastGameCredits,
@@ -566,11 +566,11 @@ export function Game() {
         )}
       </AnimatePresence>
 
-      {/* Location Win Animation - +1 flying to points indicator */}
+      {/* Location Win Animation - +1 flying to points indicator (UI-only state) */}
       <LocationWinAnimation
-        locationWinners={locationWinners}
+        locationWinners={animationLocationWinners}
         playerId={0}
-        onComplete={clearLocationWinners}
+        onComplete={clearAnimationLocationWinners}
         onPointLanded={() => addEnergy(0, 1)}
       />
 

@@ -37,7 +37,7 @@ import {
 import type { GameEvent } from './events';
 import type { PlayerId, LocationIndex, TurnNumber } from './types';
 import { MAX_TURNS, LOCATION_CAPACITY, STARTING_HAND_SIZE, MAX_HAND_SIZE, isValidLocationIndex } from './types';
-import { getDeckCardDefs, createDeck, shuffleDeckByCost, getCardDefsFromIds, getCardsByCostMap, getAllCardDefs } from './cards';
+import { getDeckCardDefs, createDeck, shuffleDeckByCost, getCardDefsFromIds, getCardsByCostMap } from './cards';
 import type { CardDef } from './models';
 import type { CardId } from './types';
 
@@ -131,7 +131,7 @@ export function createGame(): { state: GameState; events: GameEvent[] } {
  * Count how many locations a player is currently winning.
  * A player wins a location if they have strictly more power than the opponent.
  */
-function countLocationsWon(state: GameState, playerId: PlayerId): number {
+export function countLocationsWon(state: GameState, playerId: PlayerId): number {
   const enemyId = (1 - playerId) as PlayerId;
   let count = 0;
 
@@ -577,7 +577,6 @@ function generateNpcDeck(
 
   // Get all cards grouped by cost for finding replacements
   const cardsByCost = getCardsByCostMap();
-  const playerCardIds = new Set(playerDeckIds);
   
   // Start with a copy of the player's deck
   const npcDeck = [...playerDeck];
