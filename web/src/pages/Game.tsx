@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
@@ -9,6 +9,9 @@ import { CardDestroyedAnimation } from '@components/game/CardDestroyedAnimation'
 import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
 import { useGameStore } from '@store/gameStore';
 import { usePlayerStore } from '@store/playerStore';
+import { useTutorialStore } from '@tutorial/tutorialStore';
+import { TutorialPrompt } from '@tutorial/TutorialPrompt';
+import { getTutorialPrompt, getTutorialStepCount } from '@tutorial/TutorialMatch';
 import type { LocationIndex } from '@engine/types';
 import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
 
@@ -84,6 +87,109 @@ function RetreatButton({ onRetreat, disabled, isMobile }: RetreatButtonProps) {
   );
 }
 
+interface QuitConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isMobile: boolean;
+}
+
+function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmModalProps) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          data-name="quit-confirm-backdrop"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1001]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            data-name="quit-confirm-modal"
+            className={clsx(
+              "bg-olympus-navy rounded-xl border-2 border-olympus-gold text-center",
+              isMobile ? "p-4 mx-4" : "p-6"
+            )}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              data-name="quit-confirm-title"
+              className={clsx(
+                "font-display text-olympus-gold",
+                isMobile ? "text-lg mb-2" : "text-2xl mb-3"
+              )}
+            >
+              Quit Game?
+            </h3>
+            <p
+              data-name="quit-confirm-message"
+              className={clsx(
+                "text-gray-300 mb-4",
+                isMobile ? "text-sm" : "text-base"
+              )}
+            >
+              Your progress will be lost.
+            </p>
+            <div
+              data-name="quit-confirm-buttons"
+              className={clsx(
+                "flex justify-center",
+                isMobile ? "gap-3" : "gap-4"
+              )}
+            >
+              <button
+                data-name="quit-cancel-button"
+                onClick={onClose}
+                className={clsx(
+                  "bg-gray-700 text-white font-display rounded-lg hover:bg-gray-600 transition-colors",
+                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-2"
+                )}
+              >
+                Cancel
+              </button>
+              <button
+                data-name="quit-confirm-button"
+                onClick={onConfirm}
+                className={clsx(
+                  "bg-red-600 text-white font-display rounded-lg hover:bg-red-500 transition-colors",
+                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-2"
+                )}
+              >
+                Quit
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+interface BackButtonProps {
+  onClick: () => void;
+  isMobile: boolean;
+}
+
+function BackButton({ onClick, isMobile }: BackButtonProps) {
+  return (
+    <button
+      data-name="back-button"
+      onClick={onClick}
+      className={clsx(
+        "text-gray-400 hover:text-white transition-colors",
+        isMobile && "text-xs"
+      )}
+    >
+      ←
+    </button>
+  );
+}
+
 export function Game() {
   const {
     gameState,
@@ -97,6 +203,7 @@ export function Game() {
     animationLocationWinners,
     showGameResult,
     initGame,
+    initTutorialGame,
     playCard,
     moveCard,
     endTurn,
@@ -109,7 +216,9 @@ export function Game() {
     lastGamePerfectWin,
   } = useGameStore();
 
-  const { shouldShowUnlockNotification } = usePlayerStore();
+  const { shouldShowUnlockNotification, setTutorialCompleted } = usePlayerStore();
+  const { isActive: isTutorial, currentStep, advanceStep, completeTutorial } = useTutorialStore();
+  const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -120,10 +229,43 @@ export function Game() {
   const [isSelectedFromBoard, setIsSelectedFromBoard] = useState(false);
   // Track if game end screen is visible
   const [isEndScreenVisible, setIsEndScreenVisible] = useState(true);
+  // Track if quit confirmation modal is open
+  const [showQuitModal, setShowQuitModal] = useState(false);
 
   useEffect(() => {
-    initGame();
-  }, [initGame]);
+    if (searchParams.get('tutorial') === 'true') {
+      useTutorialStore.getState().startTutorial();
+    }
+    const isTutorialActive = useTutorialStore.getState().isActive;
+    if (isTutorialActive) {
+      initTutorialGame();
+    } else {
+      initGame();
+    }
+  }, [initGame, initTutorialGame, searchParams]);
+
+  // Handle browser back button
+  useEffect(() => {
+    const isGameOver = gameState?.result !== 'IN_PROGRESS';
+    
+    if (isGameOver) return; // Don't intercept if game is over
+
+    // Push a dummy state to history so we can intercept the back button
+    window.history.pushState({ gameInProgress: true }, '');
+
+    const handlePopState = () => {
+      // Show confirmation modal instead of navigating
+      setShowQuitModal(true);
+      // Push state again to prevent actual navigation
+      window.history.pushState({ gameInProgress: true }, '');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [gameState?.result]);
 
   // Navigate to card reveal screen when game ends and player can afford a new card
   useEffect(() => {
@@ -167,11 +309,13 @@ export function Game() {
     if (selectedCard === null || isAnimating || isNpcThinking || isGameOver) return;
 
     if (isSelectedFromBoard) {
-      // Moving a pending card to a new location
       moveCard(selectedCard, locationIndex as LocationIndex);
     } else {
-      // Playing a card from hand
       playCard(selectedCard, locationIndex as LocationIndex);
+      if (isTutorial) {
+        const step = getTutorialPrompt(currentStep);
+        if (step?.trigger === 'on_play_card') advanceStep();
+      }
     }
     setSelectedCard(null);
     setIsSelectedFromBoard(false);
@@ -187,7 +331,11 @@ export function Game() {
 
   const handleEndTurn = () => {
     if (!isAnimating && !isNpcThinking && !isGameOver) {
-      endTurn();
+      endTurn(isTutorial ? { isTutorial: true } : undefined);
+      if (isTutorial) {
+        const step = getTutorialPrompt(currentStep);
+        if (step?.trigger === 'on_end_turn') advanceStep();
+      }
       setSelectedCard(null);
       setIsSelectedFromBoard(false);
     }
@@ -270,16 +418,10 @@ export function Game() {
             isMobile ? "gap-2" : "gap-4"
           )}
         >
-          <Link
-            data-name="back-link"
-            to="/"
-            className={clsx(
-              "text-gray-400 hover:text-white",
-              isMobile && "text-xs"
-            )}
-          >
-            ←
-          </Link>
+          <BackButton
+            onClick={() => isGameOver ? navigate('/') : setShowQuitModal(true)}
+            isMobile={isMobile}
+          />
           <div
             data-name="turn-indicator"
             className={clsx(
@@ -287,9 +429,24 @@ export function Game() {
               isMobile ? "text-sm" : "text-xl"
             )}
           >
-            {gameState.result === 'IN_PROGRESS' ? `Turn ${gameState.turn}/6` : 'Game Ended'}
+            {gameState.result === 'IN_PROGRESS' ? `Turn ${gameState.turn}/${isTutorial ? '4' : '6'}` : 'Game Ended'}
           </div>
         </div>
+
+        {isTutorial && (
+          <button
+            data-name="skip-tutorial-button"
+            onClick={() => {
+              useTutorialStore.getState().skipTutorial();
+              initGame();
+            }}
+            className={clsx(
+              "text-gray-400 hover:text-gray-300 text-sm"
+            )}
+          >
+            Skip Tutorial
+          </button>
+        )}
 
         {showGameResult && gameState.result !== 'IN_PROGRESS' && !isEndScreenVisible && (
           <button
@@ -402,6 +559,18 @@ export function Game() {
     </>
   );
 
+  const tutorialStep = getTutorialPrompt(currentStep);
+  const tutorialStepCount = getTutorialStepCount();
+  const showTutorialPrompt = isTutorial && tutorialStep && currentStep < tutorialStepCount;
+
+  const handleTutorialContinue = () => {
+    advanceStep();
+    if (currentStep + 1 >= tutorialStepCount) {
+      completeTutorial();
+      setTutorialCompleted();
+    }
+  };
+
   return (
     <div
       data-name="game-root"
@@ -412,6 +581,14 @@ export function Game() {
           : "flex justify-center items-start pt-2"
       )}
     >
+      {showTutorialPrompt && (
+        <TutorialPrompt
+          step={tutorialStep}
+          onContinue={handleTutorialContinue}
+          isMobile={isMobile}
+        />
+      )}
+
       {isMobile ? (
         // Mobile layout - unchanged vertical stack
         gameContent
@@ -572,6 +749,14 @@ export function Game() {
         playerId={0}
         onComplete={clearAnimationLocationWinners}
         onPointLanded={() => addEnergy(0, 1)}
+      />
+
+      {/* Quit Confirmation Modal */}
+      <QuitConfirmModal
+        isOpen={showQuitModal}
+        onClose={() => setShowQuitModal(false)}
+        onConfirm={() => navigate('/')}
+        isMobile={isMobile}
       />
 
     </div>

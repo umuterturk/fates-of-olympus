@@ -38,6 +38,8 @@ export interface PlayerProfile {
   chosenIdeology: Ideology | null;
   loginStreak: LoginStreak;
   stats: PlayerStats;
+  /** Whether the player has completed the scripted tutorial match */
+  tutorialCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }

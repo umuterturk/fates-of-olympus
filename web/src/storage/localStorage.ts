@@ -203,7 +203,8 @@ export class LocalStorageAdapter implements StorageAdapter {
       typeof profile.stats.wins === 'number' &&
       typeof profile.stats.losses === 'number' &&
       typeof profile.stats.perfectWins === 'number' &&
-      typeof profile.createdAt === 'string'
+      typeof profile.createdAt === 'string' &&
+      (profile.tutorialCompleted === undefined || typeof profile.tutorialCompleted === 'boolean')
     );
   }
 

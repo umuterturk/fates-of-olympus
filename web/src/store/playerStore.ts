@@ -90,6 +90,7 @@ function createDefaultProfile(id: string, starterDeckIds: CardId[]): PlayerProfi
       losses: 0,
       perfectWins: 0,
     },
+    tutorialCompleted: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -219,6 +220,11 @@ interface PlayerStore {
    * Validate a deck composition.
    */
   isValidDeck: (deckIds: CardId[]) => { valid: boolean; reason?: string };
+
+  /**
+   * Mark the tutorial as completed and persist.
+   */
+  setTutorialCompleted: () => Promise<void>;
 }
 
 // =============================================================================
@@ -243,6 +249,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       if (!profile) {
         // Create new profile
         profile = createDefaultProfile(DEFAULT_PLAYER_ID, starterDeckIds);
+        await storage.saveProfile(profile);
+      } else if ((profile as { tutorialCompleted?: boolean }).tutorialCompleted === undefined) {
+        // Migrate existing profile: treat as having completed tutorial
+        profile = { ...profile, tutorialCompleted: true };
         await storage.saveProfile(profile);
       }
 
@@ -547,6 +557,18 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
 
     return { valid: true };
+  },
+
+  setTutorialCompleted: async () => {
+    const { profile, storage } = get();
+    if (!profile) return;
+    const updated: PlayerProfile = {
+      ...profile,
+      tutorialCompleted: true,
+      updatedAt: new Date().toISOString(),
+    };
+    set({ profile: updated });
+    await storage.saveProfile(updated);
   },
 }));
 

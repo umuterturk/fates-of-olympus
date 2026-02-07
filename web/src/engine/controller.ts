@@ -226,6 +226,53 @@ export function startNextTurn(state: GameState): { state: GameState; events: Gam
   return { state: newState, events };
 }
 
+/**
+ * Like startNextTurn but uses simple draw (first card from deck) instead of
+ * weighted draw. Used for the tutorial so card order is deterministic.
+ */
+export function startNextTurnWithSimpleDraw(state: GameState): { state: GameState; events: GameEvent[] } {
+  const events: GameEvent[] = [];
+
+  const newTurn = (state.turn + 1) as TurnNumber;
+  if (newTurn > MAX_TURNS) {
+    return { state, events };
+  }
+
+  let newState = withTurn(state, newTurn);
+  newState = withPhase(newState, 'PLANNING');
+  newState = clearTurnTracking(newState);
+
+  events.push({ type: 'TurnStarted', turn: newTurn });
+
+  for (const playerId of [0, 1] as PlayerId[]) {
+    let player = getPlayer(newState, playerId);
+
+    const baseEnergy = newTurn;
+    const locationsWon = countLocationsWon(state, playerId);
+    const cardEffectBonus = getBonusEnergyNextTurn(state, playerId);
+    const totalEnergy = baseEnergy + locationsWon + cardEffectBonus;
+
+    player = { ...player, energy: totalEnergy, maxEnergy: totalEnergy };
+    newState = withPlayer(newState, playerId, player);
+    events.push({ type: 'EnergySet', playerId, energy: baseEnergy });
+
+    const TARGET_HAND_SIZE = 4;
+    while (player.hand.length < TARGET_HAND_SIZE && player.hand.length < MAX_HAND_SIZE) {
+      const [drawnPlayer, card] = drawCard(player);
+      if (card) {
+        player = drawnPlayer;
+        newState = withPlayer(newState, playerId, player);
+        events.push({ type: 'CardDrawn', playerId, cardInstanceId: card.instanceId });
+      } else {
+        break;
+      }
+    }
+  }
+
+  newState = clearBonusEnergyNextTurn(newState);
+  return { state: newState, events };
+}
+
 // =============================================================================
 // Action Validation
 // =============================================================================

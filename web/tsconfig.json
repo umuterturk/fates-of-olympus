@@ -28,7 +28,8 @@
       "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
       "@store/*": ["src/store/*"],
-      "@storage/*": ["src/storage/*"]
+      "@storage/*": ["src/storage/*"],
+      "@tutorial/*": ["src/tutorial/*"]
     }
   },
   "include": ["src", "../cards.json"],

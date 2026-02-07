@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@store/playerStore';
+import { useTutorialStore } from '@tutorial/tutorialStore';
 import { getDefaultStarterDeck } from '@engine/starterDeck';
 
 export function Home() {
@@ -147,6 +148,19 @@ export function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
       >
+        {profile && !profile.tutorialCompleted && (
+          <button
+            onClick={() => {
+              useTutorialStore.getState().startTutorial();
+              navigate('/game?tutorial=true');
+            }}
+            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-olympus-bronze text-black font-display text-xl rounded-lg
+                       hover:from-amber-400 hover:to-yellow-700 transition-colors duration-200
+                       flex items-center justify-center gap-2 border-2 border-olympus-gold/50"
+          >
+            Start Tutorial
+          </button>
+        )}
         <Link
           to="/game"
           className="px-8 py-4 bg-olympus-gold text-black font-display text-xl rounded-lg
@@ -191,12 +205,24 @@ export function Home() {
       )}
 
       <motion.div
-        className="mt-8 text-gray-500 text-sm"
+        className="mt-8 text-gray-500 text-sm flex flex-col items-center gap-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 0.5 }}
       >
         <p>6 turns • 3 locations • 12-24 cards per deck</p>
+        {profile?.tutorialCompleted && (
+          <button
+            type="button"
+            onClick={() => {
+              useTutorialStore.getState().startTutorial();
+              navigate('/game?tutorial=true');
+            }}
+            className="text-olympus-gold/80 hover:text-olympus-gold text-xs underline"
+          >
+            Replay Tutorial
+          </button>
+        )}
       </motion.div>
 
       {/* Daily Reward Popup */}

@@ -21,10 +21,19 @@ import {
   createGameWithSeed,
   resolveTurnDeterministic,
   startNextTurn,
+  startNextTurnWithSimpleDraw,
   validateAction,
   computeWinner,
   type DeterministicResolutionResult,
 } from '@engine/controller';
+import { withResult } from '@engine/models';
+import {
+  createTutorialGameState,
+  getScriptedNpcActions,
+  TUTORIAL_MAX_TURNS,
+  TUTORIAL_SEED,
+} from '../tutorial/TutorialMatch';
+import { useTutorialStore } from '../tutorial/tutorialStore';
 import { SeededRNG, generateGameSeed, generateTimestampSeed } from '@engine/rng';
 import type { ResolutionTimeline } from '@engine/timeline/types';
 import { computeGreedyAction, getDifficultyForPosition } from '../ai/greedy';
@@ -125,14 +134,16 @@ interface GameStore {
   initGame: () => void;
   /** Initialize game with a specific seed (for testing/replay) */
   initGameWithSeed: (seed: number, playerDeckIds?: CardId[], unlockPosition?: number) => void;
+  /** Initialize the scripted tutorial match (fixed hands, 4 turns) */
+  initTutorialGame: () => void;
   /** Play a card from hand to location (doesn't end the turn) */
   playCard: (cardInstanceId: number, location: LocationIndex) => void;
   /** Move a pending card to a new location, or return to hand (null) */
   moveCard: (cardInstanceId: number, newLocation: LocationIndex | null) => void;
   /** Check if a card is pending (played this turn, can be moved) */
   isPendingCard: (cardInstanceId: number) => boolean;
-  /** End the turn - triggers NPC plays and resolution */
-  endTurn: () => Promise<void>;
+  /** End the turn - triggers NPC plays and resolution. Pass { isTutorial: true } when in tutorial. */
+  endTurn: (options?: { isTutorial?: boolean }) => Promise<void>;
   setAnimating: (isAnimating: boolean) => void;
   /** Advance to next animation */
   nextAnimation: () => void;
@@ -221,6 +232,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
+  initTutorialGame: () => {
+    const state = createTutorialGameState();
+    set({
+      gameState: state,
+      turnStartState: state,
+      playerActions: [],
+      events: [],
+      powerChangedEvents: [],
+      cardDestroyedEvents: [],
+      currentAnimationIndex: 0,
+      currentDestroyAnimationIndex: 0,
+      isAnimating: false,
+      isNpcThinking: false,
+      animationLocationWinners: null,
+      showGameResult: false,
+      revealedNpcCardIds: new Set(),
+      pendingNpcCardIds: new Set(),
+      rng: null,
+      gameSeed: null,
+      currentTimeline: null,
+      debugEnergyBonus: 0,
+      lastGameCredits: null,
+      lastGamePerfectWin: false,
+    });
+  },
+
   playCard: (cardInstanceId: number, location: LocationIndex) => {
     const { gameState, playerActions } = get();
     if (!gameState) return;
@@ -295,50 +332,48 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return playerActions.some(a => a.cardInstanceId === cardInstanceId);
   },
 
-  endTurn: async () => {
+  endTurn: async (options?: { isTutorial?: boolean }) => {
     const { gameState, turnStartState, playerActions, gameSeed } = get();
     if (!gameState || !turnStartState) return;
     if (gameState.result !== 'IN_PROGRESS') return;
 
+    const isTutorial = options?.isTutorial ?? false;
     set({ isNpcThinking: true });
 
     try {
-      // Get AI difficulty based on player's progression
-      const playerProfile = usePlayerStore.getState().profile;
-      const unlockPosition = playerProfile?.unlockPathPosition ?? 0;
-      const difficulty = getDifficultyForPosition(unlockPosition);
+      let npcActions: PlayCardAction[];
 
-      // Let NPC make its decisions based on the turn start state
-      // NPC plays multiple cards until it passes
-      const npcActions: PlayCardAction[] = [];
-      let npcState = turnStartState;
-
-      // Small delay before NPC starts "thinking"
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // NPC plays cards until it passes
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const npcAction = computeGreedyAction(npcState, 1, difficulty);
-        if (npcAction.type === 'Pass') break;
-
-        // Validate and apply NPC action
-        const validation = validateAction(npcState, npcAction);
-        if (!validation.valid) break;
-
-        npcActions.push(npcAction);
-        npcState = applyCardPlay(npcState, npcAction);
-
-        // Small delay between NPC plays for visual effect
-        await new Promise(resolve => setTimeout(resolve, 200));
+      let npcActionsForResolution: PlayerAction[];
+      npcActions = [];
+      if (isTutorial) {
+        npcActionsForResolution = getScriptedNpcActions(turnStartState);
+        npcActions = npcActionsForResolution.filter((a): a is PlayCardAction => a.type === 'PlayCard');
+      } else {
+        const playerProfile = usePlayerStore.getState().profile;
+        const unlockPosition = playerProfile?.unlockPathPosition ?? 0;
+        const difficulty = getDifficultyForPosition(unlockPosition);
+        npcActions = [];
+        let npcState = turnStartState;
+        await new Promise(resolve => setTimeout(resolve, 300));
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const npcAction = computeGreedyAction(npcState, 1, difficulty);
+          if (npcAction.type === 'Pass') break;
+          const validation = validateAction(npcState, npcAction);
+          if (!validation.valid) break;
+          npcActions.push(npcAction);
+          npcState = applyCardPlay(npcState, npcAction);
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        npcActionsForResolution = npcActions;
       }
 
       set({ isNpcThinking: false, isAnimating: true });
 
-      // Create a deterministic RNG for this turn resolution
-      // Seed is based on game seed + turn number for reproducibility
       const turnRng = new SeededRNG(
-        generateGameSeed(String(gameSeed ?? 0), turnStartState.turn)
+        isTutorial
+          ? generateGameSeed(String(TUTORIAL_SEED), turnStartState.turn)
+          : generateGameSeed(String(gameSeed ?? 0), turnStartState.turn)
       );
 
       // Now resolve the turn using the DETERMINISTIC system
@@ -347,11 +382,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       let allEvents: GameEvent[] = [];
       let lastTimeline: ResolutionTimeline | null = null;
 
-      const maxPlays = Math.max(playerActions.length, npcActions.length);
+      const maxPlays = Math.max(playerActions.length, npcActionsForResolution.length);
 
       for (let i = 0; i < maxPlays; i++) {
         const playerAction: PlayerAction = playerActions[i] ?? { type: 'Pass', playerId: 0 };
-        const npcAction: PlayerAction = npcActions[i] ?? { type: 'Pass', playerId: 1 };
+        const npcAction: PlayerAction = npcActionsForResolution[i] ?? { type: 'Pass', playerId: 1 };
 
         // Use deterministic resolution with pre-computed timeline
         const result: DeterministicResolutionResult = resolveTurnDeterministic(
@@ -522,35 +557,47 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const pointAnimationTime = 1500;
       await new Promise(resolve => setTimeout(resolve, pointAnimationTime));
 
-      // If game is still in progress, start next turn
-      if (resolvedState.result === 'IN_PROGRESS') {
-        const { state: nextState, events: nextEvents } = startNextTurn(resolvedState);
-        
-        // Apply debug energy bonus if set
+      // If game is still in progress, start next turn (or end tutorial at 4 turns)
+      const tutorialGameOver = isTutorial && resolvedState.turn >= TUTORIAL_MAX_TURNS;
+      const shouldEndGame = resolvedState.result !== 'IN_PROGRESS' || tutorialGameOver;
+
+      if (shouldEndGame) {
+        const finalState = tutorialGameOver
+          ? withResult(resolvedState, computeWinner(resolvedState).result)
+          : resolvedState;
+        if (isTutorial) {
+          useTutorialStore.getState().advanceStep();
+        }
+        set({
+          gameState: finalState,
+          isAnimating: false,
+          revealedNpcCardIds: new Set(),
+          pendingNpcCardIds: new Set(),
+        });
+        if (!isTutorial) {
+          await get().processGameEnd();
+        }
+        set({ showGameResult: true });
+      } else {
+        const { state: nextState, events: nextEvents } = isTutorial
+          ? startNextTurnWithSimpleDraw(resolvedState)
+          : startNextTurn(resolvedState);
+
         const { debugEnergyBonus } = get();
         let finalNextState = nextState;
         if (debugEnergyBonus > 0) {
           const player = getPlayer(nextState, 0);
           finalNextState = withPlayer(nextState, 0, withEnergy(player, player.energy + debugEnergyBonus));
         }
-        
+
         set({
           gameState: finalNextState,
           turnStartState: finalNextState,
           events: nextEvents,
           isAnimating: false,
-          revealedNpcCardIds: new Set(), // Reset for next turn
+          revealedNpcCardIds: new Set(),
           pendingNpcCardIds: new Set(),
         });
-      } else {
-        // Game is over - award credits first, then show result
-        set({ isAnimating: false, revealedNpcCardIds: new Set(), pendingNpcCardIds: new Set() });
-        
-        // Award credits for the game (uses deterministic computeWinner for correctness)
-        await get().processGameEnd();
-        
-        // Now show the result modal (after credits are calculated)
-        set({ showGameResult: true });
       }
     } catch (error) {
       console.error('Error during turn resolution:', error);

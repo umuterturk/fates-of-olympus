@@ -87,8 +87,9 @@ export function Location({
     <motion.div
       data-name={`location-${location.index}`}
       className={clsx(
-        'location-container flex-1 flex flex-col items-center',
+        'location-container flex-1 flex flex-col items-center rounded-xl transition-all duration-200',
         onClick && !disabled && 'cursor-pointer',
+        isDropTarget && 'location-region-highlight',
       )}
       onClick={disabled ? undefined : onClick}
     >
@@ -152,7 +153,6 @@ export function Location({
         data-name={`location-${location.index}-card`}
         className={clsx(
           "relative my-1 transition-all location-card-wrapper",
-          isDropTarget && 'location-card-highlight',
           isMobile ? "w-[105px] h-[105px]" : "w-[147px] h-[147px]"
         )}
       >

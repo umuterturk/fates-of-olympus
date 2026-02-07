@@ -112,15 +112,10 @@
         0% 75%, 0% 25%);
   }
 
-  .location-card-highlight {
-    /* Brighter gold when highlighted */
-    background: linear-gradient(135deg,
-        #ffd700 0%,
-        #ffec8b 25%,
-        #ffd700 50%,
-        #ffd700 75%,
-        #ffec8b 100%);
-    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.9));
+  /* Subtle highlight for whole location region when a card is selected */
+  .location-region-highlight {
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35),
+                0 0 20px rgba(212, 175, 55, 0.12);
   }
 
   /* Location card inner - the actual card content */
@@ -212,6 +207,23 @@
 
     50% {
       box-shadow: 0 0 16px 4px rgba(234, 179, 8, 0.6);
+    }
+  }
+
+  /* Tutorial spotlight highlight */
+  .tutorial-highlight {
+    animation: tutorialHighlight 1.5s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes tutorialHighlight {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(234, 179, 8, 0.2);
     }
   }
 }

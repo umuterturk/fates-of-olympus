@@ -114,6 +114,7 @@ export default defineConfig({
       '@hooks': path.resolve(__dirname, './src/hooks'),
       '@store': path.resolve(__dirname, './src/store'),
       '@storage': path.resolve(__dirname, './src/storage'),
+      '@tutorial': path.resolve(__dirname, './src/tutorial'),
     },
   },
   test: {
