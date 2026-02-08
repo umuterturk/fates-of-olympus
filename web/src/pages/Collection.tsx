@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { usePlayerStore } from '@store/playerStore';
+import { IchorIcon, IchorDisplay } from '@components/IchorIcon';
 import { getCardDef, getAllCardDefs } from '@engine/cards';
 import { getDefaultStarterDeck } from '@engine/starterDeck';
 import { getNextUnlockCard, IDEOLOGY_CHOICE_POSITION } from '@engine/progression';
@@ -281,10 +282,12 @@ export function Collection() {
           </div>
 
           {/* Ichor Display */}
-          <div className="flex items-center gap-2 bg-black/30 px-4 py-2 rounded-lg">
-            <span className="text-purple-400 text-xl">✨</span>
-            <span className="text-xl font-bold text-olympus-gold">{profile.credits}</span>
-          </div>
+          <IchorDisplay
+            credits={profile.credits}
+            size={24}
+            className="bg-black/30 px-4 py-2 rounded-lg"
+            textClassName="text-xl font-bold text-olympus-gold"
+          />
         </header>
 
         {/* Stats Bar */}
@@ -343,7 +346,7 @@ export function Collection() {
                       'text-xs',
                       canAfford ? 'text-green-400' : 'text-gray-400'
                     )}>
-                      {unlockCost} ✨ {!canAfford && `(need ${unlockCost - profile.credits} more)`}
+                      {unlockCost} <IchorIcon size={14} /> {!canAfford && `(need ${unlockCost - profile.credits} more)`}
                     </p>
                   </div>
                 </div>

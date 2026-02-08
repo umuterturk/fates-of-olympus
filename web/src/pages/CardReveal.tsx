@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@store/playerStore';
+import { IchorDisplay } from '@components/IchorIcon';
 import { generateUnlockPath } from '@engine/progression';
 import { getDefaultStarterDeck } from '@engine/starterDeck';
 import { getCardDef } from '@engine/cards';
@@ -596,10 +597,7 @@ export function CardReveal() {
           </div>
 
           {/* Ichor display */}
-          <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-lg">
-            <span className="text-purple-400">✨</span>
-            <span className="font-bold text-olympus-gold">{profile.credits}</span>
-          </div>
+          <IchorDisplay credits={profile.credits} />
         </div>
 
         {/* Fate Path Tree - Horizontal Scrollable */}

@@ -912,6 +912,94 @@ if (typeof window !== 'undefined') {
       console.log('[Debug] Player profile:', profile);
       return profile;
     },
+    /** Simulate a defeat to test the defeat screen */
+    defeat: async () => {
+      const state = useGameStore.getState();
+      if (!state.gameState) {
+        console.log('[Debug] No game in progress. Start a game first.');
+        return;
+      }
+
+      const playerStore = usePlayerStore.getState();
+      let credits = 0;
+      if (playerStore.profile) {
+        credits = await playerStore.awardGameCredits(false, false);
+        await playerStore.updateGameStats(false, false);
+      }
+
+      useGameStore.setState({
+        gameState: { ...state.gameState, result: 'PLAYER_1_WINS' as const },
+        isAnimating: false, isNpcThinking: false, showGameResult: true,
+        lastGameCredits: credits, lastGamePerfectWin: false,
+      });
+      console.log(`[Debug] Defeat triggered! Credits earned: ${credits}`);
+    },
+    /** Simulate a win to test the victory screen */
+    win: async () => {
+      const state = useGameStore.getState();
+      if (!state.gameState) {
+        console.log('[Debug] No game in progress. Start a game first.');
+        return;
+      }
+
+      const playerStore = usePlayerStore.getState();
+      let credits = 0;
+      if (playerStore.profile) {
+        credits = await playerStore.awardGameCredits(true, false);
+        await playerStore.updateGameStats(true, false);
+      }
+
+      useGameStore.setState({
+        gameState: { ...state.gameState, result: 'PLAYER_0_WINS' as const },
+        isAnimating: false, isNpcThinking: false, showGameResult: true,
+        lastGameCredits: credits, lastGamePerfectWin: false,
+      });
+      console.log(`[Debug] Victory triggered! Credits earned: ${credits}`);
+    },
+    /** Simulate a perfect win to test the perfect victory screen */
+    perfectWin: async () => {
+      const state = useGameStore.getState();
+      if (!state.gameState) {
+        console.log('[Debug] No game in progress. Start a game first.');
+        return;
+      }
+
+      const playerStore = usePlayerStore.getState();
+      let credits = 0;
+      if (playerStore.profile) {
+        credits = await playerStore.awardGameCredits(true, true);
+        await playerStore.updateGameStats(true, true);
+      }
+
+      useGameStore.setState({
+        gameState: { ...state.gameState, result: 'PLAYER_0_WINS' as const },
+        isAnimating: false, isNpcThinking: false, showGameResult: true,
+        lastGameCredits: credits, lastGamePerfectWin: true,
+      });
+      console.log(`[Debug] Perfect victory triggered! Credits earned: ${credits}`);
+    },
+    /** Simulate a draw to test the draw screen */
+    draw: async () => {
+      const state = useGameStore.getState();
+      if (!state.gameState) {
+        console.log('[Debug] No game in progress. Start a game first.');
+        return;
+      }
+
+      const playerStore = usePlayerStore.getState();
+      let credits = 0;
+      if (playerStore.profile) {
+        credits = await playerStore.awardGameCredits(false, false);
+        await playerStore.updateGameStats(false, false);
+      }
+
+      useGameStore.setState({
+        gameState: { ...state.gameState, result: 'DRAW' as const },
+        isAnimating: false, isNpcThinking: false, showGameResult: true,
+        lastGameCredits: credits, lastGamePerfectWin: false,
+      });
+      console.log(`[Debug] Draw triggered! Credits earned: ${credits}`);
+    },
     /** Reset all - clears player profile (unlocks, credits, stats) and starts fresh */
     resetAll: async () => {
       // Import dynamically to avoid circular dependencies
@@ -963,6 +1051,10 @@ Debug Commands:
   debug.listCards()               - Show all available card IDs
   debug.getHand()                 - Show your current hand
   debug.getState()                - Get the full game state
+  debug.win()                     - Simulate a victory (must be in a game)
+  debug.perfectWin()              - Simulate a perfect win (must be in a game)
+  debug.defeat()                  - Simulate a defeat (must be in a game)
+  debug.draw()                    - Simulate a draw (must be in a game)
   debug.resetAll()                - Reset everything (profile, unlocks, credits, game)
       `);
     },

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@store/playerStore';
+import { IchorDisplay } from '@components/IchorIcon';
 import { useTutorialStore } from '@tutorial/tutorialStore';
 import { getDefaultStarterDeck } from '@engine/starterDeck';
 
@@ -133,10 +134,7 @@ export function Home() {
           )}
           
           {/* Ichor */}
-          <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-lg">
-            <span className="text-purple-400">✨</span>
-            <span className="font-bold text-olympus-gold">{profile.credits}</span>
-          </div>
+          <IchorDisplay credits={profile.credits} />
         </motion.div>
       )}
 
@@ -213,10 +211,10 @@ export function Home() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <span>🎮 {profile.stats.gamesPlayed} games</span>
-          <span>🏆 {profile.stats.wins} wins</span>
+          <span className="flex items-center gap-1"><img src={`${import.meta.env.BASE_URL}icons/draw.png`} alt="" width={16} height={16} className="inline-block" /> {profile.stats.gamesPlayed} games</span>
+          <span className="flex items-center gap-1"><img src={`${import.meta.env.BASE_URL}icons/victory.png`} alt="" width={16} height={16} className="inline-block" /> {profile.stats.wins} wins</span>
           {profile.stats.perfectWins > 0 && (
-            <span>⭐ {profile.stats.perfectWins} perfect</span>
+            <span className="flex items-center gap-1"><img src={`${import.meta.env.BASE_URL}icons/victory_perfect.png`} alt="" width={16} height={16} className="inline-block" /> {profile.stats.perfectWins} perfect</span>
           )}
         </motion.div>
       )}

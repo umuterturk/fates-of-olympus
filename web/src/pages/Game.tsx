@@ -8,6 +8,7 @@ import { BuffDebuffAnimation } from '@components/game/BuffDebuffAnimation';
 import { CardDestroyedAnimation } from '@components/game/CardDestroyedAnimation';
 import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
 import { useGameStore } from '@store/gameStore';
+import { IchorDisplay } from '@components/IchorIcon';
 import { usePlayerStore } from '@store/playerStore';
 import { useTutorialStore } from '@tutorial/tutorialStore';
 import { TutorialPrompt } from '@tutorial/TutorialPrompt';
@@ -654,19 +655,34 @@ export function Game() {
                   isMobile ? "text-2xl mb-2" : "text-5xl mb-4"
                 )}
               >
-                {gameState.result === 'PLAYER_0_WINS' ? '⚡ Victory! ⚡' :
-                  gameState.result === 'PLAYER_1_WINS' ? '💀 Defeat' : '⚖️ Draw'}
+                {gameState.result === 'PLAYER_0_WINS'
+                  ? (lastGamePerfectWin ? 'Perfect Victory!' : 'Victory!')
+                  : gameState.result === 'PLAYER_1_WINS' ? 'Defeat' : 'Draw'}
               </h2>
+
+              {/* Result image */}
+              <motion.img
+                src={`${import.meta.env.BASE_URL}icons/${
+                  gameState.result === 'PLAYER_0_WINS'
+                    ? (lastGamePerfectWin ? 'victory_perfect.png' : 'victory.png')
+                    : gameState.result === 'PLAYER_1_WINS' ? 'defeat.png' : 'draw.png'
+                }`}
+                alt="Result"
+                className={clsx("mx-auto", isMobile ? "w-32 mb-3" : "w-48 mb-5")}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3, type: 'spring', damping: 15 }}
+              />
 
               <p
                 data-name="game-over-message"
                 className={clsx(
-                  "text-gray-300",
-                  isMobile ? "text-sm mb-2" : "mb-4"
+                  "text-gray-300 font-display italic",
+                  isMobile ? "text-sm mb-2" : "text-lg mb-4"
                 )}
               >
                 {gameState.result === 'PLAYER_0_WINS'
-                  ? 'The gods smile upon you!'
+                  ? (lastGamePerfectWin ? 'Flawless! The gods bow before you!' : 'The gods smile upon you!')
                   : gameState.result === 'PLAYER_1_WINS'
                     ? 'The Fates were not in your favor...'
                     : 'An honorable stalemate!'}
@@ -677,23 +693,27 @@ export function Game() {
                 <motion.div
                   data-name="ichor-earned"
                   className={clsx(
-                    "flex items-center justify-center gap-2 bg-purple-500/20 rounded-lg mx-auto",
-                    isMobile ? "px-3 py-1.5 mb-4" : "px-4 py-2 mb-6"
+                    "flex items-center justify-center gap-2 mx-auto",
+                    isMobile ? "mb-4" : "mb-6"
                   )}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.4, type: 'spring' }}
                 >
-                  <span className="text-purple-400 text-xl">✨</span>
-                  <span className={clsx(
-                    "font-bold text-purple-300",
-                    isMobile ? "text-lg" : "text-xl"
-                  )}>
-                    +{lastGameCredits} Ichor
-                  </span>
-                  {lastGamePerfectWin && (
-                    <span className="text-yellow-400 text-sm ml-1">Perfect!</span>
-                  )}
+                  <IchorDisplay
+                    credits={lastGameCredits}
+                    prefix="+"
+                    suffix="Ichor"
+                    size={24}
+                    className={clsx(
+                      "bg-purple-500/20 rounded-lg",
+                      isMobile ? "px-3 py-1.5" : "px-4 py-2"
+                    )}
+                    textClassName={clsx(
+                      "font-bold text-purple-300",
+                      isMobile ? "text-lg" : "text-xl"
+                    )}
+                  />
                 </motion.div>
               )}
 
