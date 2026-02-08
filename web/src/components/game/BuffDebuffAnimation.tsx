@@ -7,7 +7,8 @@
  * Animation duration: 2 seconds
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PowerChangedEvent } from '@engine/events';
 
@@ -21,6 +22,7 @@ interface CardPosition {
 interface BuffDebuffAnimationProps {
     event: PowerChangedEvent | null;
     onComplete: () => void;
+    isGodSource?: boolean;  // If true, adds camera shake effect for god cards
 }
 
 // Particle component that travels from source to target
@@ -48,9 +50,9 @@ function Particle({
     };
 
     const glowSize = {
-        sm: '8px',
-        md: '14px',
-        lg: '20px',
+        sm: '12px',
+        md: '20px',
+        lg: '30px',
     };
 
     return (
@@ -79,7 +81,7 @@ function Particle({
                 scale: [0, 1.5, 1.2, 1, 0.3],
             }}
             transition={{
-                duration: 1.2,
+                duration: 0.8,
                 delay,
                 ease: [0.25, 0.1, 0.25, 1],
                 opacity: {
@@ -87,6 +89,76 @@ function Particle({
                 },
                 scale: {
                     times: [0, 0.15, 0.5, 0.85, 1],
+                },
+            }}
+        />
+    );
+}
+
+// Particle component for self-buff - radiates outward from center
+function SelfBuffParticle({
+    centerX,
+    centerY,
+    endOffsetX,
+    endOffsetY,
+    delay,
+    isBuff,
+    size = 'md',
+}: {
+    centerX: number;
+    centerY: number;
+    endOffsetX: number;
+    endOffsetY: number;
+    delay: number;
+    isBuff: boolean;
+    size?: 'sm' | 'md' | 'lg';
+}) {
+    const sizeClasses = {
+        sm: 'w-3 h-3',
+        md: 'w-5 h-5',
+        lg: 'w-7 h-7',
+    };
+
+    const glowSize = {
+        sm: '12px',
+        md: '20px',
+        lg: '30px',
+    };
+
+    return (
+        <motion.div
+            className={`absolute rounded-full ${sizeClasses[size]}`}
+            style={{
+                left: centerX,
+                top: centerY,
+                background: isBuff
+                    ? 'radial-gradient(circle, #86efac 0%, #4ade80 30%, #22c55e 60%, #16a34a 100%)'
+                    : 'radial-gradient(circle, #fca5a5 0%, #f87171 30%, #ef4444 60%, #dc2626 100%)',
+                boxShadow: isBuff
+                    ? `0 0 ${glowSize[size]} ${glowSize[size]} rgba(74, 222, 128, 0.8), 0 0 30px 15px rgba(34, 197, 94, 0.5), 0 0 50px 25px rgba(22, 163, 74, 0.3)`
+                    : `0 0 ${glowSize[size]} ${glowSize[size]} rgba(248, 113, 113, 0.8), 0 0 30px 15px rgba(239, 68, 68, 0.5), 0 0 50px 25px rgba(220, 38, 38, 0.3)`,
+            }}
+            initial={{
+                x: 0,
+                y: 0,
+                opacity: 0,
+                scale: 0,
+            }}
+            animate={{
+                x: endOffsetX,
+                y: endOffsetY,
+                opacity: [0, 1, 1, 0.8, 0],
+                scale: [0, 1.8, 1.4, 1, 0],
+            }}
+            transition={{
+                duration: 0.9,
+                delay,
+                ease: [0.25, 0.1, 0.25, 1],
+                opacity: {
+                    times: [0, 0.2, 0.5, 0.8, 1],
+                },
+                scale: {
+                    times: [0, 0.2, 0.5, 0.8, 1],
                 },
             }}
         />
@@ -130,6 +202,7 @@ function BeamTrail({
                 animate={{ width: distance, opacity: [0, 1, 1, 0.8, 0] }}
                 transition={{
                     duration: 1.4,
+                    delay: 0.6,
                     ease: 'easeOut',
                     opacity: {
                         times: [0, 0.1, 0.5, 0.8, 1],
@@ -151,7 +224,7 @@ function BeamTrail({
                 animate={{ width: distance * 0.9, opacity: [0, 0.8, 0.6, 0] }}
                 transition={{
                     duration: 1.2,
-                    delay: 0.1,
+                    delay: 0.7,
                     ease: 'easeOut',
                     opacity: {
                         times: [0, 0.2, 0.7, 1],
@@ -189,8 +262,22 @@ function ImpactBurst({
                         : '0 0 20px 4px rgba(239, 68, 68, 0.6)',
                 }}
                 initial={{ width: 0, height: 0, opacity: 1 }}
-                animate={{ width: 140, height: 140, opacity: 0 }}
-                transition={{ duration: 0.9, delay: 0.8, ease: 'easeOut' }}
+                animate={{ width: 200, height: 200, opacity: 0 }}
+                transition={{ duration: 0.9, delay: 1.3, ease: 'easeOut' }}
+            />
+
+            {/* Middle expanding ring */}
+            <motion.div
+                className="absolute rounded-full border-4"
+                style={{
+                    left: x,
+                    top: y,
+                    borderColor: isBuff ? '#4ade80' : '#f87171',
+                    transform: 'translate(-50%, -50%)',
+                }}
+                initial={{ width: 0, height: 0, opacity: 1 }}
+                animate={{ width: 150, height: 150, opacity: 0 }}
+                transition={{ duration: 0.7, delay: 1.4, ease: 'easeOut' }}
             />
 
             {/* Inner expanding ring */}
@@ -199,12 +286,12 @@ function ImpactBurst({
                 style={{
                     left: x,
                     top: y,
-                    borderColor: isBuff ? '#4ade80' : '#f87171',
+                    borderColor: isBuff ? '#86efac' : '#fca5a5',
                     transform: 'translate(-50%, -50%)',
                 }}
                 initial={{ width: 0, height: 0, opacity: 1 }}
                 animate={{ width: 100, height: 100, opacity: 0 }}
-                transition={{ duration: 0.7, delay: 0.9, ease: 'easeOut' }}
+                transition={{ duration: 0.6, delay: 1.5, ease: 'easeOut' }}
             />
 
             {/* Inner glow - larger and more intense */}
@@ -219,11 +306,11 @@ function ImpactBurst({
                         : 'radial-gradient(circle, rgba(252, 165, 165, 0.8), rgba(248, 113, 113, 0.5), transparent 70%)',
                 }}
                 initial={{ width: 0, height: 0, opacity: 0 }}
-                animate={{ width: 120, height: 120, opacity: [0, 1, 0.8, 0] }}
-                transition={{ duration: 0.8, delay: 0.7, opacity: { times: [0, 0.3, 0.7, 1] } }}
+                animate={{ width: 180, height: 180, opacity: [0, 1, 0.8, 0] }}
+                transition={{ duration: 0.8, delay: 1.2, opacity: { times: [0, 0.3, 0.7, 1] } }}
             />
 
-            {/* Flash effect */}
+            {/* Flash effect - more dramatic */}
             <motion.div
                 className="absolute rounded-full"
                 style={{
@@ -235,13 +322,13 @@ function ImpactBurst({
                         : 'radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(252, 165, 165, 0.6), transparent 60%)',
                 }}
                 initial={{ width: 0, height: 0, opacity: 0 }}
-                animate={{ width: 80, height: 80, opacity: [0, 1, 0] }}
-                transition={{ duration: 0.3, delay: 0.85 }}
+                animate={{ width: 120, height: 120, opacity: [0, 1, 0] }}
+                transition={{ duration: 0.3, delay: 1.35 }}
             />
 
-            {/* Power change indicator - bigger and longer lasting */}
+            {/* Power change indicator - text-6xl for more impact */}
             <motion.div
-                className="absolute font-bold text-4xl font-display"
+                className="absolute font-bold text-6xl font-display"
                 style={{
                     left: x,
                     top: y,
@@ -259,7 +346,7 @@ function ImpactBurst({
                 }}
                 transition={{
                     duration: 1.2,
-                    delay: 0.8,
+                    delay: 1.3,
                     opacity: { times: [0, 0.15, 0.4, 0.8, 1] },
                     scale: { times: [0, 0.15, 0.4, 0.8, 1] },
                     y: { times: [0, 0.3, 1] },
@@ -271,7 +358,181 @@ function ImpactBurst({
     );
 }
 
-export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationProps) {
+// Screen shake wrapper - animates its children on impact
+function ScreenShake({
+    children,
+    intensity = 'medium',
+}: {
+    children: ReactNode;
+    intensity?: 'light' | 'medium' | 'heavy';
+}) {
+    const shakeIntensity = {
+        light: { x: 2, y: 1 },
+        medium: { x: 4, y: 2 },
+        heavy: { x: 6, y: 3 },
+    };
+    const { x: sx, y: sy } = shakeIntensity[intensity];
+
+    return (
+        <motion.div
+            className="absolute inset-0"
+            style={{ willChange: 'transform' }}
+            animate={{
+                x: [0, -sx, sx, -sx / 2, sx / 2, 0],
+                y: [0, sy, -sy, sy / 2, 0],
+            }}
+            transition={{
+                duration: 0.4,
+                delay: 1.1,
+                ease: 'easeInOut',
+            }}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
+// God location shake - shakes only the targeted location for dramatic effect
+function GodLocationShake({ targetCardId, isBuff }: { targetCardId: number; isBuff: boolean }) {
+    useEffect(() => {
+        // Find the target card element to determine its location
+        const cardElement = document.querySelector(`[data-card-id="${targetCardId}"]`);
+        console.log('[GodShake] Looking for card:', targetCardId, 'Found:', cardElement);
+        if (!cardElement) return;
+        
+        // Find the parent location element
+        const locationElement = cardElement.closest('[data-location-index]') as HTMLElement;
+        console.log('[GodShake] Location element:', locationElement);
+        if (!locationElement) return;
+        
+        const originalTransform = locationElement.style.transform;
+        const originalTransition = locationElement.style.transition;
+        
+        // Delay before shake starts
+        const startDelay = setTimeout(() => {
+            locationElement.style.transition = 'transform 0.05s ease-in-out';
+            
+            // Shake sequence - dramatic for god powers
+            const shakeSequence = [
+                { x: -10, y: 5 },
+                { x: 12, y: -6 },
+                { x: -8, y: 5 },
+                { x: 10, y: -4 },
+                { x: -6, y: 3 },
+                { x: 5, y: -2 },
+                { x: -3, y: 1 },
+                { x: 0, y: 0 },
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < shakeSequence.length) {
+                    locationElement.style.transform = `translate(${shakeSequence[i].x}px, ${shakeSequence[i].y}px)`;
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    locationElement.style.transform = originalTransform;
+                    locationElement.style.transition = originalTransition;
+                }
+            }, 50);
+            
+            return () => clearInterval(interval);
+        }, 700); // 0.7s delay - when particles hit
+        
+        return () => {
+            clearTimeout(startDelay);
+            locationElement.style.transform = originalTransform;
+            locationElement.style.transition = originalTransition;
+        };
+    }, [targetCardId]);
+
+    return null; // No visual element needed, we manipulate the DOM directly
+}
+
+// Lightning arc effect - zigzag path from source to target
+function LightningArc({
+    startX,
+    startY,
+    endX,
+    endY,
+    isBuff,
+}: {
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    isBuff: boolean;
+}) {
+    const path = useMemo(() => {
+        const segments = 5;
+        const zigzagAmount = 20;
+        let d = `M ${startX} ${startY}`;
+        for (let i = 1; i <= segments; i++) {
+            const t = i / segments;
+            const x = startX + (endX - startX) * t;
+            const y = startY + (endY - startY) * t;
+            const offsetX = (Math.random() - 0.5) * zigzagAmount;
+            const offsetY = (Math.random() - 0.5) * zigzagAmount;
+            d += ` L ${x + offsetX} ${y + offsetY}`;
+        }
+        return d;
+    }, [startX, startY, endX, endY]);
+
+    return (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+            <defs>
+                <filter id="lightning-glow-buff-debuff">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+            <motion.path
+                d={path}
+                stroke={isBuff ? '#4ade80' : '#ef4444'}
+                strokeWidth={4}
+                fill="none"
+                filter="url(#lightning-glow-buff-debuff)"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{
+                    pathLength: 1,
+                    opacity: [0, 1, 0.8, 0],
+                }}
+                transition={{
+                    duration: 0.5,
+                    delay: 0.6,
+                    ease: 'easeOut',
+                    opacity: { times: [0, 0.2, 0.7, 1] },
+                }}
+            />
+        </svg>
+    );
+}
+
+// Background flash centered on target
+function BackgroundFlash({ x, y, isBuff }: { x: number; y: number; isBuff: boolean }) {
+    return (
+        <motion.div
+            className="fixed inset-0 pointer-events-none"
+            style={{
+                background: isBuff
+                    ? `radial-gradient(circle at ${x}px ${y}px, rgba(34, 197, 94, 0.25), transparent 50%)`
+                    : `radial-gradient(circle at ${x}px ${y}px, rgba(239, 68, 68, 0.25), transparent 50%)`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0.6, 0] }}
+            transition={{
+                duration: 0.8,
+                delay: 1.2,
+                times: [0, 0.3, 0.7, 1],
+            }}
+        />
+    );
+}
+
+export function BuffDebuffAnimation({ event, onComplete, isGodSource = false }: BuffDebuffAnimationProps) {
     const [sourcePos, setSourcePos] = useState<CardPosition | null>(null);
     const [targetPos, setTargetPos] = useState<CardPosition | null>(null);
     const [isActive, setIsActive] = useState(false);
@@ -294,15 +555,11 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
         return null;
     }, []);
 
+    const isSelfBuff = event?.sourceCardId === event?.cardInstanceId;
+    
     useEffect(() => {
         if (!event) {
             setIsActive(false);
-            return;
-        }
-
-        // Skip if source and target are the same card (self-buff)
-        if (event.sourceCardId === event.cardInstanceId) {
-            onComplete();
             return;
         }
 
@@ -312,20 +569,55 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
         const retryDelay = 150; // ms
 
         const tryFindPositions = () => {
+            // For self-buff, we only need to find one position
+            if (isSelfBuff) {
+                const selfPos = findCardPosition(event.cardInstanceId);
+                if (selfPos) {
+                    console.log('[BuffDebuff] Self-buff animation:', {
+                        cardId: event.cardInstanceId,
+                        position: selfPos,
+                        isBuff: event.newPower > event.oldPower,
+                        isGodSource,
+                    });
+                    setSourcePos(selfPos);
+                    setTargetPos(selfPos);
+                    setIsActive(true);
+
+                    // Shorter duration for self-buff (no particle travel needed)
+                    setTimeout(() => {
+                        setIsActive(false);
+                        onComplete();
+                    }, 1800);
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    setTimeout(tryFindPositions, retryDelay);
+                } else {
+                    onComplete();
+                }
+                return;
+            }
+
             const source = findCardPosition(event.sourceCardId);
             const target = findCardPosition(event.cardInstanceId);
 
             if (source && target) {
-                console.log('[BuffDebuff] Found cards:', { source, target, event });
+                console.log('[BuffDebuff] Animation setup:', {
+                    sourceCardId: event.sourceCardId,
+                    targetCardId: event.cardInstanceId,
+                    sourcePosition: source,
+                    targetPosition: target,
+                    direction: 'Particles fly FROM source TO target',
+                    isBuff: event.newPower > event.oldPower,
+                });
                 setSourcePos(source);
                 setTargetPos(target);
                 setIsActive(true);
 
-                // Complete after 2.2 seconds (longer for more dramatic effect)
+                // Complete after 2.7 seconds (visual effects are delayed by 0.5s to let cards scale first)
                 setTimeout(() => {
                     setIsActive(false);
                     onComplete();
-                }, 2200);
+                }, 2700);
             } else if (retryCount < maxRetries) {
                 retryCount++;
                 console.log(`[BuffDebuff] Retrying... (${retryCount}/${maxRetries})`);
@@ -341,7 +633,7 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
         const timeout = setTimeout(tryFindPositions, 200);
 
         return () => clearTimeout(timeout);
-    }, [event, findCardPosition, onComplete]);
+    }, [event, findCardPosition, onComplete, isSelfBuff, isGodSource]);
 
     if (!event || !isActive || !sourcePos || !targetPos) {
         return null;
@@ -350,14 +642,69 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
     const isBuff = event.newPower > event.oldPower;
     const powerChange = event.newPower - event.oldPower;
 
-    // Generate particle positions with more randomness and staggered delays
-    const particles = Array.from({ length: 12 }, (_, i) => ({
+    // Generate particle positions - more particles, more large sizes, faster stagger
+    // Base delay 0.6s so effects start after source (0.4s) and target starts scaling (0.5s)
+    const particles = Array.from({ length: 28 }, (_, i) => ({
         id: i,
-        delay: i * 0.08,
-        size: (['sm', 'md', 'lg'] as const)[i % 3],
-        offsetX: (Math.random() - 0.5) * 30,
-        offsetY: (Math.random() - 0.5) * 30,
+        delay: 0.6 + i * 0.04,
+        size: (i % 2 === 0 ? 'lg' : i % 3 === 0 ? 'md' : 'sm') as 'sm' | 'md' | 'lg',
+        offsetX: (Math.random() - 0.5) * 50,
+        offsetY: (Math.random() - 0.5) * 50,
     }));
+
+    // Self-buff particles - radiate outward from the card
+    const selfBuffParticles = Array.from({ length: 16 }, (_, i) => {
+        const angle = (i / 16) * Math.PI * 2; // Distribute around the card
+        const distance = 60 + Math.random() * 40;
+        return {
+            id: i,
+            delay: 0.3 + i * 0.03,
+            size: (i % 2 === 0 ? 'lg' : 'md') as 'sm' | 'md' | 'lg',
+            endX: Math.cos(angle) * distance,
+            endY: Math.sin(angle) * distance,
+        };
+    });
+
+    // For self-buffs, show animation with particles radiating outward
+    if (isSelfBuff) {
+        return (
+            <AnimatePresence>
+                {isActive && (
+                    <motion.div
+                        className="fixed inset-0 pointer-events-none z-[500]"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        {/* Location shake effect for god self-buffs */}
+                        {isGodSource && <GodLocationShake targetCardId={event.cardInstanceId} isBuff={isBuff} />}
+                        <BackgroundFlash x={targetPos.x} y={targetPos.y} isBuff={isBuff} />
+                        <ScreenShake intensity={isGodSource ? 'heavy' : 'medium'}>
+                            {/* Radiating particles for self-buff */}
+                            {selfBuffParticles.map(({ id, delay, size, endX, endY }) => (
+                                <SelfBuffParticle
+                                    key={id}
+                                    centerX={targetPos.x}
+                                    centerY={targetPos.y}
+                                    endOffsetX={endX}
+                                    endOffsetY={endY}
+                                    delay={delay}
+                                    isBuff={isBuff}
+                                    size={size}
+                                />
+                            ))}
+                            <ImpactBurst
+                                x={targetPos.x}
+                                y={targetPos.y}
+                                isBuff={isBuff}
+                                powerChange={powerChange}
+                            />
+                        </ScreenShake>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        );
+    }
 
     return (
         <AnimatePresence>
@@ -368,36 +715,43 @@ export function BuffDebuffAnimation({ event, onComplete }: BuffDebuffAnimationPr
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                 >
-                    {/* Beam trail */}
-                    <BeamTrail
-                        startX={sourcePos.x}
-                        startY={sourcePos.y}
-                        endX={targetPos.x}
-                        endY={targetPos.y}
-                        isBuff={isBuff}
-                    />
-
-                    {/* Particles */}
-                    {particles.map(({ id, delay, size, offsetX, offsetY }) => (
-                        <Particle
-                            key={id}
-                            startX={sourcePos.x + offsetX}
-                            startY={sourcePos.y + offsetY}
-                            endX={targetPos.x + offsetX * 0.5}
-                            endY={targetPos.y + offsetY * 0.5}
-                            delay={delay}
+                    {/* Location shake effect for god cards */}
+                    {isGodSource && <GodLocationShake targetCardId={event.cardInstanceId} isBuff={isBuff} />}
+                    <BackgroundFlash x={targetPos.x} y={targetPos.y} isBuff={isBuff} />
+                    <ScreenShake intensity={isGodSource ? 'heavy' : 'medium'}>
+                        <LightningArc
+                            startX={sourcePos.x}
+                            startY={sourcePos.y}
+                            endX={targetPos.x}
+                            endY={targetPos.y}
                             isBuff={isBuff}
-                            size={size}
                         />
-                    ))}
-
-                    {/* Impact burst */}
-                    <ImpactBurst
-                        x={targetPos.x}
-                        y={targetPos.y}
-                        isBuff={isBuff}
-                        powerChange={powerChange}
-                    />
+                        <BeamTrail
+                            startX={sourcePos.x}
+                            startY={sourcePos.y}
+                            endX={targetPos.x}
+                            endY={targetPos.y}
+                            isBuff={isBuff}
+                        />
+                        {particles.map(({ id, delay, size, offsetX, offsetY }) => (
+                            <Particle
+                                key={id}
+                                startX={sourcePos.x + offsetX}
+                                startY={sourcePos.y + offsetY}
+                                endX={targetPos.x + offsetX * 0.5}
+                                endY={targetPos.y + offsetY * 0.5}
+                                delay={delay}
+                                isBuff={isBuff}
+                                size={size}
+                            />
+                        ))}
+                        <ImpactBurst
+                            x={targetPos.x}
+                            y={targetPos.y}
+                            isBuff={isBuff}
+                            powerChange={powerChange}
+                        />
+                    </ScreenShake>
                 </motion.div>
             )}
         </AnimatePresence>

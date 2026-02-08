@@ -438,14 +438,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Store the timeline for debugging/replay
       set({ currentTimeline: lastTimeline });
 
-      // Filter out PowerChanged events that target different cards (buff/debuff effects)
+      // Filter PowerChanged events - include all buff/debuff effects
+      // Self-buffs are now included (previously filtered out) so gods like Zeus get animations
       const powerChangedEvents = allEvents.filter(
         (e): e is GameEvent & { type: 'PowerChanged' } =>
           e.type === 'PowerChanged' &&
           'sourceCardId' in e &&
-          'cardInstanceId' in e &&
-          (e as { sourceCardId: number; cardInstanceId: number }).sourceCardId !==
-          (e as { sourceCardId: number; cardInstanceId: number }).cardInstanceId
+          'cardInstanceId' in e
       );
 
       // Filter CardDestroyed events

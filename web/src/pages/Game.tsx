@@ -15,6 +15,7 @@ import { TutorialPrompt } from '@tutorial/TutorialPrompt';
 import { getTutorialPrompt, getTutorialStepCount } from '@tutorial/TutorialMatch';
 import type { LocationIndex } from '@engine/types';
 import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
+import { findCardByInstance } from '@engine/models';
 
 // Hook to detect mobile
 function useIsMobile() {
@@ -616,6 +617,19 @@ export function Game() {
             : null
         }
         onComplete={nextAnimation}
+        isGodSource={(() => {
+          if (!gameState || powerChangedEvents.length === 0 || currentAnimationIndex >= powerChangedEvents.length) return false;
+          const event = powerChangedEvents[currentAnimationIndex] as PowerChangedEvent;
+          const sourceCard = findCardByInstance(gameState, event.sourceCardId);
+          const isGod = sourceCard?.cardDef.cardType === 'God';
+          console.log('[BuffDebuff] Source card check:', {
+            sourceCardId: event.sourceCardId,
+            sourceCardName: sourceCard?.cardDef.name,
+            cardType: sourceCard?.cardDef.cardType,
+            isGod,
+          });
+          return isGod;
+        })()}
       />
 
       {/* Card Destroyed Animation Overlay */}

@@ -86,6 +86,7 @@ export function Location({
   return (
     <motion.div
       data-name={`location-${location.index}`}
+      data-location-index={location.index}
       className={clsx(
         'location-container flex-1 flex flex-col items-center rounded-xl transition-all duration-200',
         onClick && !disabled && 'cursor-pointer',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import type { CardInstance } from '@engine/models';
@@ -64,9 +64,34 @@ export function Card({
     ? (powerChangedEvents[currentAnimationIndex] as PowerChangedEvent)
     : null;
 
-  const isSourceOfEffect = currentEvent && currentEvent.sourceCardId === card.instanceId;
-  const isTargetOfEffect = currentEvent && currentEvent.cardInstanceId === card.instanceId;
-  
+  // Source stays big while ANY remaining event (from current index onward) has this card as source
+  // This keeps the effecting card big until all its effects are done
+  const currentSourceId = currentEvent?.sourceCardId;
+  const isSourceOfEffect = currentSourceId === card.instanceId && 
+    powerChangedEvents.slice(currentAnimationIndex).some(
+      (e) => (e as PowerChangedEvent).sourceCardId === currentSourceId
+    );
+  const isTargetOfEffectRaw = currentEvent && currentEvent.cardInstanceId === card.instanceId;
+  const isBuffEffect = currentEvent && currentEvent.newPower > currentEvent.oldPower;
+  const isDebuffEffect = currentEvent && currentEvent.newPower < currentEvent.oldPower;
+
+  // Delay target animation state to ensure source animates first
+  const [targetAnimationActive, setTargetAnimationActive] = useState(false);
+  useEffect(() => {
+    if (isTargetOfEffectRaw) {
+      // Wait for source card to scale up first (0.5s delay)
+      const timer = setTimeout(() => {
+        setTargetAnimationActive(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setTargetAnimationActive(false);
+    }
+  }, [isTargetOfEffectRaw, currentAnimationIndex]);
+
+  // Target only animates after the delay
+  const isTargetOfEffect = isTargetOfEffectRaw && targetAnimationActive;
+
   // Disable layout animation when card is involved in buff/debuff animation to prevent conflicts
   const isInBuffDebuffAnimation = isSourceOfEffect || isTargetOfEffect;
 
@@ -136,6 +161,80 @@ export function Card({
 
   const cardWidth = size === 'xs' ? 40 : size === 'loc' ? 56 : size === 'sm' ? 80 : size === 'md' ? 112 : 128;
 
+  // Memoize animate/transition so Framer Motion doesn't restart the animation on every render
+  const cardAnimate = useMemo(() => {
+    if (isBeingDestroyed) {
+      return { scale: 30, opacity: 0.01, zIndex: 100 };
+    }
+    if (isSourceOfEffect) {
+      // Source card (effecting card) scales up with a golden glow - stays big
+      return {
+        scale: [1, 1.55, 1.55],
+        y: [0, -25, -25],
+        zIndex: 50,
+        boxShadow: '0 0 30px 8px rgba(212, 175, 55, 0.7), 0 0 60px 15px rgba(184, 134, 11, 0.5)',
+      };
+    }
+    if (isTargetOfEffect && isBuffEffect) {
+      return {
+        scale: [1, 1.55, 1.55, 1],
+        y: [0, -20, -20, 0],
+        rotate: [0, 2, 2, 0],
+        zIndex: 40,
+        boxShadow: '0 0 25px 6px rgba(34, 197, 94, 0.5), 0 0 50px 12px rgba(22, 163, 74, 0.3)',
+      };
+    }
+    if (isTargetOfEffect && isDebuffEffect) {
+      return {
+        scale: [1, 0.95, 1.5, 1.5, 1],
+        x: [0, 5, -5, 0, 0],
+        y: [0, 3, -3, 0, 0],
+        zIndex: 40,
+        boxShadow: '0 0 25px 6px rgba(239, 68, 68, 0.5), 0 0 50px 12px rgba(220, 38, 38, 0.3)',
+      };
+    }
+    if (isTargetOfEffect) {
+      return { scale: 1.5, zIndex: 40 };
+    }
+    return {
+      scale: 1,
+      x: 0,
+      y: 0,
+      rotate: 0,
+      zIndex: 1,
+      opacity: 1,
+      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    };
+  }, [isBeingDestroyed, isSourceOfEffect, isTargetOfEffect, isBuffEffect, isDebuffEffect]);
+
+  const cardTransition = useMemo(() => {
+    if (isBeingDestroyed) {
+      return { duration: 0.4, ease: 'easeOut' as const };
+    }
+    // SOURCE card: scales up IMMEDIATELY with clear visual cue, stays big
+    if (isSourceOfEffect) {
+      return {
+        duration: 0.4,  // Noticeable scale up
+        ease: 'easeOut' as const,
+        scale: { times: [0, 0.5, 1] },  // Quickly scale up, then hold
+        y: { times: [0, 0.5, 1] },
+      };
+    }
+    // TARGET card: scales up (delay is handled by state, not transition)
+    if (isTargetOfEffect && (isBuffEffect || isDebuffEffect)) {
+      // Duration 2.2s - delay is handled by useState timer above
+      return {
+        duration: 2.2,
+        ease: 'easeInOut' as const,
+        scale: { times: isDebuffEffect ? [0, 0.05, 0.12, 0.9, 1] : [0, 0.1, 0.9, 1] },
+        y: { times: isDebuffEffect ? [0, 0.05, 0.1, 0.2, 1] : [0, 0.1, 0.9, 1] },
+        x: isDebuffEffect ? { times: [0, 0.05, 0.1, 0.2, 1] } : undefined,
+        rotate: isBuffEffect ? { times: [0, 0.1, 0.9, 1] } : undefined,
+      };
+    }
+    return { type: 'spring' as const, stiffness: 300, damping: 20 };
+  }, [isBeingDestroyed, isSourceOfEffect, isTargetOfEffect, isBuffEffect, isDebuffEffect]);
+
   return (
     <motion.div
       layout={shouldEnableLayout}
@@ -174,43 +273,17 @@ export function Card({
 
       <motion.div
         className={clsx(
-          'card cursor-pointer overflow-hidden relative',
+          'card cursor-pointer overflow-visible relative',
           sizeClasses[size],
           selected && 'ring-2 ring-olympus-gold ring-offset-2 ring-offset-olympus-navy',
           disabled && 'brightness-[0.7] saturate-[0.8] cursor-not-allowed',
         )}
         onClick={disabled ? undefined : onClick}
         initial={false}
-        animate={isBeingDestroyed ? {
-          // Card grows bigger and fades out when being destroyed
-          scale: 30,
-          opacity: 0.01,
-          zIndex: 100,
-        } : isSourceOfEffect ? {
-          scale: 1.2,
-          y: -10,
-          zIndex: 50,
-          boxShadow: '0 0 20px 5px rgba(212, 175, 55, 0.6), 0 0 40px 10px rgba(184, 134, 11, 0.4)',
-        } : isTargetOfEffect ? {
-          scale: 1.05,
-          zIndex: 40,
-        } : {
-          scale: 1,
-          y: 0,
-          zIndex: 1,
-          opacity: 1,
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        }}
+        animate={cardAnimate}
         whileHover={disabled || isBeingDestroyed ? undefined : { scale: 1.05, y: -4, zIndex: 100 }}
         whileTap={disabled || isBeingDestroyed ? undefined : { scale: 0.98 }}
-        transition={isBeingDestroyed ? {
-          duration: 0.4,
-          ease: 'easeOut',
-        } : {
-          type: 'spring',
-          stiffness: 300,
-          damping: 20,
-        }}
+        transition={cardTransition}
         drag={draggable && !disabled}
         dragSnapToOrigin
       >
@@ -229,6 +302,20 @@ export function Card({
           'absolute inset-0',
           !imageError && 'bg-gradient-to-t from-black/80 via-black/20 to-black/40'
         )} />
+
+        {/* Debuff flash overlay */}
+        {isTargetOfEffect && isDebuffEffect && (
+          <motion.div
+            className="absolute inset-0 bg-red-500 pointer-events-none z-[5]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.6, 0.3, 0] }}
+            transition={{
+              duration: 0.6,
+              times: [0, 0.3, 0.7, 1],
+              repeat: 2,
+            }}
+          />
+        )}
 
         {/* Card content */}
         <div className="relative h-full p-2 flex flex-col">
@@ -300,32 +387,30 @@ export function Card({
           </div>
         </div>
 
-
+        {/* Info button - inside card so it scales with the card */}
+        {showTooltip && !faceDown && (
+          <button
+            onClick={isMobile ? handleInfoClick : undefined}
+            onMouseEnter={() => !isMobile && setIsInfoHovered(true)}
+            onMouseLeave={() => !isMobile && setIsInfoHovered(false)}
+            className={clsx(
+              'absolute z-[110] rounded-full flex items-center justify-center font-bold text-black',
+              'transition-all active:scale-90 select-none shadow-sm',
+              isMobile ? 'opacity-85' : 'opacity-70 hover:opacity-100',
+              (size === 'xs' || size === 'loc') ? 'w-2.5 h-2.5 text-[8px] -top-0.5 -right-0.5' :
+                size === 'sm' ? 'w-3.5 h-3.5 text-[10px] -top-1 -right-1' :
+                  size === 'md' ? 'w-5 h-5 text-[12px] -top-1.5 -right-1.5' :
+                    'w-5 h-5 text-[12px] -top-1.5 -right-1.5'
+            )}
+            style={{
+              background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <span className="leading-none">?</span>
+          </button>
+        )}
       </motion.div>
-
-      {/* Info button - click on mobile, hover on desktop */}
-      {showTooltip && !faceDown && (
-        <button
-          onClick={isMobile ? handleInfoClick : undefined}
-          onMouseEnter={() => !isMobile && setIsInfoHovered(true)}
-          onMouseLeave={() => !isMobile && setIsInfoHovered(false)}
-          className={clsx(
-            'absolute z-[110] rounded-full flex items-center justify-center font-bold text-black',
-            'transition-all active:scale-90 select-none shadow-sm',
-            isMobile ? 'opacity-85' : 'opacity-70 hover:opacity-100',
-            (size === 'xs' || size === 'loc') ? 'w-2.5 h-2.5 text-[8px] -top-0.5 -right-0.5' :
-              size === 'sm' ? 'w-3.5 h-3.5 text-[10px] -top-1 -right-1' :
-                size === 'md' ? 'w-5 h-5 text-[12px] -top-1.5 -right-1.5' :
-                  'w-5 h-5 text-[12px] -top-1.5 -right-1.5'
-          )}
-          style={{
-            background: 'linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3)',
-          }}
-        >
-          <span className="leading-none">?</span>
-        </button>
-      )}
     </motion.div >
   );
 }
