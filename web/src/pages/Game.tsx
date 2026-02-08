@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { Board } from '@components/game/Board';
 import { Hand } from '@components/game/Hand';
+import { AnimatedNumber } from '@components/game/AnimatedNumber';
 import { BuffDebuffAnimation } from '@components/game/BuffDebuffAnimation';
 import { CardDestroyedAnimation } from '@components/game/CardDestroyedAnimation';
 import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
@@ -380,7 +381,13 @@ export function Game() {
       >
         <div className="flex items-center -ml-1">
           <span className="text-[0.9em] brightness-125 mr-0.5">⚡</span>
-          <span>{gameState.players[0].energy}</span>
+          <AnimatedNumber
+            value={gameState.players[0].energy}
+            increaseColor="text-emerald-400"
+            decreaseColor="text-red-400"
+            defaultColor="text-amber-100"
+            duration={500}
+          />
         </div>
       </div>
 

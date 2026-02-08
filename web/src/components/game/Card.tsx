@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import type { CardInstance } from '@engine/models';
 import { getEffectivePower } from '@engine/models';
 import { CardTooltip } from './CardTooltip';
+import { AnimatedNumber } from './AnimatedNumber';
 import { useGameStore } from '@store/gameStore';
 import { getCardImagePath } from '@/utils/assets';
 import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
@@ -124,32 +125,6 @@ export function Card({
     lg: 'text-base',
   };
 
-  const handleInfoClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowMobileTooltip(true);
-  };
-
-  if (faceDown) {
-    const faceDownIconSize = size === 'xs' || size === 'loc' ? 'text-sm' : size === 'sm' ? 'text-lg' : 'text-2xl';
-    return (
-      <motion.div
-        layout
-        layoutId={`card-${card.instanceId}`}
-        className={clsx(
-          'card flex items-center justify-center',
-          sizeClasses[size],
-          'bg-gradient-to-br from-olympus-navy to-gray-900',
-          'border-olympus-bronze'
-        )}
-        transition={{
-          layout: { duration: 0.4, type: 'spring', bounce: 0.2 },
-        }}
-      >
-        <div className={clsx("text-olympus-gold font-display", faceDownIconSize)}>⚡</div>
-      </motion.div>
-    );
-  }
-
   // Get width for wrapper to match card size
   const wrapperSizeClasses = {
     xs: 'w-10',
@@ -162,6 +137,7 @@ export function Card({
   const cardWidth = size === 'xs' ? 40 : size === 'loc' ? 56 : size === 'sm' ? 80 : size === 'md' ? 112 : 128;
 
   // Memoize animate/transition so Framer Motion doesn't restart the animation on every render
+  // These must be called before any conditional returns to satisfy React's rules of hooks
   const cardAnimate = useMemo(() => {
     if (isBeingDestroyed) {
       return { scale: 30, opacity: 0.01, zIndex: 100 };
@@ -232,8 +208,36 @@ export function Card({
         rotate: isBuffEffect ? { times: [0, 0.1, 0.9, 1] } : undefined,
       };
     }
-    return { type: 'spring' as const, stiffness: 300, damping: 20 };
+    // Fast transition for hover-out and normal state changes
+    return { duration: 0.1 };
   }, [isBeingDestroyed, isSourceOfEffect, isTargetOfEffect, isBuffEffect, isDebuffEffect]);
+
+  const handleInfoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMobileTooltip(true);
+  };
+
+  // Early return for face-down cards (placed after all hooks to satisfy React's rules of hooks)
+  if (faceDown) {
+    const faceDownIconSize = size === 'xs' || size === 'loc' ? 'text-sm' : size === 'sm' ? 'text-lg' : 'text-2xl';
+    return (
+      <motion.div
+        layout
+        layoutId={`card-${card.instanceId}`}
+        className={clsx(
+          'card flex items-center justify-center',
+          sizeClasses[size],
+          'bg-gradient-to-br from-olympus-navy to-gray-900',
+          'border-olympus-bronze'
+        )}
+        transition={{
+          layout: { duration: 0.4, type: 'spring', bounce: 0.2 },
+        }}
+      >
+        <div className={clsx("text-olympus-gold font-display", faceDownIconSize)}>⚡</div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -281,8 +285,16 @@ export function Card({
         onClick={disabled ? undefined : onClick}
         initial={false}
         animate={cardAnimate}
-        whileHover={disabled || isBeingDestroyed ? undefined : { scale: 1.05, y: -4, zIndex: 100 }}
-        whileTap={disabled || isBeingDestroyed ? undefined : { scale: 0.98 }}
+        whileHover={disabled || isBeingDestroyed ? undefined : { 
+          scale: 1.05, 
+          y: -4, 
+          zIndex: 100,
+          transition: { duration: 0.1 }
+        }}
+        whileTap={disabled || isBeingDestroyed ? undefined : { 
+          scale: 0.98,
+          transition: { duration: 0.05 }
+        }}
         transition={cardTransition}
         drag={draggable && !disabled}
         dragSnapToOrigin
@@ -326,11 +338,18 @@ export function Card({
               powerSizeClasses[size],
             )}
           >
-            <span className={clsx(
-              powerDiff === 0 && 'text-black',
-              powerDiff > 0 && 'text-emerald-800 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]',
-              powerDiff < 0 && 'text-red-800 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]',
-            )}>{power}</span>
+            <AnimatedNumber
+              value={power}
+              className={clsx(
+                powerDiff === 0 && 'text-black',
+                powerDiff > 0 && 'text-emerald-800 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]',
+                powerDiff < 0 && 'text-red-800 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]',
+              )}
+              increaseColor="text-emerald-800"
+              decreaseColor="text-red-800"
+              defaultColor="text-black"
+              duration={500}
+            />
           </div>
 
           {/* Cost badge - hexagon below power, aligned */}

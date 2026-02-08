@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import type { LocationState } from '@engine/models';
 import { getTotalPower, getCards } from '@engine/models';
 import { Card } from './Card';
+import { AnimatedNumber } from './AnimatedNumber';
 import { useGameStore } from '@store/gameStore';
 
 interface LocationProps {
@@ -300,19 +301,20 @@ function HexPowerBadge({
         'hex-power-badge relative flex items-center justify-center font-bold',
         isMobile ? 'w-6 h-7 text-xs' : 'w-8 h-9 text-sm',
       )}
-      key={power}
+      key={`badge-${isWinning}`}
       initial={{ scale: 1 }}
       animate={{ scale: [1, 1.15, 1] }}
       transition={{ duration: 0.3 }}
     >
       {/* Hexagon background with 3D gradient */}
-      <div
+      <motion.div
         className="absolute inset-0"
         style={{
-          background: getGradient(),
           clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
           filter: 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4))',
         }}
+        animate={{ background: getGradient() }}
+        transition={{ duration: 0.3 }}
       />
       {/* Inner highlight/shadow for 3D effect */}
       <div
@@ -322,10 +324,15 @@ function HexPowerBadge({
           clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
         }}
       />
-      {/* Power number */}
-      <span className="relative z-10 text-white drop-shadow-md">
-        {power}
-      </span>
+      {/* Power number with slot machine animation */}
+      <AnimatedNumber
+        value={power}
+        className="relative z-10 text-white drop-shadow-md"
+        increaseColor="text-white"
+        decreaseColor="text-white"
+        defaultColor="text-white"
+        duration={600}
+      />
     </motion.div>
   );
 }

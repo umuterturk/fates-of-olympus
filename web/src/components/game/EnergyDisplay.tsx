@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import type { Energy } from '@engine/types';
+import { AnimatedNumber } from './AnimatedNumber';
 
 interface EnergyDisplayProps {
   current: Energy;
@@ -53,17 +54,26 @@ export function EnergyDisplay({ current, max }: EnergyDisplayProps) {
         ))}
       </div>
 
-      <motion.span
-        key={current}
-        className={clsx(
-          "font-bold text-card-cost",
-          isMobile && "text-xs"
-        )}
-        initial={{ scale: 1.5 }}
-        animate={{ scale: 1 }}
-      >
-        {current}/{max}
-      </motion.span>
+      <span className={clsx(
+        "font-bold text-card-cost",
+        isMobile && "text-xs"
+      )}>
+        <AnimatedNumber
+          value={current}
+          increaseColor="text-emerald-400"
+          decreaseColor="text-red-400"
+          defaultColor="text-card-cost"
+          duration={400}
+        />
+        /
+        <AnimatedNumber
+          value={max}
+          increaseColor="text-emerald-400"
+          decreaseColor="text-red-400"
+          defaultColor="text-card-cost"
+          duration={400}
+        />
+      </span>
     </div>
   );
 }

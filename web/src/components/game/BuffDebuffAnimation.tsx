@@ -393,7 +393,7 @@ function ScreenShake({
 }
 
 // God location shake - shakes only the targeted location for dramatic effect
-function GodLocationShake({ targetCardId, isBuff }: { targetCardId: number; isBuff: boolean }) {
+function GodLocationShake({ targetCardId, isBuff: _isBuff }: { targetCardId: number; isBuff: boolean }) {
     useEffect(() => {
         // Find the target card element to determine its location
         const cardElement = document.querySelector(`[data-card-id="${targetCardId}"]`);

@@ -4,6 +4,7 @@ export { Location } from './Location';
 export { Board } from './Board';
 export { Hand } from './Hand';
 export { EnergyDisplay } from './EnergyDisplay';
+export { AnimatedNumber, AnimatedDigit, SlotMachineNumber } from './AnimatedNumber';
 export { BuffDebuffAnimation } from './BuffDebuffAnimation';
 export { CardDestroyedAnimation } from './CardDestroyedAnimation';
 export { LocationWinAnimation } from './LocationWinAnimation';
