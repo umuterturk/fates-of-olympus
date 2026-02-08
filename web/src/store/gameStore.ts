@@ -51,6 +51,7 @@ import {
 } from '@engine/models';
 import { getCardDef, createCardInstance, getAllCardDefs } from '@engine/cards';
 import type { CardId } from '@engine/types';
+import { track } from '../analytics/ga4';
 import { usePlayerStore } from './playerStore';
 
 /**
@@ -230,6 +231,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastGameCredits: null,
       lastGamePerfectWin: false,
     });
+    const profile = usePlayerStore.getState().profile;
+    track('game_created', {
+      game_id: String(seed),
+      mode: 'local',
+      is_tutorial: false,
+      unlock_position: unlockPosition,
+      deck_size: profile?.currentDeckIds?.length ?? playerDeckIds?.length ?? 0,
+    });
   },
 
   initTutorialGame: () => {
@@ -255,6 +264,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       debugEnergyBonus: 0,
       lastGameCredits: null,
       lastGamePerfectWin: false,
+    });
+    const profile = usePlayerStore.getState().profile;
+    track('game_created', {
+      game_id: 'tutorial',
+      mode: 'local',
+      is_tutorial: true,
+      unlock_position: profile?.unlockPathPosition ?? 0,
+      deck_size: profile?.currentDeckIds?.length ?? 0,
     });
   },
 
@@ -672,8 +689,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   retreat: async () => {
-    const { gameState } = get();
+    const { gameState, gameSeed, playerActions } = get();
     if (!gameState || gameState.result !== 'IN_PROGRESS') return;
+
+    track('game_abandoned', {
+      game_id: String(gameSeed ?? 'unknown'),
+      reason: 'retreat',
+      turn_reached: gameState.turn,
+      cards_played: playerActions.length,
+    });
 
     set({
       gameState: {
@@ -696,7 +720,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   processGameEnd: async () => {
-    const { gameState } = get();
+    const { gameState, gameSeed } = get();
     if (!gameState || gameState.result === 'IN_PROGRESS') return;
 
     // Use deterministic engine function to compute winner and location state
@@ -718,6 +742,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         lastGameCredits: credits,
         lastGamePerfectWin: isPerfectWin,
+      });
+
+      const resultParam = result === 'PLAYER_0_WINS' ? 'win' : result === 'PLAYER_1_WINS' ? 'loss' : 'draw';
+      track('game_ended', {
+        game_id: String(gameSeed ?? 'unknown'),
+        result: resultParam,
+        is_perfect_win: isPerfectWin,
+        credits_earned: credits,
       });
 
       console.log(`[GameStore] Game ended. Won: ${playerWon}, Perfect: ${isPerfectWin}, Credits: ${credits}`);

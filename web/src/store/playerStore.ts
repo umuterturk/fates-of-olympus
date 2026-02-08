@@ -13,6 +13,7 @@ import type {
   StorageAdapter,
 } from '@storage/types';
 import { localStorageAdapter } from '@storage/localStorage';
+import { track } from '../analytics/ga4';
 
 // =============================================================================
 // Constants
@@ -380,6 +381,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({ profile: updatedProfile });
     await storage.saveProfile(updatedProfile);
 
+    if (creditsEarned > 0) {
+      track('earn_virtual_currency', {
+        virtual_currency_name: 'ichor',
+        value: creditsEarned,
+        source: 'daily_login',
+      });
+    }
+
     return { creditsEarned, newStreak, wasReset };
   },
 
@@ -387,15 +396,24 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { addCredits } = get();
     
     let credits: number;
+    let source: string;
     if (isPerfectWin) {
       credits = CREDITS_PERFECT_WIN;
+      source = 'game_end_perfect_win';
     } else if (won) {
       credits = CREDITS_WIN;
+      source = 'game_end_win';
     } else {
       credits = CREDITS_LOSS;
+      source = 'game_end_loss';
     }
 
     await addCredits(credits);
+    track('earn_virtual_currency', {
+      virtual_currency_name: 'ichor',
+      value: credits,
+      source,
+    });
     return credits;
   },
 
@@ -442,6 +460,21 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       unlockNotificationDismissed: true, // Reset dismissed since they just unlocked
     });
     await storage.saveProfile(updatedProfile);
+
+    track('spend_virtual_currency', {
+      virtual_currency_name: 'ichor',
+      value: cost,
+      sink: 'card_unlock',
+      card_id: nextCardId,
+    });
+    track('card_unlocked', {
+      card_id: nextCardId,
+      unlock_cost: cost,
+      unlock_position_after: newPosition,
+      balance_after: newCredits,
+      context: 'card_reveal',
+    });
+
     return nextCardId;
   },
 

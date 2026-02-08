@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { trackPageView } from './analytics/ga4';
 import { Home } from './pages/Home';
 import { Game } from './pages/Game';
 import { Collection } from './pages/Collection';
@@ -27,10 +28,15 @@ function formatBuildTime(isoString: string): string {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
 
   const handleLoadComplete = useCallback(() => {
     setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
 
   const buildTimeDisplay = useMemo(() => formatBuildTime(__BUILD_TIME__), []);
 
