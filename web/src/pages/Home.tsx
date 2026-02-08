@@ -1,9 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@store/playerStore';
 import { useTutorialStore } from '@tutorial/tutorialStore';
 import { getDefaultStarterDeck } from '@engine/starterDeck';
+
+/** Format build time as human-readable date */
+function formatBuildTime(isoString: string): string {
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return isoString;
+  }
+}
 
 export function Home() {
   const navigate = useNavigate();
@@ -20,6 +36,7 @@ export function Home() {
     wasReset: boolean;
   } | null>(null);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
+  const buildTimeDisplay = useMemo(() => formatBuildTime(__BUILD_TIME__), []);
 
   // Initialize player store on mount
   useEffect(() => {
@@ -248,6 +265,13 @@ export function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Build version */}
+      <div className="absolute bottom-1 left-0 right-0 text-center pointer-events-none">
+        <span className="text-[10px] text-gray-500">
+          Build: {buildTimeDisplay}
+        </span>
+      </div>
     </div>
   );
 }
