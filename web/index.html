@@ -43,10 +43,17 @@
       }(window.location))
     </script>
     
-    <!-- PWA Version Check - Clear cache on new version -->
+    <!-- PWA Version Check - Clear code caches on new version, preserve images/fonts -->
     <script>
       (async function checkVersion() {
         var STORAGE_KEY = 'app_version';
+        // Cache names to preserve (images use StaleWhileRevalidate - auto-update in background)
+        var PRESERVE_PATTERNS = ['images-', 'google-fonts', 'gstatic-fonts'];
+        
+        function shouldPreserve(name) {
+          return PRESERVE_PATTERNS.some(function(p) { return name.includes(p); });
+        }
+        
         try {
           var res = await fetch('/fates-of-olympus/version.json?t=' + Date.now(), { cache: 'no-store' });
           var data = await res.json();
@@ -54,16 +61,29 @@
           var storedVersion = localStorage.getItem(STORAGE_KEY);
           
           if (storedVersion && storedVersion !== version) {
-            // Clear all caches
+            console.log('[Version] Update detected:', storedVersion, '->', version);
+            
             if ('caches' in window) {
               var keys = await caches.keys();
-              await Promise.all(keys.map(function(k) { return caches.delete(k); }));
+              for (var i = 0; i < keys.length; i++) {
+                var k = keys[i];
+                if (shouldPreserve(k)) {
+                  console.log('[Version] Preserving:', k);
+                } else {
+                  console.log('[Version] Clearing:', k);
+                  await caches.delete(k);
+                }
+              }
             }
-            // Unregister service workers
+            
+            // Unregister service workers to force fresh registration with new code
             if ('serviceWorker' in navigator) {
               var regs = await navigator.serviceWorker.getRegistrations();
-              await Promise.all(regs.map(function(r) { return r.unregister(); }));
+              for (var j = 0; j < regs.length; j++) {
+                await regs[j].unregister();
+              }
             }
+            
             localStorage.setItem(STORAGE_KEY, version);
             window.location.reload();
             return;
