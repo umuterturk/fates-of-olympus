@@ -136,14 +136,59 @@ export function Card({
 
   const cardWidth = size === 'xs' ? 40 : size === 'loc' ? 56 : size === 'sm' ? 80 : size === 'md' ? 112 : 128;
 
+  // Confrontation offset for source card moving toward target during debuff
+  // Computed via effect to ensure DOM positions are available
+  const getConfrontationOffset = useGameStore(state => state.getConfrontationOffset);
+  const [confrontationOffset, setConfrontationOffset] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    if (isSourceOfEffect && isDebuffEffect && currentEvent) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const offset = getConfrontationOffset(currentEvent.sourceCardId, currentEvent.cardInstanceId);
+        setConfrontationOffset(offset);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setConfrontationOffset({ x: 0, y: 0 });
+    }
+  }, [isSourceOfEffect, isDebuffEffect, currentEvent, getConfrontationOffset]);
+
+  // Target recoil offset for target card moving away during debuff confrontation
+  const getTargetRecoilOffset = useGameStore(state => state.getTargetRecoilOffset);
+  const [targetRecoilOffset, setTargetRecoilOffset] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    if (isTargetOfEffect && isDebuffEffect && currentEvent) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        const offset = getTargetRecoilOffset(currentEvent.sourceCardId, currentEvent.cardInstanceId);
+        setTargetRecoilOffset(offset);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setTargetRecoilOffset({ x: 0, y: 0 });
+    }
+  }, [isTargetOfEffect, isDebuffEffect, currentEvent, getTargetRecoilOffset]);
+
   // Memoize animate/transition so Framer Motion doesn't restart the animation on every render
-  // These must be called before any conditional returns to satisfy React's rules of hooks
+
   const cardAnimate = useMemo(() => {
     if (isBeingDestroyed) {
       return { scale: 30, opacity: 0.01, zIndex: 100 };
     }
     if (isSourceOfEffect) {
       // Source card (effecting card) scales up with a golden glow - stays big
+      // For debuffs, also moves toward the target for confrontation
+      if (isDebuffEffect && (confrontationOffset.x !== 0 || confrontationOffset.y !== 0)) {
+        return {
+          scale: [1, 1.55, 1.55],
+          x: [0, confrontationOffset.x, confrontationOffset.x],
+          y: [0, confrontationOffset.y - 25, confrontationOffset.y - 25],
+          zIndex: 50,
+          boxShadow: '0 0 30px 8px rgba(212, 175, 55, 0.7), 0 0 60px 15px rgba(184, 134, 11, 0.5)',
+        };
+      }
       return {
         scale: [1, 1.55, 1.55],
         y: [0, -25, -25],
@@ -161,10 +206,13 @@ export function Card({
       };
     }
     if (isTargetOfEffect && isDebuffEffect) {
+      // Target card recoils away from the source during debuff confrontation
+      const recoilX = targetRecoilOffset.x;
+      const recoilY = targetRecoilOffset.y;
       return {
         scale: [1, 0.95, 1.5, 1.5, 1],
-        x: [0, 5, -5, 0, 0],
-        y: [0, 3, -3, 0, 0],
+        x: [0, recoilX + 5, recoilX - 5, recoilX, 0],
+        y: [0, recoilY + 3, recoilY - 3, recoilY, 0],
         zIndex: 40,
         boxShadow: '0 0 25px 6px rgba(239, 68, 68, 0.5), 0 0 50px 12px rgba(220, 38, 38, 0.3)',
       };
@@ -181,18 +229,20 @@ export function Card({
       opacity: 1,
       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
     };
-  }, [isBeingDestroyed, isSourceOfEffect, isTargetOfEffect, isBuffEffect, isDebuffEffect]);
+  }, [isBeingDestroyed, isSourceOfEffect, isTargetOfEffect, isBuffEffect, isDebuffEffect, confrontationOffset, targetRecoilOffset]);
 
   const cardTransition = useMemo(() => {
     if (isBeingDestroyed) {
       return { duration: 0.4, ease: 'easeOut' as const };
     }
     // SOURCE card: scales up IMMEDIATELY with clear visual cue, stays big
+    // For debuffs, also moves toward the target for confrontation
     if (isSourceOfEffect) {
       return {
         duration: 0.4,  // Noticeable scale up
         ease: 'easeOut' as const,
         scale: { times: [0, 0.5, 1] },  // Quickly scale up, then hold
+        x: { times: [0, 0.5, 1] },  // Move toward target
         y: { times: [0, 0.5, 1] },
       };
     }

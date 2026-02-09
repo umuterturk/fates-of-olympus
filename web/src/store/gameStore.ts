@@ -162,6 +162,15 @@ interface GameStore {
   processGameEnd: () => Promise<void>;
   
   // ==========================================================================
+  // Confrontation Animation Functions
+  // ==========================================================================
+  
+  /** Get offset for source card to move toward target during debuff confrontation */
+  getConfrontationOffset: (sourceCardId: number, targetCardId: number) => { x: number; y: number };
+  /** Get offset for target card to recoil away from source during debuff confrontation */
+  getTargetRecoilOffset: (sourceCardId: number, targetCardId: number) => { x: number; y: number };
+  
+  // ==========================================================================
   // Debug Functions (for testing)
   // ==========================================================================
   
@@ -753,6 +762,76 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       console.log(`[GameStore] Game ended. Won: ${playerWon}, Perfect: ${isPerfectWin}, Credits: ${credits}`);
     }
+  },
+
+  // ==========================================================================
+  // Confrontation Animation Functions
+  // ==========================================================================
+  
+  getConfrontationOffset: (sourceCardId: number, targetCardId: number) => {
+    // Find positions of source and target cards in the DOM
+    const sourceElement = document.querySelector(`[data-card-id="${sourceCardId}"]`);
+    const targetElement = document.querySelector(`[data-card-id="${targetCardId}"]`);
+    
+    if (!sourceElement || !targetElement) {
+      return { x: 0, y: 0 };
+    }
+    
+    const sourceRect = sourceElement.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    
+    // Calculate direction from source to target
+    const sourceCenterX = sourceRect.left + sourceRect.width / 2;
+    const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+    
+    const dx = targetCenterX - sourceCenterX;
+    const dy = targetCenterY - sourceCenterY;
+    
+    // Normalize and apply movement amount (move source partway toward target)
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < 1) return { x: 0, y: 0 };
+    
+    // Move about 30% of the way toward the target for confrontation
+    const moveFraction = 0.3;
+    const moveX = (dx / distance) * distance * moveFraction;
+    const moveY = (dy / distance) * distance * moveFraction;
+    
+    return { x: moveX, y: moveY };
+  },
+  
+  getTargetRecoilOffset: (sourceCardId: number, targetCardId: number) => {
+    // Find positions of source and target cards in the DOM
+    const sourceElement = document.querySelector(`[data-card-id="${sourceCardId}"]`);
+    const targetElement = document.querySelector(`[data-card-id="${targetCardId}"]`);
+    
+    if (!sourceElement || !targetElement) {
+      return { x: 0, y: 0 };
+    }
+    
+    const sourceRect = sourceElement.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    
+    // Calculate direction from source to target (target moves away from source)
+    const sourceCenterX = sourceRect.left + sourceRect.width / 2;
+    const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+    
+    const dx = targetCenterX - sourceCenterX;
+    const dy = targetCenterY - sourceCenterY;
+    
+    // Normalize and apply recoil (move target away from source)
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < 1) return { x: 0, y: 0 };
+    
+    // Recoil about 15-25 pixels away from the source
+    const recoilDistance = 20;
+    const recoilX = (dx / distance) * recoilDistance;
+    const recoilY = (dy / distance) * recoilDistance;
+    
+    return { x: recoilX, y: recoilY };
   },
 
   // ==========================================================================

@@ -392,7 +392,55 @@ function ScreenShake({
     );
 }
 
-// God location shake - shakes only the targeted location for dramatic effect
+// Different shake patterns for variety - each location gets a different pattern
+const shakePatterns = [
+    // Pattern 0: Strong diagonal shake (for target location)
+    [
+        { x: -10, y: 5 },
+        { x: 12, y: -6 },
+        { x: -8, y: 5 },
+        { x: 10, y: -4 },
+        { x: -6, y: 3 },
+        { x: 5, y: -2 },
+        { x: -3, y: 1 },
+        { x: 0, y: 0 },
+    ],
+    // Pattern 1: Horizontal dominant shake
+    [
+        { x: -8, y: 2 },
+        { x: 10, y: -2 },
+        { x: -7, y: 3 },
+        { x: 8, y: -1 },
+        { x: -5, y: 2 },
+        { x: 4, y: -1 },
+        { x: -2, y: 0 },
+        { x: 0, y: 0 },
+    ],
+    // Pattern 2: Vertical dominant shake
+    [
+        { x: 3, y: -9 },
+        { x: -2, y: 11 },
+        { x: 4, y: -7 },
+        { x: -3, y: 8 },
+        { x: 2, y: -5 },
+        { x: -1, y: 4 },
+        { x: 1, y: -2 },
+        { x: 0, y: 0 },
+    ],
+    // Pattern 3: Circular shake
+    [
+        { x: -6, y: -6 },
+        { x: 6, y: -6 },
+        { x: 6, y: 6 },
+        { x: -6, y: 6 },
+        { x: -4, y: -4 },
+        { x: 4, y: 4 },
+        { x: -2, y: 2 },
+        { x: 0, y: 0 },
+    ],
+];
+
+// God location shake - shakes the targeted location strongly and other locations with decreasing intensity
 function GodLocationShake({ targetCardId, isBuff: _isBuff }: { targetCardId: number; isBuff: boolean }) {
     useEffect(() => {
         // Find the target card element to determine its location
@@ -401,48 +449,92 @@ function GodLocationShake({ targetCardId, isBuff: _isBuff }: { targetCardId: num
         if (!cardElement) return;
         
         // Find the parent location element
-        const locationElement = cardElement.closest('[data-location-index]') as HTMLElement;
-        console.log('[GodShake] Location element:', locationElement);
-        if (!locationElement) return;
+        const targetLocationElement = cardElement.closest('[data-location-index]') as HTMLElement;
+        console.log('[GodShake] Target location element:', targetLocationElement);
+        if (!targetLocationElement) return;
         
-        const originalTransform = locationElement.style.transform;
-        const originalTransition = locationElement.style.transition;
+        const targetLocationIndex = parseInt(targetLocationElement.getAttribute('data-location-index') ?? '0', 10);
         
-        // Delay before shake starts
-        const startDelay = setTimeout(() => {
-            locationElement.style.transition = 'transform 0.05s ease-in-out';
+        // Find all location elements
+        const allLocationElements = document.querySelectorAll('[data-location-index]') as NodeListOf<HTMLElement>;
+        
+        // Store original styles and setup shake for each location
+        const locationData: Array<{
+            element: HTMLElement;
+            originalTransform: string;
+            originalTransition: string;
+            distance: number;
+            intensity: number;
+            patternIndex: number;
+            interval: ReturnType<typeof setInterval> | null;
+        }> = [];
+        
+        allLocationElements.forEach((element) => {
+            const locIndex = parseInt(element.getAttribute('data-location-index') ?? '0', 10);
+            const distance = Math.abs(locIndex - targetLocationIndex);
             
-            // Shake sequence - dramatic for god powers
-            const shakeSequence = [
-                { x: -10, y: 5 },
-                { x: 12, y: -6 },
-                { x: -8, y: 5 },
-                { x: 10, y: -4 },
-                { x: -6, y: 3 },
-                { x: 5, y: -2 },
-                { x: -3, y: 1 },
-                { x: 0, y: 0 },
-            ];
+            // Intensity decreases with distance: target = 1.0, adjacent = 0.5, far = 0.25
+            const intensity = distance === 0 ? 1.0 : distance === 1 ? 0.5 : 0.25;
             
-            let i = 0;
-            const interval = setInterval(() => {
-                if (i < shakeSequence.length) {
-                    locationElement.style.transform = `translate(${shakeSequence[i].x}px, ${shakeSequence[i].y}px)`;
-                    i++;
-                } else {
-                    clearInterval(interval);
-                    locationElement.style.transform = originalTransform;
-                    locationElement.style.transition = originalTransition;
-                }
-            }, 50);
+            // Use different shake patterns for different locations to avoid sync
+            // Target gets pattern 0, others get patterns based on their index
+            const patternIndex = distance === 0 ? 0 : (locIndex % 3) + 1;
             
-            return () => clearInterval(interval);
-        }, 700); // 0.7s delay - when particles hit
+            locationData.push({
+                element,
+                originalTransform: element.style.transform,
+                originalTransition: element.style.transition,
+                distance,
+                intensity,
+                patternIndex,
+                interval: null,
+            });
+        });
+        
+        // Delay before shake starts - staggered delays based on distance
+        const timeouts: ReturnType<typeof setTimeout>[] = [];
+        
+        locationData.forEach((data) => {
+            // Base delay + extra delay based on distance (creates ripple effect)
+            const delay = 700 + data.distance * 50;
+            
+            const timeout = setTimeout(() => {
+                data.element.style.transition = 'transform 0.05s ease-in-out';
+                
+                const shakeSequence = shakePatterns[data.patternIndex];
+                
+                let i = 0;
+                data.interval = setInterval(() => {
+                    if (i < shakeSequence.length) {
+                        // Apply intensity multiplier to the shake
+                        const x = shakeSequence[i].x * data.intensity;
+                        const y = shakeSequence[i].y * data.intensity;
+                        data.element.style.transform = `translate(${x}px, ${y}px)`;
+                        i++;
+                    } else {
+                        if (data.interval) {
+                            clearInterval(data.interval);
+                            data.interval = null;
+                        }
+                        data.element.style.transform = data.originalTransform;
+                        data.element.style.transition = data.originalTransition;
+                    }
+                }, 50);
+            }, delay);
+            
+            timeouts.push(timeout);
+        });
         
         return () => {
-            clearTimeout(startDelay);
-            locationElement.style.transform = originalTransform;
-            locationElement.style.transition = originalTransition;
+            // Cleanup all timeouts and intervals
+            timeouts.forEach(clearTimeout);
+            locationData.forEach((data) => {
+                if (data.interval) {
+                    clearInterval(data.interval);
+                }
+                data.element.style.transform = data.originalTransform;
+                data.element.style.transition = data.originalTransition;
+            });
         };
     }, [targetCardId]);
 

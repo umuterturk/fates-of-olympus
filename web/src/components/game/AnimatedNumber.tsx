@@ -27,7 +27,7 @@ interface AnimatedNumberProps {
 export function AnimatedNumber({
   value,
   className,
-  duration = 600,
+  duration = 1200,
   increaseColor = 'text-emerald-400',
   decreaseColor = 'text-red-400',
   defaultColor: _defaultColor = 'inherit',
@@ -60,30 +60,44 @@ export function AnimatedNumber({
     const startTime = performance.now();
     
     // Number of "rolls" before settling - more rolls for larger differences
-    const rollCount = Math.min(Math.max(diff * 2, 6), 15);
+    const rollCount = Math.min(Math.max(diff * 2, 8), 20);
     
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function - ease out quad for slot machine feel
-      const easeOutQuad = (t: number) => t * (2 - t);
-      const easedProgress = easeOutQuad(progress);
+      // Custom easing function with very slow end - combines ease out with extra deceleration
+      // Uses ease-out-expo for most of animation, then very slow cubic at the end
+      const easeOutWithSlowEnd = (t: number) => {
+        if (t < 0.7) {
+          // First 70% uses ease-out-expo (fast start, smooth deceleration)
+          const normalized = t / 0.7;
+          return 0.85 * (1 - Math.pow(1 - normalized, 3));
+        } else {
+          // Last 30% is very slow - cubic ease out for dramatic finish
+          const normalized = (t - 0.7) / 0.3;
+          // Slow down dramatically - this covers the last 15% of value change
+          return 0.85 + 0.15 * (1 - Math.pow(1 - normalized, 4));
+        }
+      };
+      const easedProgress = easeOutWithSlowEnd(progress);
       
       if (progress < 1) {
         // During animation, show rolling numbers
         // Roll faster at the start, slower as we approach the end
         const rollSpeed = (1 - easedProgress) * rollCount;
         
-        if (rollSpeed > 0.3) {
-          // Still rolling - show intermediate numbers
-          const intermediateProgress = easedProgress + Math.sin(elapsed / 30) * 0.1 * (1 - easedProgress);
+        if (rollSpeed > 0.15) {
+          // Still rolling - show intermediate numbers with slower oscillation at the end
+          const oscillationSpeed = 40 + (1 - progress) * 20; // Slower oscillation as we progress
+          const oscillationAmount = 0.08 * (1 - easedProgress); // Reduce oscillation amplitude toward end
+          const intermediateProgress = easedProgress + Math.sin(elapsed / oscillationSpeed) * oscillationAmount;
           const intermediateValue = Math.round(
             startValue + (endValue - startValue) * intermediateProgress
           );
           setDisplayValue(intermediateValue);
         } else {
-          // Slowing down - approach final value
+          // Final approach - very smooth settling
           const approachValue = Math.round(startValue + (endValue - startValue) * easedProgress);
           setDisplayValue(approachValue);
         }
@@ -98,7 +112,7 @@ export function AnimatedNumber({
         setTimeout(() => {
           setDirection(null);
           onAnimationComplete?.();
-        }, 300);
+        }, 400);
       }
     };
     

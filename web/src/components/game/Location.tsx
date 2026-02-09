@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import type { LocationState } from '@engine/models';
@@ -281,6 +281,20 @@ function HexPowerBadge({
   isWinning: boolean;
   isMobile?: boolean;
 }) {
+  // Track previous winning state to trigger pulse animation on change
+  const previousWinningRef = useRef(isWinning);
+  const [shouldPulse, setShouldPulse] = useState(false);
+  
+  useEffect(() => {
+    if (previousWinningRef.current !== isWinning) {
+      setShouldPulse(true);
+      previousWinningRef.current = isWinning;
+      // Reset pulse after animation completes
+      const timer = setTimeout(() => setShouldPulse(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isWinning]);
+
   // 3D gradient colors
   const getGradient = () => {
     if (isWinning) {
@@ -301,9 +315,8 @@ function HexPowerBadge({
         'hex-power-badge relative flex items-center justify-center font-bold',
         isMobile ? 'w-6 h-7 text-xs' : 'w-8 h-9 text-sm',
       )}
-      key={`badge-${isWinning}`}
       initial={{ scale: 1 }}
-      animate={{ scale: [1, 1.15, 1] }}
+      animate={{ scale: shouldPulse ? [1, 1.15, 1] : 1 }}
       transition={{ duration: 0.3 }}
     >
       {/* Hexagon background with 3D gradient */}
@@ -331,7 +344,6 @@ function HexPowerBadge({
         increaseColor="text-white"
         decreaseColor="text-white"
         defaultColor="text-white"
-        duration={600}
       />
     </motion.div>
   );
