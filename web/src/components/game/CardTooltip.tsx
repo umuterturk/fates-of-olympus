@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { useState, useRef, useLayoutEffect } from 'react';
 import type { CardDef } from '@engine/models';
 import { getCardImagePath } from '@/utils/assets';
 
@@ -12,10 +13,36 @@ interface CardTooltipProps {
   onClose?: () => void;
 }
 
+// Estimated tooltip height (header + image + stats + ability + padding)
+const TOOLTIP_HEIGHT_ESTIMATE = 340;
+const TOOLTIP_MARGIN = 12; // mb-3 = 0.75rem = 12px
+
 export function CardTooltip({ cardDef, power, powerDiff, cardWidth = 96, isMobile = false, onClose }: CardTooltipProps) {
   // Tooltip is 256px wide (w-64), center it above the card
   const tooltipWidth = 256;
   const offset = (tooltipWidth - cardWidth) / 2;
+  
+  // Detect if tooltip should appear below instead of above
+  // Use a ref to the parent card's position to calculate before first paint
+  const [showBelow, setShowBelow] = useState(false);
+  const [isPositioned, setIsPositioned] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  
+  useLayoutEffect(() => {
+    if (isMobile || !tooltipRef.current) return;
+    
+    // Get the parent element (the card wrapper) to calculate available space
+    const parent = tooltipRef.current.parentElement;
+    if (!parent) return;
+    
+    const parentRect = parent.getBoundingClientRect();
+    // Check if there's enough space above the card for the tooltip
+    const spaceAbove = parentRect.top;
+    const needsFlip = spaceAbove < TOOLTIP_HEIGHT_ESTIMATE + TOOLTIP_MARGIN;
+    
+    setShowBelow(needsFlip);
+    setIsPositioned(true);
+  }, [isMobile]);
 
   // Mobile: Render as a centered modal
   if (isMobile) {
@@ -50,22 +77,30 @@ export function CardTooltip({ cardDef, power, powerDiff, cardWidth = 96, isMobil
   }
 
   // Desktop: Render as positioned tooltip
+  // Position above by default, but flip to below if there's not enough space above
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+      ref={tooltipRef}
+      initial={{ opacity: 0, y: showBelow ? -10 : 10, scale: 0.95 }}
+      animate={{ opacity: isPositioned ? 1 : 0, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: showBelow ? -10 : 10, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="absolute z-[500] bottom-full mb-3 pointer-events-none"
+      className={`absolute z-[500] pointer-events-none ${
+        showBelow ? 'top-full mt-3' : 'bottom-full mb-3'
+      }`}
       style={{ left: -offset }}
     >
       <div className="w-64 bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-olympus-gold rounded-lg shadow-2xl overflow-hidden">
         <TooltipContent cardDef={cardDef} power={power} powerDiff={powerDiff} />
       </div>
 
-      {/* Arrow pointing down */}
-      <div className="absolute left-1/2 -translate-x-1/2 -bottom-2">
-        <div className="w-4 h-4 bg-gray-950 border-r-2 border-b-2 border-olympus-gold transform rotate-45" />
+      {/* Arrow - points down when tooltip is above, points up when tooltip is below */}
+      <div className={`absolute left-1/2 -translate-x-1/2 ${showBelow ? '-top-2' : '-bottom-2'}`}>
+        <div className={`w-4 h-4 bg-gray-950 border-olympus-gold transform ${
+          showBelow 
+            ? 'border-l-2 border-t-2 rotate-45' 
+            : 'border-r-2 border-b-2 rotate-45'
+        }`} />
       </div>
     </motion.div>
   );
