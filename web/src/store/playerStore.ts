@@ -107,7 +107,7 @@ interface PlayerStore {
   isLoading: boolean;
   error: string | null;
   storage: StorageAdapter;
-  
+
   /** Whether the player just earned enough to unlock a new card */
   canUnlockNewCard: boolean;
   /** Notification was shown and acknowledged */
@@ -261,8 +261,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       const unlockCost = getUnlockCost(profile.unlockPathPosition);
       const canAfford = profile.credits >= unlockCost;
 
-      set({ 
-        profile, 
+      set({
+        profile,
         isLoading: false,
         canUnlockNewCard: canAfford,
         unlockNotificationDismissed: false,
@@ -281,8 +281,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     try {
       const profile = createDefaultProfile(DEFAULT_PLAYER_ID, starterDeckIds);
       await storage.saveProfile(profile);
-      set({ 
-        profile, 
+      set({
+        profile,
         isLoading: false,
         canUnlockNewCard: false,
         unlockNotificationDismissed: false,
@@ -300,15 +300,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const oldCredits = profile.credits;
     const newCredits = profile.credits + amount;
     const unlockCost = getNextUnlockCost();
-    
+
     // Check if player just crossed the unlock threshold
     const couldAffordBefore = oldCredits >= unlockCost;
     const canAffordNow = newCredits >= unlockCost;
     const justCrossedThreshold = !couldAffordBefore && canAffordNow;
 
     const updatedProfile = { ...profile, credits: newCredits };
-    
-    set({ 
+
+    set({
       profile: updatedProfile,
       canUnlockNewCard: canAffordNow,
       // Only reset dismissed state if we just crossed the threshold
@@ -323,7 +323,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     const newCredits = profile.credits - amount;
     const updatedProfile = { ...profile, credits: newCredits };
-    
+
     set({ profile: updatedProfile });
     await storage.saveProfile(updatedProfile);
     return true;
@@ -394,7 +394,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   awardGameCredits: async (won: boolean, isPerfectWin: boolean) => {
     const { addCredits } = get();
-    
+
     let credits: number;
     let source: string;
     if (isPerfectWin) {
@@ -442,7 +442,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const cost = getNextUnlockCost();
     const newCredits = profile.credits - cost;
     const newPosition = profile.unlockPathPosition + 1;
-    
+
     // Calculate if player can afford the NEXT unlock after this one
     const nextCost = getUnlockCost(newPosition);
     const canAffordNextUnlock = newCredits >= nextCost;
@@ -454,7 +454,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       unlockPathPosition: newPosition,
     };
 
-    set({ 
+    set({
       profile: updatedProfile,
       canUnlockNewCard: canAffordNextUnlock,
       unlockNotificationDismissed: true, // Reset dismissed since they just unlocked
