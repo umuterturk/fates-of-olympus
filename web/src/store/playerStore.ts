@@ -621,6 +621,19 @@ if (typeof window !== 'undefined') {
     reset: (starterDeckIds: CardId[]) => usePlayerStore.getState().resetProfile(starterDeckIds),
     /** Get unlock cost for position */
     getUnlockCost,
+    /** Reveal cards (advance progression): playerDebug.revealCards(5) */
+    revealCards: async (amount: number) => {
+      const state = usePlayerStore.getState();
+      if (!state.profile) return;
+      const updated = {
+        ...state.profile,
+        unlockPathPosition: state.profile.unlockPathPosition + amount,
+        updatedAt: new Date().toISOString(),
+      };
+      usePlayerStore.setState({ profile: updated });
+      await state.storage.saveProfile(updated);
+      console.log(`[Debug] Revealed ${amount} cards. New position: ${updated.unlockPathPosition}`);
+    },
     /** Show help */
     help: () => {
       console.log(`
@@ -630,6 +643,7 @@ Player Debug Commands:
   playerDebug.dailyLogin()      - Process daily login
   playerDebug.reset(deckIds)    - Reset profile with starter deck
   playerDebug.getUnlockCost(5)  - Get cost at position 5
+  playerDebug.revealCards(5)    - Advance progression by 5
       `);
     },
   };

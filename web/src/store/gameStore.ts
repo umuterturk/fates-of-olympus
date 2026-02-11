@@ -112,7 +112,7 @@ interface GameStore {
   revealedNpcCardIds: Set<number>;
   /** All NPC card IDs that need to be revealed this turn (used to hide them initially) */
   pendingNpcCardIds: Set<number>;
-  
+
   // Deterministic system state
   /** Seeded RNG for deterministic game behavior */
   rng: SeededRNG | null;
@@ -120,7 +120,7 @@ interface GameStore {
   gameSeed: number | null;
   /** Current resolution timeline (for debugging/replay) */
   currentTimeline: ResolutionTimeline | null;
-  
+
   // Debug state
   /** Persistent debug energy bonus (added each turn) */
   debugEnergyBonus: number;
@@ -160,20 +160,20 @@ interface GameStore {
   retreat: () => Promise<void>;
   /** Process game end and award credits - uses deterministic computeWinner for correctness */
   processGameEnd: () => Promise<void>;
-  
+
   // ==========================================================================
   // Confrontation Animation Functions
   // ==========================================================================
-  
+
   /** Get offset for source card to move toward target during debuff confrontation */
   getConfrontationOffset: (sourceCardId: number, targetCardId: number) => { x: number; y: number };
   /** Get offset for target card to recoil away from source during debuff confrontation */
   getTargetRecoilOffset: (sourceCardId: number, targetCardId: number) => { x: number; y: number };
-  
+
   // ==========================================================================
   // Debug Functions (for testing)
   // ==========================================================================
-  
+
   /** Add a specific card to player's hand by card ID (e.g., 'ares', 'zeus') */
   debugAddCardToHand: (cardId: CardId, playerId?: PlayerId) => void;
   /** Replace player's entire hand with specific cards */
@@ -207,12 +207,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   initGame: () => {
     // Generate a timestamp-based seed for single-player games
     const seed = generateTimestampSeed();
-    
+
     // Get the player's deck and progression from playerStore
     const playerProfile = usePlayerStore.getState().profile;
     const playerDeckIds = playerProfile?.currentDeckIds;
     const unlockPosition = playerProfile?.unlockPathPosition ?? 0;
-    
+
     get().initGameWithSeed(seed, playerDeckIds, unlockPosition);
   },
 
@@ -421,11 +421,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           npcAction,
           turnRng
         );
-        
+
         resolvedState = result.state;
         allEvents = [...allEvents, ...result.events];
         lastTimeline = result.timeline;
-        
+
         if (!result.success) {
           console.error('Turn resolution failed:', result.error);
         }
@@ -443,7 +443,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         allEvents = [...allEvents, ...result.events];
         lastTimeline = result.timeline;
       }
-      
+
       // Store the timeline for debugging/replay
       set({ currentTimeline: lastTimeline });
 
@@ -474,34 +474,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // This is needed so the animation can find both source and target cards in the DOM
       // We start from turnStartState and add all played cards with revealed=true
       let preAnimationState = turnStartState;
-      
+
       // Apply all player actions with revealed=true
       for (const action of playerActions) {
         const player = getPlayer(preAnimationState, action.playerId);
         const [playerWithoutCard, card] = removeFromHand(player, action.cardInstanceId);
         if (!card) continue;
-        
+
         const playerSpent = spendEnergy(playerWithoutCard, card.cardDef.cost);
         preAnimationState = withPlayer(preAnimationState, action.playerId, playerSpent);
-        
+
         const playedCard: CardInstance = { ...card, revealed: true };
         const location = getLocation(preAnimationState, action.location);
         const newLocation = addCard(location, playedCard, action.playerId);
         preAnimationState = withLocation(preAnimationState, action.location, newLocation);
       }
-      
+
       // Track NPC card IDs for staggered reveal animation
       const npcCardIds = npcActions.map(a => a.cardInstanceId);
-      
+
       // Apply all NPC actions with revealed=true
       for (const action of npcActions) {
         const player = getPlayer(preAnimationState, action.playerId);
         const [playerWithoutCard, card] = removeFromHand(player, action.cardInstanceId);
         if (!card) continue;
-        
+
         const playerSpent = spendEnergy(playerWithoutCard, card.cardDef.cost);
         preAnimationState = withPlayer(preAnimationState, action.playerId, playerSpent);
-        
+
         const playedCard: CardInstance = { ...card, revealed: true };
         const location = getLocation(preAnimationState, action.location);
         const newLocation = addCard(location, playedCard, action.playerId);
@@ -531,19 +531,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
           revealedNpcCardIds: new Set([...state.revealedNpcCardIds, cardId])
         }));
       }
-      
+
       // Wait for the last card's fly-in animation to complete (spring animation ~500ms)
       if (npcCardIds.length > 0) {
         await new Promise(resolve => setTimeout(resolve, 600));
       }
-      
+
       // Clear pending NPC cards after reveal animation completes
       set({ pendingNpcCardIds: new Set() });
 
       // NOW trigger buff/debuff animations after all NPC cards are visible
       if (powerChangedEvents.length > 0) {
         set({ powerChangedEvents, currentAnimationIndex: 0 });
-        
+
         // Wait for buff/debuff animations (approx 2.2s per animation)
         const buffAnimationTime = Math.min(powerChangedEvents.length, 3) * 2200 + 500;
         await new Promise(resolve => setTimeout(resolve, buffAnimationTime));
@@ -553,10 +553,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (cardDestroyedEvents.length > 0) {
         console.log('[GameStore] Triggering destruction animations (cards still visible):', cardDestroyedEvents);
         set({ cardDestroyedEvents, currentDestroyAnimationIndex: 0 });
-        
+
         // Small delay to let React re-render with the new events
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         // Wait for destruction animations (approx 8s per destruction - DEBUG MODE)
         const destroyAnimationTime = Math.min(cardDestroyedEvents.length, 3) * 500 + 100;
         console.log('[GameStore] Waiting for destruction animation:', destroyAnimationTime, 'ms');
@@ -658,8 +658,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   clearAnimations: () => {
-    set({ 
-      powerChangedEvents: [], 
+    set({
+      powerChangedEvents: [],
       currentAnimationIndex: 0,
       cardDestroyedEvents: [],
       currentDestroyAnimationIndex: 0,
@@ -676,23 +676,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const player = getPlayer(gameState, playerId);
     const newGameState = withPlayer(gameState, playerId, withEnergy(player, player.energy + amount));
-    
+
     // Also update turnStartState so changes persist through turn resolution
     let newTurnStartState = turnStartState;
     if (turnStartState) {
       const turnStartPlayer = getPlayer(turnStartState, playerId);
       newTurnStartState = withPlayer(turnStartState, playerId, withEnergy(turnStartPlayer, turnStartPlayer.energy + amount));
     }
-    
+
     // For player 0, also set the persistent debug energy bonus
     const newDebugBonus = playerId === 0 ? debugEnergyBonus + amount : debugEnergyBonus;
-    
+
     set({
       gameState: newGameState,
       turnStartState: newTurnStartState,
       debugEnergyBonus: newDebugBonus,
     });
-    
+
     console.log(`[Debug] Added ${amount} energy. Persistent bonus is now +${newDebugBonus}`);
   },
 
@@ -737,7 +737,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Determine if player won
     const playerWon = result === 'PLAYER_0_WINS';
-    
+
     // Check for perfect win (all 3 locations won by player)
     const isPerfectWin = playerWon && locationWinners.every(winner => winner === 0);
 
@@ -767,70 +767,70 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // ==========================================================================
   // Confrontation Animation Functions
   // ==========================================================================
-  
+
   getConfrontationOffset: (sourceCardId: number, targetCardId: number) => {
     // Find positions of source and target cards in the DOM
     const sourceElement = document.querySelector(`[data-card-id="${sourceCardId}"]`);
     const targetElement = document.querySelector(`[data-card-id="${targetCardId}"]`);
-    
+
     if (!sourceElement || !targetElement) {
       return { x: 0, y: 0 };
     }
-    
+
     const sourceRect = sourceElement.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
-    
+
     // Calculate direction from source to target
     const sourceCenterX = sourceRect.left + sourceRect.width / 2;
     const sourceCenterY = sourceRect.top + sourceRect.height / 2;
     const targetCenterX = targetRect.left + targetRect.width / 2;
     const targetCenterY = targetRect.top + targetRect.height / 2;
-    
+
     const dx = targetCenterX - sourceCenterX;
     const dy = targetCenterY - sourceCenterY;
-    
+
     // Normalize and apply movement amount (move source partway toward target)
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (distance < 1) return { x: 0, y: 0 };
-    
+
     // Move about 30% of the way toward the target for confrontation
     const moveFraction = 0.3;
     const moveX = (dx / distance) * distance * moveFraction;
     const moveY = (dy / distance) * distance * moveFraction;
-    
+
     return { x: moveX, y: moveY };
   },
-  
+
   getTargetRecoilOffset: (sourceCardId: number, targetCardId: number) => {
     // Find positions of source and target cards in the DOM
     const sourceElement = document.querySelector(`[data-card-id="${sourceCardId}"]`);
     const targetElement = document.querySelector(`[data-card-id="${targetCardId}"]`);
-    
+
     if (!sourceElement || !targetElement) {
       return { x: 0, y: 0 };
     }
-    
+
     const sourceRect = sourceElement.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
-    
+
     // Calculate direction from source to target (target moves away from source)
     const sourceCenterX = sourceRect.left + sourceRect.width / 2;
     const sourceCenterY = sourceRect.top + sourceRect.height / 2;
     const targetCenterX = targetRect.left + targetRect.width / 2;
     const targetCenterY = targetRect.top + targetRect.height / 2;
-    
+
     const dx = targetCenterX - sourceCenterX;
     const dy = targetCenterY - sourceCenterY;
-    
+
     // Normalize and apply recoil (move target away from source)
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (distance < 1) return { x: 0, y: 0 };
-    
+
     // Recoil about 15-25 pixels away from the source
     const recoilDistance = 20;
     const recoilX = (dx / distance) * recoilDistance;
     const recoilY = (dy / distance) * recoilDistance;
-    
+
     return { x: recoilX, y: recoilY };
   },
 
@@ -856,7 +856,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newCard = createCardInstance(cardDef, playerId, gameState.nextInstanceId);
     const player = getPlayer(gameState, playerId);
     const newHand = [...player.hand, newCard];
-    
+
     const newGameState = {
       ...withPlayer(gameState, playerId, withHand(player, newHand)),
       nextInstanceId: gameState.nextInstanceId + 1,
@@ -873,7 +873,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     }
 
-    set({ 
+    set({
       gameState: newGameState,
       turnStartState: newTurnStartState,
     });
@@ -916,7 +916,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
     }
 
-    set({ 
+    set({
       gameState: newGameState,
       turnStartState: newTurnStartState,
     });
@@ -1083,10 +1083,10 @@ if (typeof window !== 'undefined') {
       // Import dynamically to avoid circular dependencies
       const { getDefaultStarterDeck } = await import('@engine/starterDeck');
       const starterDeck = getDefaultStarterDeck();
-      
+
       // Reset player profile
       await usePlayerStore.getState().resetProfile(starterDeck);
-      
+
       // Reset game state
       useGameStore.setState({
         gameState: null,
@@ -1110,9 +1110,15 @@ if (typeof window !== 'undefined') {
         lastGameCredits: null,
         lastGamePerfectWin: false,
       });
-      
+
       console.log('[Debug] All data reset! Player profile and game state cleared.');
       console.log('[Debug] Refresh the page to start fresh.');
+    },
+    /** Reveal cards (advance progression): debug.revealCards(5) */
+    revealCards: (amount: number) => {
+      // Use playerDebug since it's already defined
+      (window as unknown as { playerDebug: { revealCards: (n: number) => void } })
+        .playerDebug.revealCards(amount);
     },
     /** Show help */
     help: () => {
@@ -1134,6 +1140,7 @@ Debug Commands:
   debug.defeat()                  - Simulate a defeat (must be in a game)
   debug.draw()                    - Simulate a draw (must be in a game)
   debug.resetAll()                - Reset everything (profile, unlocks, credits, game)
+  debug.revealCards(5)            - Advance progression by 5 cards
       `);
     },
   };

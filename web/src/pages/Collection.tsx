@@ -14,6 +14,8 @@ import { getCardImagePath } from "@/utils/assets";
 import type { CardDef } from "@engine/models";
 import type { CardId } from "@engine/types";
 import type { Ideology } from "@storage/types";
+import { IDEOLOGY_INFO } from "@/utils/ideologyData";
+import { IdeologyPanel } from "@/components/IdeologyPanel";
 
 // =============================================================================
 // Mini Card Component for Collection
@@ -131,10 +133,7 @@ function MiniCard({
   );
 }
 
-// Ideology Choice Modal
 // =============================================================================
-
-import { IDEOLOGY_INFO } from "@/utils/ideologyData";
 
 interface IdeologyChoiceModalProps {
   isOpen: boolean;
@@ -142,18 +141,33 @@ interface IdeologyChoiceModalProps {
 }
 
 function IdeologyChoiceModal({ isOpen, onChoose }: IdeologyChoiceModalProps) {
+  const [confirmingIdeology, setConfirmingIdeology] = useState<Ideology | null>(
+    null,
+  );
+
   if (!isOpen) return null;
+
+  const handleSelect = (ideology: Ideology) => {
+    if (confirmingIdeology === ideology) {
+      onChoose(ideology);
+      setConfirmingIdeology(null);
+    } else {
+      setConfirmingIdeology(ideology);
+    }
+  };
 
   return (
     <motion.div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      onClick={() => setConfirmingIdeology(null)}
     >
       <motion.div
         className="bg-olympus-navy rounded-xl border-2 border-olympus-gold p-6 max-w-2xl w-full"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
+        onClick={(e) => e.stopPropagation()} // Prevent click-away when clicking the modal content
       >
         <h2 className="text-2xl font-display text-olympus-gold text-center mb-4">
           Choose Your Path
@@ -163,28 +177,22 @@ function IdeologyChoiceModal({ isOpen, onChoose }: IdeologyChoiceModalProps) {
           unlocks will be from your chosen path.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-wrap gap-4 justify-center">
           {(
             Object.entries(IDEOLOGY_INFO) as [
               Ideology,
               (typeof IDEOLOGY_INFO)[Ideology],
             ][]
-          ).map(([ideology, info]) => (
-            <motion.button
+          ).map(([ideology]) => (
+            <IdeologyPanel
               key={ideology}
-              onClick={() => onChoose(ideology)}
-              className={clsx(
-                "p-4 rounded-lg bg-gradient-to-br text-white text-left transition-transform",
-                info.color,
-                "hover:scale-105 hover:shadow-lg",
-              )}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <h3 className="font-display text-lg mb-1">{info.name}</h3>
-              <p className="text-xs opacity-70 mb-1">{info.tagline}</p>
-              <p className="text-sm opacity-90">{info.description}</p>
-            </motion.button>
+              ideology={ideology}
+              isChosen={false}
+              hasChosenAny={false}
+              onSelect={handleSelect}
+              forceRevealed={true}
+              isConfirming={confirmingIdeology === ideology}
+            />
           ))}
         </div>
       </motion.div>
