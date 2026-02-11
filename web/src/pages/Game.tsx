@@ -1,22 +1,25 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { clsx } from 'clsx';
-import { Board } from '@components/game/Board';
-import { Hand } from '@components/game/Hand';
-import { AnimatedNumber } from '@components/game/AnimatedNumber';
-import { BuffDebuffAnimation } from '@components/game/BuffDebuffAnimation';
-import { CardDestroyedAnimation } from '@components/game/CardDestroyedAnimation';
-import { LocationWinAnimation } from '@components/game/LocationWinAnimation';
-import { useGameStore } from '@store/gameStore';
-import { IchorDisplay } from '@components/IchorIcon';
-import { usePlayerStore } from '@store/playerStore';
-import { useTutorialStore } from '@tutorial/tutorialStore';
-import { TutorialPrompt } from '@tutorial/TutorialPrompt';
-import { getTutorialPrompt, getTutorialStepCount } from '@tutorial/TutorialMatch';
-import type { LocationIndex } from '@engine/types';
-import type { PowerChangedEvent, CardDestroyedEvent } from '@engine/events';
-import { findCardByInstance } from '@engine/models';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { clsx } from "clsx";
+import { Board } from "@components/game/Board";
+import { Hand } from "@components/game/Hand";
+import { AnimatedNumber } from "@components/game/AnimatedNumber";
+import { BuffDebuffAnimation } from "@components/game/BuffDebuffAnimation";
+import { CardDestroyedAnimation } from "@components/game/CardDestroyedAnimation";
+import { LocationWinAnimation } from "@components/game/LocationWinAnimation";
+import { useGameStore } from "@store/gameStore";
+import { IchorDisplay } from "@components/IchorIcon";
+import { usePlayerStore } from "@store/playerStore";
+import { useTutorialStore } from "@tutorial/tutorialStore";
+import { TutorialPrompt } from "@tutorial/TutorialPrompt";
+import {
+  getTutorialPrompt,
+  getTutorialStepCount,
+} from "@tutorial/TutorialMatch";
+import type { LocationIndex } from "@engine/types";
+import type { PowerChangedEvent, CardDestroyedEvent } from "@engine/events";
+import { findCardByInstance } from "@engine/models";
 
 // Hook to detect mobile
 function useIsMobile() {
@@ -27,11 +30,29 @@ function useIsMobile() {
       setIsMobile(window.innerWidth <= 640);
     };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   return isMobile;
+}
+
+// Hook to auto-scale the game to fit the viewport on smaller screens
+function useViewportScale(designHeight: number = 900) {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const vh = window.innerHeight;
+      const newScale = vh < designHeight ? vh / designHeight : 1;
+      setScale(newScale);
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [designHeight]);
+
+  return scale;
 }
 
 interface RetreatButtonProps {
@@ -67,7 +88,7 @@ function RetreatButton({ onRetreat, disabled, isMobile }: RetreatButtonProps) {
         isConfirming
           ? "bg-red-600 text-white border-red-400 px-6 py-2 scale-105 shadow-lg shadow-red-900/50"
           : "bg-red-900/30 text-red-100/70 hover:bg-red-800/50 hover:text-red-100 border-red-900/50 px-5 py-2",
-        isMobile ? "text-xs" : "text-sm"
+        isMobile ? "text-xs" : "text-sm",
       )}
     >
       <motion.div
@@ -97,7 +118,12 @@ interface QuitConfirmModalProps {
   isMobile: boolean;
 }
 
-function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmModalProps) {
+function QuitConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isMobile,
+}: QuitConfirmModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -113,7 +139,7 @@ function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmM
             data-name="quit-confirm-modal"
             className={clsx(
               "bg-olympus-navy rounded-xl border-2 border-olympus-gold text-center",
-              isMobile ? "p-4 mx-4" : "p-6"
+              isMobile ? "p-4 mx-4" : "p-6",
             )}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -124,7 +150,7 @@ function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmM
               data-name="quit-confirm-title"
               className={clsx(
                 "font-display text-olympus-gold",
-                isMobile ? "text-lg mb-2" : "text-2xl mb-3"
+                isMobile ? "text-lg mb-2" : "text-2xl mb-3",
               )}
             >
               Quit Game?
@@ -133,7 +159,7 @@ function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmM
               data-name="quit-confirm-message"
               className={clsx(
                 "text-gray-300 mb-4",
-                isMobile ? "text-sm" : "text-base"
+                isMobile ? "text-sm" : "text-base",
               )}
             >
               Your progress will be lost.
@@ -142,7 +168,7 @@ function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmM
               data-name="quit-confirm-buttons"
               className={clsx(
                 "flex justify-center",
-                isMobile ? "gap-3" : "gap-4"
+                isMobile ? "gap-3" : "gap-4",
               )}
             >
               <button
@@ -150,7 +176,7 @@ function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmM
                 onClick={onClose}
                 className={clsx(
                   "bg-gray-700 text-white font-display rounded-lg hover:bg-gray-600 transition-colors",
-                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-2"
+                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-2",
                 )}
               >
                 Cancel
@@ -160,7 +186,7 @@ function QuitConfirmModal({ isOpen, onClose, onConfirm, isMobile }: QuitConfirmM
                 onClick={onConfirm}
                 className={clsx(
                   "bg-red-600 text-white font-display rounded-lg hover:bg-red-500 transition-colors",
-                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-2"
+                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-2",
                 )}
               >
                 Quit
@@ -185,7 +211,7 @@ function BackButton({ onClick, isMobile }: BackButtonProps) {
       onClick={onClick}
       className={clsx(
         "text-gray-400 hover:text-white transition-colors",
-        isMobile && "text-xs"
+        isMobile && "text-xs",
       )}
     >
       ←
@@ -219,12 +245,20 @@ export function Game() {
     lastGamePerfectWin,
   } = useGameStore();
 
-  const { shouldShowUnlockNotification, setTutorialCompleted } = usePlayerStore();
-  const { isActive: isTutorial, currentStep, advanceStep, completeTutorial } = useTutorialStore();
+  const { shouldShowUnlockNotification, setTutorialCompleted } =
+    usePlayerStore();
+  const {
+    isActive: isTutorial,
+    currentStep,
+    advanceStep,
+    completeTutorial,
+  } = useTutorialStore();
   const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const desktopScale = useViewportScale(950);
+  const mobileScale = useViewportScale(670);
 
   // Selected card can be from hand or a pending card on board
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
@@ -236,7 +270,7 @@ export function Game() {
   const [showQuitModal, setShowQuitModal] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get('tutorial') === 'true') {
+    if (searchParams.get("tutorial") === "true") {
       useTutorialStore.getState().startTutorial();
     }
     const isTutorialActive = useTutorialStore.getState().isActive;
@@ -249,24 +283,24 @@ export function Game() {
 
   // Handle browser back button
   useEffect(() => {
-    const isGameOver = gameState?.result !== 'IN_PROGRESS';
-    
+    const isGameOver = gameState?.result !== "IN_PROGRESS";
+
     if (isGameOver) return; // Don't intercept if game is over
 
     // Push a dummy state to history so we can intercept the back button
-    window.history.pushState({ gameInProgress: true }, '');
+    window.history.pushState({ gameInProgress: true }, "");
 
     const handlePopState = () => {
       // Show confirmation modal instead of navigating
       setShowQuitModal(true);
       // Push state again to prevent actual navigation
-      window.history.pushState({ gameInProgress: true }, '');
+      window.history.pushState({ gameInProgress: true }, "");
     };
 
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, [gameState?.result]);
 
@@ -275,16 +309,18 @@ export function Game() {
     if (showGameResult && shouldShowUnlockNotification()) {
       // Delay slightly to let game end animation complete
       const timer = setTimeout(() => {
-        navigate('/card-reveal');
+        navigate("/card-reveal");
       }, 2500);
       return () => clearTimeout(timer);
     }
   }, [showGameResult, shouldShowUnlockNotification, navigate]);
 
-
   if (!gameState) {
     return (
-      <div data-name="loading-screen" className="min-h-screen flex items-center justify-center">
+      <div
+        data-name="loading-screen"
+        className="min-h-screen flex items-center justify-center"
+      >
         <motion.div
           data-name="loading-text"
           className="text-2xl text-olympus-gold"
@@ -297,7 +333,10 @@ export function Game() {
     );
   }
 
-  const handleCardSelect = (cardId: number | null, fromBoard: boolean = false) => {
+  const handleCardSelect = (
+    cardId: number | null,
+    fromBoard: boolean = false,
+  ) => {
     if (cardId === selectedCard) {
       // Deselect if clicking same card
       setSelectedCard(null);
@@ -309,7 +348,8 @@ export function Game() {
   };
 
   const handleLocationClick = (locationIndex: number) => {
-    if (selectedCard === null || isAnimating || isNpcThinking || isGameOver) return;
+    if (selectedCard === null || isAnimating || isNpcThinking || isGameOver)
+      return;
 
     if (isSelectedFromBoard) {
       moveCard(selectedCard, locationIndex as LocationIndex);
@@ -317,7 +357,7 @@ export function Game() {
       playCard(selectedCard, locationIndex as LocationIndex);
       if (isTutorial) {
         const step = getTutorialPrompt(currentStep);
-        if (step?.trigger === 'on_play_card') advanceStep();
+        if (step?.trigger === "on_play_card") advanceStep();
       }
     }
     setSelectedCard(null);
@@ -325,7 +365,13 @@ export function Game() {
   };
 
   const handleHandClick = () => {
-    if (selectedCard !== null && isSelectedFromBoard && !isAnimating && !isNpcThinking && !isGameOver) {
+    if (
+      selectedCard !== null &&
+      isSelectedFromBoard &&
+      !isAnimating &&
+      !isNpcThinking &&
+      !isGameOver
+    ) {
       moveCard(selectedCard, null); // null = return to hand
       setSelectedCard(null);
       setIsSelectedFromBoard(false);
@@ -337,17 +383,17 @@ export function Game() {
       endTurn(isTutorial ? { isTutorial: true } : undefined);
       if (isTutorial) {
         const step = getTutorialPrompt(currentStep);
-        if (step?.trigger === 'on_end_turn') advanceStep();
+        if (step?.trigger === "on_end_turn") advanceStep();
       }
       setSelectedCard(null);
       setIsSelectedFromBoard(false);
     }
   };
 
-  const pendingCardIds = new Set(playerActions.map(a => a.cardInstanceId));
+  const pendingCardIds = new Set(playerActions.map((a) => a.cardInstanceId));
 
   const isDisabled = isAnimating || isNpcThinking;
-  const isGameOver = gameState.result !== 'IN_PROGRESS';
+  const isGameOver = gameState.result !== "IN_PROGRESS";
 
   // Action buttons component - reused in mobile (bottom) and desktop (sidebar)
   const actionButtons = (vertical: boolean = false) => (
@@ -356,7 +402,7 @@ export function Game() {
       className={clsx(
         "flex items-center shrink-0",
         vertical ? "flex-col gap-4" : "flex-row justify-center",
-        !vertical && (isMobile ? "gap-3 mt-1" : "gap-4 mt-4")
+        !vertical && (isMobile ? "gap-3 mt-1" : "gap-4 mt-4"),
       )}
     >
       <RetreatButton
@@ -370,13 +416,16 @@ export function Game() {
         className={clsx(
           "flex items-center justify-center font-bold",
           "text-amber-100",
-          isMobile ? "w-12 h-10 text-base" : "w-16 h-14 text-2xl"
+          isMobile ? "w-12 h-10 text-base" : "w-16 h-14 text-2xl",
         )}
         style={{
-          background: 'linear-gradient(145deg, #4a3219 0%, #3a2815 25%, #2c1e0f 50%, #1a1209 75%, #0d0904 100%)',
-          clipPath: 'polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)',
-          filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))',
-          boxShadow: 'inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5)',
+          background:
+            "linear-gradient(145deg, #4a3219 0%, #3a2815 25%, #2c1e0f 50%, #1a1209 75%, #0d0904 100%)",
+          clipPath:
+            "polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%)",
+          filter: "drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))",
+          boxShadow:
+            "inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5)",
         }}
       >
         <div className="flex items-center -ml-1">
@@ -401,7 +450,7 @@ export function Game() {
           "text-black shadow-lg shadow-olympus-gold/30",
           "hover:shadow-olympus-gold/50 hover:scale-105",
           "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none",
-          isMobile ? "px-4 py-1.5 text-xs" : "px-6 py-2"
+          isMobile ? "px-4 py-1.5 text-xs" : "px-6 py-2",
         )}
       >
         <span className="relative z-10">End Turn</span>
@@ -417,28 +466,29 @@ export function Game() {
         data-name="header"
         className={clsx(
           "flex justify-between items-center",
-          isMobile ? "mb-1" : "mb-2"
+          isMobile ? "mb-1" : "mb-2",
         )}
       >
         <div
           data-name="header-left"
-          className={clsx(
-            "flex items-center",
-            isMobile ? "gap-2" : "gap-4"
-          )}
+          className={clsx("flex items-center", isMobile ? "gap-2" : "gap-4")}
         >
           <BackButton
-            onClick={() => isGameOver ? navigate('/') : setShowQuitModal(true)}
+            onClick={() =>
+              isGameOver ? navigate("/") : setShowQuitModal(true)
+            }
             isMobile={isMobile}
           />
           <div
             data-name="turn-indicator"
             className={clsx(
               "font-display text-olympus-gold",
-              isMobile ? "text-sm" : "text-xl"
+              isMobile ? "text-sm" : "text-xl",
             )}
           >
-            {gameState.result === 'IN_PROGRESS' ? `Turn ${gameState.turn}/${isTutorial ? '4' : '6'}` : 'Game Ended'}
+            {gameState.result === "IN_PROGRESS"
+              ? `Turn ${gameState.turn}/${isTutorial ? "4" : "6"}`
+              : "Game Ended"}
           </div>
         </div>
 
@@ -449,26 +499,26 @@ export function Game() {
               useTutorialStore.getState().skipTutorial();
               initGame();
             }}
-            className={clsx(
-              "text-gray-400 hover:text-gray-300 text-sm"
-            )}
+            className={clsx("text-gray-400 hover:text-gray-300 text-sm")}
           >
             Skip Tutorial
           </button>
         )}
 
-        {showGameResult && gameState.result !== 'IN_PROGRESS' && !isEndScreenVisible && (
-          <button
-            data-name="show-results-button"
-            onClick={() => setIsEndScreenVisible(true)}
-            className={clsx(
-              "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
-              isMobile ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm"
-            )}
-          >
-            Show Results
-          </button>
-        )}
+        {showGameResult &&
+          gameState.result !== "IN_PROGRESS" &&
+          !isEndScreenVisible && (
+            <button
+              data-name="show-results-button"
+              onClick={() => setIsEndScreenVisible(true)}
+              className={clsx(
+                "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
+                isMobile ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm",
+              )}
+            >
+              Show Results
+            </button>
+          )}
       </header>
 
       {/* Opponent area (NPC) - compact on mobile */}
@@ -476,7 +526,7 @@ export function Game() {
         data-name="opponent-area"
         className={clsx(
           "flex justify-between items-center bg-black/30 rounded-lg shrink-0",
-          isMobile ? "mb-1 px-2 h-6" : "mb-2 px-4 h-8"
+          isMobile ? "mb-1 px-2 h-6" : "mb-2 px-4 h-8",
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -485,14 +535,16 @@ export function Game() {
           <div data-name="opponent-info" className="flex items-center gap-1.5">
             <span className="text-gray-300 text-[10px]">NPC</span>
             <span className="text-gray-500 text-[8px]">
-              {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
+              {gameState.players[1].hand.length} cards • ⚡
+              {gameState.players[1].energy}
             </span>
           </div>
         ) : (
           <div data-name="opponent-info" className="flex items-center gap-3">
             <span className="text-gray-300 text-sm">Opponent (NPC)</span>
             <span className="text-gray-500 text-xs">
-              {gameState.players[1].hand.length} cards • ⚡{gameState.players[1].energy}
+              {gameState.players[1].hand.length} cards • ⚡
+              {gameState.players[1].energy}
             </span>
           </div>
         )}
@@ -506,30 +558,33 @@ export function Game() {
               exit={{ opacity: 0, scale: 0.8 }}
               className={clsx(
                 "flex items-center gap-1 text-olympus-gold",
-                isMobile ? "text-[10px]" : "text-xs"
+                isMobile ? "text-[10px]" : "text-xs",
               )}
             >
               <motion.span
                 className={isMobile ? "text-[10px]" : "text-sm"}
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               >
                 ⚡
               </motion.span>
-              {!isMobile && 'Thinking...'}
+              {!isMobile && "Thinking..."}
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
 
       {/* Game Board and Hand - Board takes remaining space */}
-      <div data-name="board-and-hand-container" className="flex-1 flex flex-col min-h-0">
+      <div
+        data-name="board-and-hand-container"
+        className="flex-1 flex flex-col min-h-0"
+      >
         {/* Game Board */}
         <div
           data-name="board-container"
           className={clsx(
             "flex items-center justify-center",
-            isMobile ? "min-h-[360px] flex-1" : "h-[650px]"
+            isMobile ? "min-h-[360px] flex-1" : "h-[650px]",
           )}
         >
           <Board
@@ -542,13 +597,12 @@ export function Game() {
           />
         </div>
 
-
         {/* Player Hand - fixed height area */}
         <div
           data-name="hand-container"
           className={clsx(
             isMobile ? "h-[120px]" : "h-[160px]",
-            "flex flex-col shrink-0"
+            "flex flex-col shrink-0",
           )}
         >
           <Hand
@@ -570,7 +624,8 @@ export function Game() {
 
   const tutorialStep = getTutorialPrompt(currentStep);
   const tutorialStepCount = getTutorialStepCount();
-  const showTutorialPrompt = isTutorial && tutorialStep && currentStep < tutorialStepCount;
+  const showTutorialPrompt =
+    isTutorial && tutorialStep && currentStep < tutorialStepCount;
 
   const handleTutorialContinue = () => {
     advanceStep();
@@ -585,9 +640,7 @@ export function Game() {
       data-name="game-root"
       className={clsx(
         "h-full",
-        isMobile 
-          ? "flex flex-col p-2" 
-          : "flex justify-center items-start pt-2"
+        isMobile ? "flex flex-col p-2" : "flex justify-center items-start pt-2",
       )}
     >
       {showTutorialPrompt && (
@@ -599,18 +652,42 @@ export function Game() {
       )}
 
       {isMobile ? (
-        // Mobile layout - unchanged vertical stack
-        gameContent
+        // Mobile layout - auto-scales to fit smaller viewports
+        <div
+          style={{
+            transform: mobileScale < 1 ? `scale(${mobileScale})` : undefined,
+            transformOrigin: "top center",
+            height: mobileScale < 1 ? `${100 / mobileScale}%` : "100%",
+          }}
+          className="flex flex-col flex-1"
+        >
+          {gameContent}
+        </div>
       ) : (
         // Desktop layout - centered portrait-like width with action sidebar
-        <div data-name="desktop-layout" className="flex flex-row items-stretch h-full">
+        // Auto-scales to fit smaller viewports (e.g. MacBook Air)
+        <div
+          data-name="desktop-layout"
+          className="flex flex-row items-stretch"
+          style={{
+            transform: desktopScale < 1 ? `scale(${desktopScale})` : undefined,
+            transformOrigin: "top center",
+            height: desktopScale < 1 ? `${100 / desktopScale}%` : "100%",
+          }}
+        >
           {/* Main game column - portrait width */}
-          <div data-name="main-game-column" className="w-[620px] min-h-[850px] flex flex-col px-3 pt-3 pb-6 bg-black/40 rounded-xl shadow-lg shadow-black/50">
+          <div
+            data-name="main-game-column"
+            className="w-[620px] min-h-[850px] flex flex-col px-3 pt-3 pb-6 bg-black/40 rounded-xl shadow-lg shadow-black/50"
+          >
             {gameContent}
           </div>
-          
+
           {/* Action sidebar - desktop only */}
-          <div data-name="action-sidebar" className="flex flex-col justify-center ml-4 pr-4">
+          <div
+            data-name="action-sidebar"
+            className="flex flex-col justify-center ml-4 pr-4"
+          >
             {actionButtons(true)}
           </div>
         </div>
@@ -619,17 +696,25 @@ export function Game() {
       {/* Buff/Debuff Animation Overlay */}
       <BuffDebuffAnimation
         event={
-          powerChangedEvents.length > 0 && currentAnimationIndex < powerChangedEvents.length
+          powerChangedEvents.length > 0 &&
+          currentAnimationIndex < powerChangedEvents.length
             ? (powerChangedEvents[currentAnimationIndex] as PowerChangedEvent)
             : null
         }
         onComplete={nextAnimation}
         isGodSource={(() => {
-          if (!gameState || powerChangedEvents.length === 0 || currentAnimationIndex >= powerChangedEvents.length) return false;
-          const event = powerChangedEvents[currentAnimationIndex] as PowerChangedEvent;
+          if (
+            !gameState ||
+            powerChangedEvents.length === 0 ||
+            currentAnimationIndex >= powerChangedEvents.length
+          )
+            return false;
+          const event = powerChangedEvents[
+            currentAnimationIndex
+          ] as PowerChangedEvent;
           const sourceCard = findCardByInstance(gameState, event.sourceCardId);
-          const isGod = sourceCard?.cardDef.cardType === 'God';
-          console.log('[BuffDebuff] Source card check:', {
+          const isGod = sourceCard?.cardDef.cardType === "God";
+          console.log("[BuffDebuff] Source card check:", {
             sourceCardId: event.sourceCardId,
             sourceCardName: sourceCard?.cardDef.name,
             cardType: sourceCard?.cardDef.cardType,
@@ -642,8 +727,11 @@ export function Game() {
       {/* Card Destroyed Animation Overlay */}
       <CardDestroyedAnimation
         event={
-          cardDestroyedEvents.length > 0 && currentDestroyAnimationIndex < cardDestroyedEvents.length
-            ? (cardDestroyedEvents[currentDestroyAnimationIndex] as CardDestroyedEvent)
+          cardDestroyedEvents.length > 0 &&
+          currentDestroyAnimationIndex < cardDestroyedEvents.length
+            ? (cardDestroyedEvents[
+                currentDestroyAnimationIndex
+              ] as CardDestroyedEvent)
             : null
         }
         onComplete={nextDestroyAnimation}
@@ -651,137 +739,152 @@ export function Game() {
 
       {/* Game over overlay - z-index 1000 to be above tooltips */}
       <AnimatePresence>
-        {showGameResult && gameState.result !== 'IN_PROGRESS' && isEndScreenVisible && (
-          <motion.div
-            data-name="game-over-backdrop"
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+        {showGameResult &&
+          gameState.result !== "IN_PROGRESS" &&
+          isEndScreenVisible && (
             <motion.div
-              data-name="game-over-modal"
-              className={clsx(
-                "text-center bg-olympus-navy rounded-xl border-2 border-olympus-gold",
-                isMobile ? "p-4" : "p-8"
-              )}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              data-name="game-over-backdrop"
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <h2
-                data-name="game-over-title"
+              <motion.div
+                data-name="game-over-modal"
                 className={clsx(
-                  "font-display text-olympus-gold",
-                  isMobile ? "text-2xl mb-2" : "text-5xl mb-4"
+                  "text-center bg-olympus-navy rounded-xl border-2 border-olympus-gold",
+                  isMobile ? "p-4" : "p-8",
                 )}
-              >
-                {gameState.result === 'PLAYER_0_WINS'
-                  ? (lastGamePerfectWin ? 'Perfect Victory!' : 'Victory!')
-                  : gameState.result === 'PLAYER_1_WINS' ? 'Defeat' : 'Draw'}
-              </h2>
-
-              {/* Result image */}
-              <motion.img
-                src={`${import.meta.env.BASE_URL}icons/${
-                  gameState.result === 'PLAYER_0_WINS'
-                    ? (lastGamePerfectWin ? 'victory_perfect.png' : 'victory.png')
-                    : gameState.result === 'PLAYER_1_WINS' ? 'defeat.png' : 'draw.png'
-                }`}
-                alt="Result"
-                className={clsx("mx-auto", isMobile ? "w-32 mb-3" : "w-48 mb-5")}
-                initial={{ scale: 0, opacity: 0 }}
+                initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.3, type: 'spring', damping: 15 }}
-              />
-
-              <p
-                data-name="game-over-message"
-                className={clsx(
-                  "text-gray-300 font-display italic",
-                  isMobile ? "text-sm mb-2" : "text-lg mb-4"
-                )}
+                transition={{ delay: 0.2 }}
               >
-                {gameState.result === 'PLAYER_0_WINS'
-                  ? (lastGamePerfectWin ? 'Flawless! The gods bow before you!' : 'The gods smile upon you!')
-                  : gameState.result === 'PLAYER_1_WINS'
-                    ? 'The Fates were not in your favor...'
-                    : 'An honorable stalemate!'}
-              </p>
-
-              {/* Ichor Earned */}
-              {lastGameCredits !== null && (
-                <motion.div
-                  data-name="ichor-earned"
+                <h2
+                  data-name="game-over-title"
                   className={clsx(
-                    "flex items-center justify-center gap-2 mx-auto",
-                    isMobile ? "mb-4" : "mb-6"
+                    "font-display text-olympus-gold",
+                    isMobile ? "text-2xl mb-2" : "text-5xl mb-4",
+                  )}
+                >
+                  {gameState.result === "PLAYER_0_WINS"
+                    ? lastGamePerfectWin
+                      ? "Perfect Victory!"
+                      : "Victory!"
+                    : gameState.result === "PLAYER_1_WINS"
+                      ? "Defeat"
+                      : "Draw"}
+                </h2>
+
+                {/* Result image */}
+                <motion.img
+                  src={`${import.meta.env.BASE_URL}icons/${
+                    gameState.result === "PLAYER_0_WINS"
+                      ? lastGamePerfectWin
+                        ? "victory_perfect.png"
+                        : "victory.png"
+                      : gameState.result === "PLAYER_1_WINS"
+                        ? "defeat.png"
+                        : "draw.png"
+                  }`}
+                  alt="Result"
+                  className={clsx(
+                    "mx-auto",
+                    isMobile ? "w-32 mb-3" : "w-48 mb-5",
                   )}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.4, type: 'spring' }}
-                >
-                  <IchorDisplay
-                    credits={lastGameCredits}
-                    prefix="+"
-                    suffix="Ichor"
-                    size={24}
-                    className={clsx(
-                      "bg-purple-500/20 rounded-lg",
-                      isMobile ? "px-3 py-1.5" : "px-4 py-2"
-                    )}
-                    textClassName={clsx(
-                      "font-bold text-purple-300",
-                      isMobile ? "text-lg" : "text-xl"
-                    )}
-                  />
-                </motion.div>
-              )}
+                  transition={{ delay: 0.3, type: "spring", damping: 15 }}
+                />
 
-              <div
-                data-name="game-over-buttons"
-                className={clsx(
-                  "flex justify-center",
-                  isMobile ? "gap-2" : "gap-4"
+                <p
+                  data-name="game-over-message"
+                  className={clsx(
+                    "text-gray-300 font-display italic",
+                    isMobile ? "text-sm mb-2" : "text-lg mb-4",
+                  )}
+                >
+                  {gameState.result === "PLAYER_0_WINS"
+                    ? lastGamePerfectWin
+                      ? "Flawless! The gods bow before you!"
+                      : "The gods smile upon you!"
+                    : gameState.result === "PLAYER_1_WINS"
+                      ? "The Fates were not in your favor..."
+                      : "An honorable stalemate!"}
+                </p>
+
+                {/* Ichor Earned */}
+                {lastGameCredits !== null && (
+                  <motion.div
+                    data-name="ichor-earned"
+                    className={clsx(
+                      "flex items-center justify-center gap-2 mx-auto",
+                      isMobile ? "mb-4" : "mb-6",
+                    )}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                  >
+                    <IchorDisplay
+                      credits={lastGameCredits}
+                      prefix="+"
+                      suffix="Ichor"
+                      size={24}
+                      className={clsx(
+                        "bg-purple-500/20 rounded-lg",
+                        isMobile ? "px-3 py-1.5" : "px-4 py-2",
+                      )}
+                      textClassName={clsx(
+                        "font-bold text-purple-300",
+                        isMobile ? "text-lg" : "text-xl",
+                      )}
+                    />
+                  </motion.div>
                 )}
-              >
-                <button
-                  data-name="play-again-button"
-                  onClick={() => {
-                    initGame();
-                    setIsEndScreenVisible(true);
-                  }}
+
+                <div
+                  data-name="game-over-buttons"
                   className={clsx(
-                    "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
-                    isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
+                    "flex justify-center",
+                    isMobile ? "gap-2" : "gap-4",
                   )}
                 >
-                  Play Again
-                </button>
-                <button
-                  data-name="view-board-button"
-                  onClick={() => setIsEndScreenVisible(false)}
-                  className={clsx(
-                    "bg-white/10 text-white font-display rounded-lg hover:bg-white/20 transition-colors border border-white/20",
-                    isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
-                  )}
-                >
-                  View Board
-                </button>
-                <Link
-                  data-name="menu-link"
-                  to="/"
-                  className={clsx(
-                    "bg-gray-700 text-white font-display rounded-lg hover:bg-gray-600 transition-colors",
-                    isMobile ? "px-4 py-2 text-sm" : "px-8 py-3"
-                  )}
-                >
-                  Menu
-                </Link>
-              </div>
+                  <button
+                    data-name="play-again-button"
+                    onClick={() => {
+                      initGame();
+                      setIsEndScreenVisible(true);
+                    }}
+                    className={clsx(
+                      "bg-olympus-gold text-black font-display rounded-lg hover:bg-yellow-400 transition-colors",
+                      isMobile ? "px-4 py-2 text-sm" : "px-8 py-3",
+                    )}
+                  >
+                    Play Again
+                  </button>
+                  <button
+                    data-name="view-board-button"
+                    onClick={() => setIsEndScreenVisible(false)}
+                    className={clsx(
+                      "bg-white/10 text-white font-display rounded-lg hover:bg-white/20 transition-colors border border-white/20",
+                      isMobile ? "px-4 py-2 text-sm" : "px-8 py-3",
+                    )}
+                  >
+                    View Board
+                  </button>
+                  <Link
+                    data-name="menu-link"
+                    to="/"
+                    className={clsx(
+                      "bg-gray-700 text-white font-display rounded-lg hover:bg-gray-600 transition-colors",
+                      isMobile ? "px-4 py-2 text-sm" : "px-8 py-3",
+                    )}
+                  >
+                    Menu
+                  </Link>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
       </AnimatePresence>
 
       {/* Location Win Animation - +1 flying to points indicator (UI-only state) */}
@@ -796,10 +899,9 @@ export function Game() {
       <QuitConfirmModal
         isOpen={showQuitModal}
         onClose={() => setShowQuitModal(false)}
-        onConfirm={() => navigate('/')}
+        onConfirm={() => navigate("/")}
         isMobile={isMobile}
       />
-
     </div>
   );
 }
