@@ -31,7 +31,7 @@ function App() {
       {/* Mobile background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden blur-xs"
-        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.png)` }}
+        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.jpg)` }}
       />
       {/* Mobile overlay for readability */}
       <div 
@@ -42,7 +42,7 @@ function App() {
       {/* Desktop background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat hidden sm:block blur-xs"
-        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.png)` }}
+        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/background.jpg)` }}
       />
       {/* Desktop overlay for readability */}
       <div 

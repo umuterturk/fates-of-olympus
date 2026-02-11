@@ -60,7 +60,7 @@ export function Location({
 
   const locationNames = ['Mount Olympus', 'The Underworld', 'The Aegean Sea'];
   const locationShortNames = ['Olympus', 'Underworld', 'Aegean'];
-  const locationImages = ['mount_olympus.png', 'the_uderworld.png', 'aegean_see.png'];
+  const locationImages = ['mount_olympus.jpg', 'the_uderworld.jpg', 'aegean_see.jpg'];
   const locationName = isMobile
     ? (locationShortNames[location.index] ?? `Loc ${location.index + 1}`)
     : (locationNames[location.index] ?? `Location ${location.index + 1}`);
