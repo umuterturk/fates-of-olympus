@@ -547,6 +547,92 @@ describe('MoveCardEffect', () => {
     expect(irisAtOther.length).toBe(1);
   });
 
+  it('Iris should NOT move to a location that is already full', () => {
+    let state = createTestState({
+      turn: 2 as TurnNumber,
+      p0Energy: 2,
+      p1Energy: 2,
+      p0HandDefs: [IRIS()],
+      p1HandDefs: [],
+    });
+
+    // Fill location 1 with 4 cards for player 0 (at capacity)
+    let loc1 = getLocation(state, 1);
+    for (let i = 0; i < 4; i++) {
+      loc1 = addCard(loc1, makeCard(200 + i, HOPLITE(), 0), 0);
+    }
+    state = withLocation(state, 1, loc1);
+
+    // Fill location 2 with 4 cards for player 0 (at capacity)
+    let loc2 = getLocation(state, 2);
+    for (let i = 0; i < 4; i++) {
+      loc2 = addCard(loc2, makeCard(300 + i, HOPLITE(), 0), 0);
+    }
+    state = withLocation(state, 2, loc2);
+
+    // Play Iris at location 0
+    const iris = state.players[0].hand[0]!;
+    const action: PlayCardAction = {
+      type: 'PlayCard',
+      playerId: 0,
+      cardInstanceId: iris.instanceId,
+      location: 0,
+    };
+    const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+    const { state: newState } = resolveTurn(state, action, passAction);
+
+    // Both other locations are full, so Iris should stay at location 0
+    const loc0Cards = getCards(getLocation(newState, 0), 0);
+    const loc1Cards = getCards(getLocation(newState, 1), 0);
+    const loc2Cards = getCards(getLocation(newState, 2), 0);
+
+    const irisAtLoc0 = loc0Cards.filter((c) => c.cardDef.id === 'iris');
+    expect(irisAtLoc0.length).toBe(1); // Iris stayed put
+    expect(loc1Cards.length).toBe(4); // Still exactly 4
+    expect(loc2Cards.length).toBe(4); // Still exactly 4
+  });
+
+  it('Iris should only move to a non-full location when one destination is full', () => {
+    let state = createTestState({
+      turn: 2 as TurnNumber,
+      p0Energy: 2,
+      p1Energy: 2,
+      p0HandDefs: [IRIS()],
+      p1HandDefs: [],
+    });
+
+    // Fill location 1 with 4 cards for player 0 (at capacity)
+    let loc1 = getLocation(state, 1);
+    for (let i = 0; i < 4; i++) {
+      loc1 = addCard(loc1, makeCard(200 + i, HOPLITE(), 0), 0);
+    }
+    state = withLocation(state, 1, loc1);
+
+    // Location 2 is empty — Iris should move there
+    const iris = state.players[0].hand[0]!;
+    const action: PlayCardAction = {
+      type: 'PlayCard',
+      playerId: 0,
+      cardInstanceId: iris.instanceId,
+      location: 0,
+    };
+    const passAction: PassAction = { type: 'Pass', playerId: 1 };
+
+    const { state: newState } = resolveTurn(state, action, passAction);
+
+    const loc0Cards = getCards(getLocation(newState, 0), 0);
+    const loc1Cards = getCards(getLocation(newState, 1), 0);
+    const loc2Cards = getCards(getLocation(newState, 2), 0);
+
+    // Iris should NOT be at location 0 (moved away)
+    expect(loc0Cards.filter((c) => c.cardDef.id === 'iris').length).toBe(0);
+    // Iris should NOT be at full location 1
+    expect(loc1Cards.length).toBe(4);
+    // Iris should be at location 2 (the only non-full destination)
+    expect(loc2Cards.filter((c) => c.cardDef.id === 'iris').length).toBe(1);
+  });
+
   it('Hermes should move one other allied card to another location', () => {
     let state = createTestState({
       turn: 2 as TurnNumber,

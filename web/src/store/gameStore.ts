@@ -572,7 +572,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Wait for move animations to complete (they are triggered by the state change and handled by layoutId)
       const moveEvents = allEvents.filter(e => e.type === 'CardMoved');
       if (moveEvents.length > 0) {
-        await new Promise(resolve => setTimeout(resolve, 800)); // EVENT_ANIMATIONS.CardMoved is 0.7s
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 0.6s spring + bounce overshoot
       }
 
       // NOW trigger point animations (UI-only state)

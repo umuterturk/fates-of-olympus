@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 import { getCardImagePath } from "@/utils/assets";
@@ -17,7 +17,7 @@ interface IdeologyPanelProps {
   className?: string;
 }
 
-export function IdeologyPanel({
+export const IdeologyPanel = memo(function IdeologyPanel({
   ideology,
   isChosen,
   hasChosenAny,
@@ -28,6 +28,13 @@ export function IdeologyPanel({
   isConfirming = false,
   className,
 }: IdeologyPanelProps) {
+  // Performance tracking
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log(`[PERF] IdeologyPanel(${ideology}) rendered`);
+    }
+  });
+
   const info = IDEOLOGY_INFO[ideology];
   const [isRevealedInternal, setIsRevealedInternal] = useState(isChosen);
   const [isShaking, setIsShaking] = useState(false);
@@ -49,10 +56,10 @@ export function IdeologyPanel({
     if (isHovering && !isChosen) {
       startTimer = setTimeout(() => triggerShake(), 1000);
     } else if (forceRevealed && !isChosen) {
-      // Periodic ambient shake for selection mode — more frequent
+      // Periodic ambient shake for selection mode — reduced frequency (was 2s)
       ambientTimer = setInterval(() => {
-        if (Math.random() > 0.6) triggerShake(150);
-      }, 2000);
+        if (Math.random() > 0.8) triggerShake(150); // Reduced probability from 0.4 to 0.2
+      }, 4000);
     } else {
       setIsShaking(false);
     }
@@ -169,7 +176,7 @@ export function IdeologyPanel({
                       repeat: Infinity,
                       repeatType: "loop" as const,
                     } // rapid blinks
-              : { duration: 1.2, ease: "easeOut" }
+              : { duration: 1.2, ease: "easeOut", filter: { duration: 0 } }
           }
           loading="lazy"
         />
@@ -245,24 +252,17 @@ export function IdeologyPanel({
           transition={{ duration: 0.4 }}
         />
 
-        {/* Static noise / grain — shared */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none z-[1] mix-blend-overlay"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E")`,
-            backgroundSize: "128px 128px",
-          }}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: isRevealed ? [0.4, 0.7, 0.35, 0.6, 0.4] : 0,
-            x: isRevealed ? [0, -2, 1, -1, 0] : 0,
-          }}
-          transition={{
-            duration: 0.3,
-            repeat: isRevealed ? Infinity : 0,
-            repeatType: "loop",
-          }}
-        />
+        {/* Static noise / grain — shared (static for GPU performance) */}
+        {isRevealed && (
+          <div
+            className="absolute inset-0 pointer-events-none z-[1] mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E")`,
+              backgroundSize: "128px 128px",
+              opacity: 0.5,
+            }}
+          />
+        )}
 
         {/* Themed glitch bar — color per ideology */}
         <motion.div
@@ -274,12 +274,6 @@ export function IdeologyPanel({
                 : ideology === "KATABASIS"
                   ? "rgba(200,50,50,0.15)"
                   : "rgba(80,220,200,0.15)",
-            boxShadow:
-              ideology === "NOMOS"
-                ? "0 0 10px rgba(100,160,255,0.3)"
-                : ideology === "KATABASIS"
-                  ? "0 0 10px rgba(200,50,50,0.3)"
-                  : "0 0 10px rgba(80,220,200,0.3)",
           }}
           initial={{ opacity: 0, top: "20%" }}
           animate={{
@@ -462,4 +456,4 @@ export function IdeologyPanel({
       </AnimatePresence>
     </motion.div>
   );
-}
+});

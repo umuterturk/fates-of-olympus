@@ -196,6 +196,7 @@
   /* Pending card glow animation - uses box-shadow to avoid transform conflicts */
   .pending-card-glow {
     animation: pendingGlow 2s ease-in-out infinite;
+    will-change: box-shadow;
   }
 
   @keyframes pendingGlow {
@@ -213,6 +214,7 @@
   /* Tutorial spotlight highlight */
   .tutorial-highlight {
     animation: tutorialHighlight 1.5s ease-in-out infinite;
+    will-change: box-shadow;
     position: relative;
     z-index: 1;
   }

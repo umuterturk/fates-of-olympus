@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import { usePlayerStore } from '@store/playerStore';
+import { useState, useCallback, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
+import { usePlayerStore } from "@store/playerStore";
 
 // =============================================================================
 // IchorIcon — inline image, clickable to show popup
@@ -12,7 +12,10 @@ interface IchorIconProps {
   size?: number;
 }
 
-export function IchorIcon({ className = '', size = 20 }: IchorIconProps) {
+export const IchorIcon = memo(function IchorIcon({
+  className = "",
+  size = 20,
+}: IchorIconProps) {
   const [showPopup, setShowPopup] = useState(false);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
@@ -28,13 +31,13 @@ export function IchorIcon({ className = '', size = 20 }: IchorIconProps) {
         width={size}
         height={size}
         className={`inline-block cursor-pointer ${className}`}
-        style={{ verticalAlign: 'middle' }}
+        style={{ verticalAlign: "middle" }}
         onClick={handleClick}
       />
       {showPopup && <IchorPopup onClose={() => setShowPopup(false)} />}
     </>
   );
-}
+});
 
 // =============================================================================
 // IchorDisplay — container with icon + credits, whole thing clickable
@@ -49,11 +52,11 @@ interface IchorDisplayProps {
   suffix?: string;
 }
 
-export function IchorDisplay({
+export const IchorDisplay = memo(function IchorDisplay({
   credits,
   size = 20,
-  className = 'bg-black/40 px-4 py-2 rounded-lg',
-  textClassName = 'font-bold text-olympus-gold',
+  className = "bg-black/40 px-4 py-2 rounded-lg",
+  textClassName = "font-bold text-olympus-gold",
   prefix,
   suffix,
 }: IchorDisplayProps) {
@@ -73,13 +76,15 @@ export function IchorDisplay({
           className="inline-block"
         />
         <span className={textClassName}>
-          {prefix}{credits}{suffix && ` ${suffix}`}
+          {prefix}
+          {credits}
+          {suffix && ` ${suffix}`}
         </span>
       </div>
       {showPopup && <IchorPopup onClose={() => setShowPopup(false)} />}
     </>
   );
-}
+});
 
 // =============================================================================
 // IchorPopup — modal showing ichor info + player balance
@@ -111,7 +116,7 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
           initial={{ scale: 0.7, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.8, opacity: 0, y: -20 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 350 }}
+          transition={{ type: "spring", damping: 20, stiffness: 350 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Glow behind popup */}
@@ -127,7 +132,11 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
               <motion.div
                 className="relative"
                 animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               >
                 <motion.div
                   className="absolute inset-0 bg-purple-400/30 rounded-full blur-lg"
@@ -143,7 +152,9 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
                 />
               </motion.div>
               <div>
-                <h3 className="font-display text-2xl text-olympus-gold leading-tight">Ichor</h3>
+                <h3 className="font-display text-2xl text-olympus-gold leading-tight">
+                  Ichor
+                </h3>
                 <p className="text-purple-300 text-xs font-medium tracking-wide uppercase">
                   Divine Currency
                 </p>
@@ -162,7 +173,9 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
                   width={20}
                   height={20}
                 />
-                <span className="font-display text-2xl text-olympus-gold">{credits}</span>
+                <span className="font-display text-2xl text-olympus-gold">
+                  {credits}
+                </span>
               </div>
             </div>
           </div>
@@ -170,30 +183,56 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
           {/* Body */}
           <div className="relative bg-gradient-to-b from-gray-900/98 to-gray-950/98 px-5 py-4">
             <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              The sacred blood of the gods, Ichor flows through Olympus as the essence 
-              of divine power. Collect it to <span className="text-olympus-gold font-semibold">unlock new cards</span> and 
-              strengthen your fate.
+              The sacred blood of the gods, Ichor flows through Olympus as the
+              essence of divine power. Collect it to{" "}
+              <span className="text-olympus-gold font-semibold">
+                unlock new cards
+              </span>{" "}
+              and strengthen your fate.
             </p>
 
             {/* How to earn section */}
             <div className="bg-black/30 rounded-lg p-3 border border-gray-800/50">
-              <h4 className="font-display text-sm text-purple-300 mb-2">Ways to Earn</h4>
+              <h4 className="font-display text-sm text-purple-300 mb-2">
+                Ways to Earn
+              </h4>
               <div className="space-y-1.5 text-xs text-gray-400">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <img src={`${import.meta.env.BASE_URL}icons/victory.png`} alt="Win" width={16} height={16} className="inline-block" /> Win a match
+                    <img
+                      src={`${import.meta.env.BASE_URL}icons/victory.png`}
+                      alt="Win"
+                      width={16}
+                      height={16}
+                      className="inline-block"
+                    />{" "}
+                    Win a match
                   </span>
                   <span className="text-olympus-gold font-semibold">+25</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <img src={`${import.meta.env.BASE_URL}icons/victory_perfect.png`} alt="Perfect" width={16} height={16} className="inline-block" /> Perfect win
+                    <img
+                      src={`${import.meta.env.BASE_URL}icons/victory_perfect.png`}
+                      alt="Perfect"
+                      width={16}
+                      height={16}
+                      className="inline-block"
+                    />{" "}
+                    Perfect win
                   </span>
                   <span className="text-olympus-gold font-semibold">+50</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <img src={`${import.meta.env.BASE_URL}icons/defeat.png`} alt="Defeat" width={16} height={16} className="inline-block" /> Lose a match
+                    <img
+                      src={`${import.meta.env.BASE_URL}icons/defeat.png`}
+                      alt="Defeat"
+                      width={16}
+                      height={16}
+                      className="inline-block"
+                    />{" "}
+                    Lose a match
                   </span>
                   <span className="text-olympus-gold font-semibold">+10</span>
                 </div>
@@ -201,7 +240,9 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
                   <span className="flex items-center gap-1.5">
                     <span className="text-orange-400">🔥</span> Daily login
                   </span>
-                  <span className="text-olympus-gold font-semibold">+50<span className="text-gray-500">×streak</span></span>
+                  <span className="text-olympus-gold font-semibold">
+                    +50<span className="text-gray-500">×streak</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -226,6 +267,6 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
         </motion.div>
       </motion.div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

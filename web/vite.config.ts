@@ -25,7 +25,7 @@ const buildTime = new Date().toISOString();
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/fates-of-olympus/',
+  base: '/',
   define: {
     __BUILD_TIME__: JSON.stringify(buildTime),
   },
@@ -43,9 +43,9 @@ export default defineConfig({
         background_color: '#1a1a2e',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/fates-of-olympus/',
-        start_url: '/fates-of-olympus/',
-        id: '/fates-of-olympus/',
+        scope: '/',
+        start_url: '/',
+        id: '/',
         categories: ['games', 'entertainment'],
         lang: 'en',
         icons: [

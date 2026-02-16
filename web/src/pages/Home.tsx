@@ -32,14 +32,23 @@ function formatBuildTime(isoString: string): string {
 // =============================================================================
 
 export function Home() {
+  // Performance tracking
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("[PERF] Home rendered");
+    }
+  });
+
   const navigate = useNavigate();
-  const {
-    profile,
-    isLoading,
-    initialize,
-    processDailyLogin,
-    shouldShowUnlockNotification,
-  } = usePlayerStore();
+
+  // Use selectors to prevent unnecessary re-renders when unrelated profile fields change
+  const profile = usePlayerStore((s) => s.profile);
+  const isLoading = usePlayerStore((s) => s.isLoading);
+  const initialize = usePlayerStore((s) => s.initialize);
+  const processDailyLogin = usePlayerStore((s) => s.processDailyLogin);
+  const shouldShowUnlockNotification = usePlayerStore(
+    (s) => s.shouldShowUnlockNotification,
+  );
   const [dailyReward, setDailyReward] = useState<{
     creditsEarned: number;
     newStreak: number;
@@ -85,7 +94,9 @@ export function Home() {
   ]);
 
   const chosenIdeology = profile?.chosenIdeology ?? null;
-  const needsIdeologyChoice = usePlayerStore.getState().needsIdeologyChoice();
+  // Use a stable reference for needsIdeologyChoice if possible, or just call it from the store state
+  const needsIdeologyChoice = usePlayerStore((s) => s.needsIdeologyChoice());
+  const unlockPathPosition = profile?.unlockPathPosition ?? 0;
 
   const handleChooseIdeology = async (ideology: Ideology) => {
     if (confirmingIdeology === ideology) {
@@ -205,14 +216,10 @@ export function Home() {
               isChosen={chosenIdeology === ideo}
               hasChosenAny={chosenIdeology !== null}
               delay={0.5 + i * 0.12}
-              revealsLeft={
-                profile
-                  ? Math.max(
-                      0,
-                      IDEOLOGY_CHOICE_POSITION - profile.unlockPathPosition,
-                    )
-                  : 0
-              }
+              revealsLeft={Math.max(
+                0,
+                IDEOLOGY_CHOICE_POSITION - unlockPathPosition,
+              )}
               forceRevealed={needsIdeologyChoice}
               isConfirming={confirmingIdeology === ideo}
               onSelect={needsIdeologyChoice ? handleChooseIdeology : undefined}

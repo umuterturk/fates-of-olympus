@@ -553,20 +553,26 @@ function applyMoveToLocation(
   sourceCardId?: InstanceId
 ): EffectResult {
   let newState = state;
-  
+
   // Remove from source
   const sourceLoc = getLocation(newState, fromLocation);
   const [newSourceLoc, removedCard] = removeCard(sourceLoc, cardId);
   if (!removedCard) {
     return { state, events: [], success: false, failureReason: 'Failed to remove card' };
   }
-  
+
+  // Check destination capacity before moving
+  const destLoc = getLocation(newState, toLocation);
+  if (getCardCount(destLoc, removedCard.owner) >= LOCATION_CAPACITY) {
+    return { state, events: [], success: false, failureReason: 'Destination full' };
+  }
+
   newState = withLocation(newState, fromLocation, newSourceLoc);
-  
+
   // Add to destination
-  let destLoc = getLocation(newState, toLocation);
-  destLoc = addCard(destLoc, removedCard, removedCard.owner);
-  newState = withLocation(newState, toLocation, destLoc);
+  let newDestLoc = getLocation(newState, toLocation);
+  newDestLoc = addCard(newDestLoc, removedCard, removedCard.owner);
+  newState = withLocation(newState, toLocation, newDestLoc);
   
   // Track move
   newState = withCardMoved(newState, cardId);

@@ -58,7 +58,7 @@ function FlyingPoint({
                         left: startX,
                         top: startY,
                         background: 'radial-gradient(circle, #fcd34d 0%, #f59e0b 50%, #d97706 100%)',
-                        boxShadow: '0 0 8px 4px rgba(252, 211, 77, 0.5)',
+                        boxShadow: '0 0 6px rgba(252, 211, 77, 0.4)',
                     }}
                     initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
                     animate={{
@@ -115,7 +115,7 @@ function FlyingPoint({
                     className="relative font-bold text-xl font-display"
                     style={{
                         color: '#fcd34d',
-                        textShadow: '0 0 10px rgba(252, 211, 77, 0.9), 0 0 20px rgba(245, 158, 11, 0.7), 0 2px 4px rgba(0,0,0,0.5)',
+                        textShadow: '0 0 10px rgba(252, 211, 77, 0.8), 0 2px 4px rgba(0,0,0,0.5)',
                     }}
                 >
                     +1
@@ -141,13 +141,14 @@ function PointImpact({
             <motion.div
                 className="absolute rounded-full border-2"
                 style={{
-                    left: x,
-                    top: y,
+                    left: x - 25,
+                    top: y - 25,
+                    width: 50,
+                    height: 50,
                     borderColor: '#fcd34d',
-                    transform: 'translate(-50%, -50%)',
                 }}
-                initial={{ width: 0, height: 0, opacity: 1 }}
-                animate={{ width: 50, height: 50, opacity: 0 }}
+                initial={{ scale: 0, opacity: 1 }}
+                animate={{ scale: 1, opacity: 0 }}
                 transition={{ duration: 0.5, delay: delay + 0.7, ease: 'easeOut' }}
             />
 
@@ -155,13 +156,14 @@ function PointImpact({
             <motion.div
                 className="absolute rounded-full"
                 style={{
-                    left: x,
-                    top: y,
-                    transform: 'translate(-50%, -50%)',
+                    left: x - 20,
+                    top: y - 20,
                     background: 'radial-gradient(circle, rgba(252, 211, 77, 0.6), transparent 70%)',
+                    width: 40,
+                    height: 40,
                 }}
-                initial={{ width: 0, height: 0, opacity: 0 }}
-                animate={{ width: 40, height: 40, opacity: [0, 1, 0] }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: [0, 1, 0] }}
                 transition={{ duration: 0.4, delay: delay + 0.6 }}
             />
         </>

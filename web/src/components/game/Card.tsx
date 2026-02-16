@@ -175,7 +175,7 @@ export function Card({
 
   const cardAnimate = useMemo(() => {
     if (isBeingDestroyed) {
-      return { scale: 30, opacity: 0.01, zIndex: 100 };
+      return { scale: 3, opacity: 0.01, zIndex: 100 };
     }
     if (isSourceOfEffect) {
       // Source card (effecting card) scales up with a golden glow - stays big
@@ -239,16 +239,16 @@ export function Card({
     // For debuffs, also moves toward the target for confrontation
     if (isSourceOfEffect) {
       return {
-        duration: 0.4,  // Noticeable scale up
+        duration: 0.4,
         ease: 'easeOut' as const,
-        scale: { times: [0, 0.5, 1] },  // Quickly scale up, then hold
-        x: { times: [0, 0.5, 1] },  // Move toward target
+        scale: { times: [0, 0.5, 1] },
+        x: { times: [0, 0.5, 1] },
         y: { times: [0, 0.5, 1] },
+        boxShadow: { duration: 0 },
       };
     }
     // TARGET card: scales up (delay is handled by state, not transition)
     if (isTargetOfEffect && (isBuffEffect || isDebuffEffect)) {
-      // Duration 2.2s - delay is handled by useState timer above
       return {
         duration: 2.2,
         ease: 'easeInOut' as const,
@@ -256,6 +256,7 @@ export function Card({
         y: { times: isDebuffEffect ? [0, 0.05, 0.1, 0.2, 1] : [0, 0.1, 0.9, 1] },
         x: isDebuffEffect ? { times: [0, 0.05, 0.1, 0.2, 1] } : undefined,
         rotate: isBuffEffect ? { times: [0, 0.1, 0.9, 1] } : undefined,
+        boxShadow: { duration: 0 },
       };
     }
     // Fast transition for hover-out and normal state changes
@@ -296,7 +297,7 @@ export function Card({
       data-card-id={card.instanceId}
       className={clsx("relative", wrapperSizeClasses[size])}
       transition={{
-        layout: { duration: 0.4, type: 'spring', bounce: 0.2 },
+        layout: { duration: 0.6, type: 'spring', bounce: 0.25 },
       }}
     >
       {/* Desktop: Tooltip on hover over info button */}

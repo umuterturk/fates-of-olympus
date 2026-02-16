@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { clsx } from "clsx";
@@ -32,7 +32,7 @@ interface MiniCardProps {
   shiny?: "high" | "low";
 }
 
-function MiniCard({
+const MiniCard = memo(function MiniCard({
   cardDef,
   selected,
   locked,
@@ -41,6 +41,13 @@ function MiniCard({
   size = "md",
   shiny,
 }: MiniCardProps) {
+  // Performance tracking
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log(`[PERF] MiniCard(${cardDef.name}) rendered`);
+    }
+  });
+
   const imagePath = getCardImagePath(cardDef.id);
   const [imageError, setImageError] = useState(false);
 
@@ -131,7 +138,7 @@ function MiniCard({
       )}
     </motion.button>
   );
-}
+});
 
 // =============================================================================
 
@@ -205,17 +212,22 @@ function IdeologyChoiceModal({ isOpen, onChoose }: IdeologyChoiceModalProps) {
 // =============================================================================
 
 export function Collection() {
-  const {
-    profile,
-    isLoading,
-    initialize,
-    addCardToDeck,
-    removeCardFromDeck,
-    chooseIdeology,
-    needsIdeologyChoice,
-    isCardUnlocked,
-    getNextUnlockCost,
-  } = usePlayerStore();
+  // Performance tracking
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("[PERF] Collection rendered");
+    }
+  });
+
+  const profile = usePlayerStore((s) => s.profile);
+  const isLoading = usePlayerStore((s) => s.isLoading);
+  const initialize = usePlayerStore((s) => s.initialize);
+  const addCardToDeck = usePlayerStore((s) => s.addCardToDeck);
+  const removeCardFromDeck = usePlayerStore((s) => s.removeCardFromDeck);
+  const chooseIdeology = usePlayerStore((s) => s.chooseIdeology);
+  const needsIdeologyChoice = usePlayerStore((s) => s.needsIdeologyChoice);
+  const isCardUnlocked = usePlayerStore((s) => s.isCardUnlocked);
+  const getNextUnlockCost = usePlayerStore((s) => s.getNextUnlockCost);
 
   const [selectedCardId, setSelectedCardId] = useState<CardId | null>(null);
   const [showIdeologyModal, setShowIdeologyModal] = useState(false);
@@ -268,6 +280,32 @@ export function Collection() {
     await removeCardFromDeck(selectedCardId);
   };
 
+  const unlockedCards = useMemo(
+    () => allCards.filter((c) => isCardUnlocked(c.id)),
+    [allCards, isCardUnlocked],
+  );
+
+  const deckCards = useMemo(
+    () =>
+      profile
+        ? profile.currentDeckIds
+            .map((id: CardId) => getCardDef(id))
+            .filter(Boolean) as CardDef[]
+        : [],
+    [profile],
+  );
+
+  const sortedCards = useMemo(() => {
+    if (activeTab !== "collection" || !profile) return [];
+    // Sort cards: most recently unlocked first, then by deck status
+    return [...unlockedCards].sort((a, b) => {
+      const aIndex = profile.unlockedCardIds.indexOf(a.id);
+      const bIndex = profile.unlockedCardIds.indexOf(b.id);
+      // Most recently unlocked (higher index) comes first
+      return bIndex - aIndex;
+    });
+  }, [activeTab, unlockedCards, profile]);
+
   if (isLoading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -281,11 +319,6 @@ export function Collection() {
       </div>
     );
   }
-
-  const unlockedCards = allCards.filter((c) => isCardUnlocked(c.id));
-  const deckCards = profile.currentDeckIds
-    .map((id) => getCardDef(id))
-    .filter(Boolean) as CardDef[];
 
   return (
     <div className="min-h-screen flex flex-col items-center pt-2 sm:pt-8 p-2 sm:p-4">
@@ -446,31 +479,20 @@ export function Collection() {
         {/* Main Content */}
         <div className="p-2 sm:p-4">
           {/* Collection Grid */}
-          {activeTab === "collection" &&
-            (() => {
-              // Sort cards: most recently unlocked first, then by deck status
-              const sortedCards = [...unlockedCards].sort((a, b) => {
-                const aIndex = profile.unlockedCardIds.indexOf(a.id);
-                const bIndex = profile.unlockedCardIds.indexOf(b.id);
-                // Most recently unlocked (higher index) comes first
-                return bIndex - aIndex;
-              });
-
-              return (
-                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                  {sortedCards.map((card) => (
-                    <MiniCard
-                      key={card.id}
-                      cardDef={card}
-                      selected={selectedCardId === card.id}
-                      inDeck={profile.currentDeckIds.includes(card.id)}
-                      onClick={() => setSelectedCardId(card.id)}
-                      size="sm"
-                    />
-                  ))}
-                </div>
-              );
-            })()}
+          {activeTab === "collection" && (
+            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {sortedCards.map((card) => (
+                <MiniCard
+                  key={card.id}
+                  cardDef={card}
+                  selected={selectedCardId === card.id}
+                  inDeck={profile.currentDeckIds.includes(card.id)}
+                  onClick={() => setSelectedCardId(card.id)}
+                  size="sm"
+                />
+              ))}
+            </div>
+          )}
 
           {/* Deck Grid */}
           {activeTab === "deck" && (
