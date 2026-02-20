@@ -14,9 +14,9 @@
     <meta name="apple-mobile-web-app-title" content="Fates" />
     
     <!-- Favicon & Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/fates-of-olympus/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/fates-of-olympus/favicon-16x16.png" />
-    <link rel="apple-touch-icon" href="/fates-of-olympus/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     
     <!-- Google Fonts for Greek theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,7 +55,7 @@
         }
         
         try {
-          var res = await fetch('/fates-of-olympus/version.json?t=' + Date.now(), { cache: 'no-store' });
+          var res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
           var data = await res.json();
           var version = data.version;
           var storedVersion = localStorage.getItem(STORAGE_KEY);
