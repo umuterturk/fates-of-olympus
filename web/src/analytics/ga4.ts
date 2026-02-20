@@ -32,6 +32,7 @@ export function initGa4(): void {
   script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
   document.head.appendChild(script);
 
+  window.gtag?.('js', new Date());
   window.gtag?.('config', MEASUREMENT_ID, { send_page_view: false });
 }
 
