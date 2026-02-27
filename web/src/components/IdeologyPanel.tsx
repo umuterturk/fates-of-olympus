@@ -333,12 +333,19 @@ export const IdeologyPanel = memo(function IdeologyPanel({
       <div className="absolute inset-0 z-[4] flex flex-col justify-end p-3 sm:p-4">
         {/* Ideology name */}
         <motion.h3
-          className="font-display text-olympus-gold/90 text-sm sm:text-base leading-tight"
-          animate={{ opacity: isRevealed ? 1 : 0.8 }}
+          className="font-display text-olympus-gold text-sm sm:text-base leading-tight"
+          animate={{ opacity: isRevealed ? 1 : 0.9 }}
+          style={{
+            textShadow:
+              "0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9), 0 2px 3px rgba(0,0,0,1)",
+          }}
         >
           {info.name}
         </motion.h3>
-        <p className="text-[10px] sm:text-xs text-white/60 italic mt-0.5">
+        <p
+          className="text-[10px] sm:text-xs text-white/80 italic mt-0.5"
+          style={{ textShadow: "0 1px 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,0.9)" }}
+        >
           {info.tagline}
         </p>
 
@@ -372,20 +379,20 @@ export const IdeologyPanel = memo(function IdeologyPanel({
         <>
           {/* Stamp badge */}
           <motion.div
-            className="absolute top-3 right-3 z-[6] pointer-events-none"
+            className="absolute bottom-3 right-3 z-[6] pointer-events-none"
             initial={{ opacity: 0, scale: 0, rotate: -20 }}
             animate={{ opacity: 1, scale: 1, rotate: -12 }}
             transition={{ delay: delay + 0.4, duration: 0.4, type: "spring" }}
           >
             <div
-              className="px-2 py-0.5 border border-olympus-gold/80 rounded-sm"
+              className="px-2 py-0.5 border border-green-400/90 rounded-sm"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))",
-                boxShadow: "0 0 8px rgba(212,175,55,0.3)",
+                  "linear-gradient(135deg, rgba(34,197,94,0.35), rgba(22,163,74,0.25))",
+                boxShadow: "0 0 10px rgba(34,197,94,0.6), 0 0 4px rgba(34,197,94,0.4)",
               }}
             >
-              <span className="text-[8px] font-bold tracking-[0.2em] text-olympus-gold uppercase">
+              <span className="text-[8px] font-bold tracking-[0.2em] text-green-300 uppercase">
                 Chosen
               </span>
             </div>

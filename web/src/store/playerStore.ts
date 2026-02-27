@@ -112,6 +112,8 @@ interface PlayerStore {
   canUnlockNewCard: boolean;
   /** Notification was shown and acknowledged */
   unlockNotificationDismissed: boolean;
+  /** Daily reward pending claim (in-memory only, credits already saved) */
+  pendingDailyReward: { creditsEarned: number; newStreak: number; wasReset: boolean } | null;
 
   // Profile Management
   /**
@@ -185,6 +187,11 @@ interface PlayerStore {
    */
   shouldShowUnlockNotification: () => boolean;
 
+  /**
+   * Acknowledge and dismiss the pending daily reward (credits already credited).
+   */
+  claimDailyReward: () => void;
+
   // Ideology
   /**
    * Choose an ideology (can only be done once, after position 5).
@@ -239,6 +246,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   storage: localStorageAdapter,
   canUnlockNewCard: false,
   unlockNotificationDismissed: false,
+  pendingDailyReward: null,
 
   initialize: async (starterDeckIds: CardId[]) => {
     const { storage } = get();
@@ -378,7 +386,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       },
     };
 
-    set({ profile: updatedProfile });
+    const reward = { creditsEarned, newStreak, wasReset };
+    set({ profile: updatedProfile, pendingDailyReward: reward });
     await storage.saveProfile(updatedProfile);
 
     if (creditsEarned > 0) {
@@ -389,7 +398,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       });
     }
 
-    return { creditsEarned, newStreak, wasReset };
+    return reward;
   },
 
   awardGameCredits: async (won: boolean, isPerfectWin: boolean) => {
@@ -492,6 +501,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   dismissUnlockNotification: () => {
     set({ unlockNotificationDismissed: true });
+  },
+
+  claimDailyReward: () => {
+    set({ pendingDailyReward: null });
   },
 
   shouldShowUnlockNotification: () => {

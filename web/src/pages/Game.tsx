@@ -272,6 +272,8 @@ export function Game() {
   useEffect(() => {
     if (searchParams.get("tutorial") === "true") {
       useTutorialStore.getState().startTutorial();
+    } else {
+      useTutorialStore.getState().skipTutorial();
     }
     const isTutorialActive = useTutorialStore.getState().isActive;
     if (isTutorialActive) {

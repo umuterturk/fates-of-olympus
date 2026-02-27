@@ -240,9 +240,10 @@ function IchorPopup({ onClose }: { onClose: () => void }) {
                   <span className="flex items-center gap-1.5">
                     <span className="text-orange-400">🔥</span> Daily login
                   </span>
-                  <span className="text-olympus-gold font-semibold">
-                    +50<span className="text-gray-500">×streak</span>
-                  </span>
+                  <div className="text-right">
+                    <span className="text-olympus-gold font-semibold">+50–+100</span>
+                    <span className="block text-[10px] text-gray-500">streak ×1.0–×2.0</span>
+                  </div>
                 </div>
               </div>
             </div>

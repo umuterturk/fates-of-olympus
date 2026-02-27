@@ -430,6 +430,7 @@ export function CardReveal() {
     canAffordUnlock,
     getNextUnlockCost,
     dismissUnlockNotification,
+    addCardToDeck,
   } = usePlayerStore();
 
   const [selectedCardId, setSelectedCardId] = useState<CardId | null>(null);
@@ -934,24 +935,61 @@ export function CardReveal() {
                       )}
 
                       {/* Action buttons */}
-                      {displayCard === nextCardId && (
+                      {(displayCard === nextCardId || (isUnlocked && displayCard === unlockedCardId)) && (
                         <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
-                          <motion.button
-                            onClick={handleUnlock}
-                            disabled={!canAfford || isUnlocking || isUnlocked}
-                            className={`px-8 py-3 rounded-lg font-bold text-lg transition-all ${
-                              isUnlocked
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30'
-                                : canAfford && !isUnlocking
+                          {!isUnlocked ? (
+                            <motion.button
+                              onClick={handleUnlock}
+                              disabled={!canAfford || isUnlocking}
+                              className={`px-8 py-3 rounded-lg font-bold text-lg transition-all ${
+                                canAfford && !isUnlocking
                                   ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black shadow-lg shadow-yellow-500/30'
                                   : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                            }`}
-                            whileHover={canAfford && !isUnlocking && !isUnlocked ? { scale: 1.05 } : {}}
-                            whileTap={canAfford && !isUnlocking && !isUnlocked ? { scale: 0.95 } : {}}
-                          >
-                            {isUnlocked ? 'Unlocked!' : isUnlocking ? 'Unlocking...' : canAfford ? `Unlock (${unlockCost} Ichor)` : 'Not Enough Ichor'}
-                          </motion.button>
-                          
+                              }`}
+                              whileHover={canAfford && !isUnlocking ? { scale: 1.05 } : {}}
+                              whileTap={canAfford && !isUnlocking ? { scale: 0.95 } : {}}
+                            >
+                              {isUnlocking ? 'Unlocking...' : canAfford ? `Unlock (${unlockCost} Ichor)` : 'Not Enough Ichor'}
+                            </motion.button>
+                          ) : (
+                            (() => {
+                              const inDeck = profile.currentDeckIds.includes(displayCard);
+                              const deckFull = profile.currentDeckIds.length >= 24;
+                              if (inDeck) {
+                                return (
+                                  <motion.button
+                                    disabled
+                                    className="px-8 py-3 rounded-lg font-bold text-lg bg-green-500/20 border-2 border-green-500/60 text-green-400 cursor-default shadow-lg"
+                                  >
+                                    ✓ Added to Deck
+                                  </motion.button>
+                                );
+                              }
+                              if (deckFull) {
+                                return (
+                                  <motion.button
+                                    onClick={() => navigate('/collection')}
+                                    className="px-8 py-3 rounded-lg font-bold text-lg bg-olympus-gold text-black hover:bg-yellow-400 shadow-lg transition-all"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                  >
+                                    Manage Deck
+                                  </motion.button>
+                                );
+                              }
+                              return (
+                                <motion.button
+                                  onClick={() => addCardToDeck(displayCard)}
+                                  className="px-8 py-3 rounded-lg font-bold text-lg bg-gradient-to-r from-olympus-gold to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black shadow-lg shadow-amber-900/40 transition-all"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  ＋ Add to Deck
+                                </motion.button>
+                              );
+                            })()
+                          )}
+
                           <button
                             onClick={() => {
                               handleClosePopup();

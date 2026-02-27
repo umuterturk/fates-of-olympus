@@ -116,6 +116,13 @@ const MiniCard = memo(function MiniCard({
         </span>
       </div>
 
+      {/* Card Name Strip */}
+      <div className="absolute bottom-0 left-0 right-0 bg-black/75 py-0.5 px-1">
+        <p className="text-[7px] text-white/90 text-center leading-tight truncate pr-3">
+          {cardDef.name}
+        </p>
+      </div>
+
       {/* Power Badge */}
       <div className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-amber-900 rounded-full flex items-center justify-center border border-amber-400">
         <span className="text-[8px] font-bold text-amber-200">
@@ -297,14 +304,19 @@ export function Collection() {
 
   const sortedCards = useMemo(() => {
     if (activeTab !== "collection" || !profile) return [];
-    // Sort cards: most recently unlocked first, then by deck status
-    return [...unlockedCards].sort((a, b) => {
-      const aIndex = profile.unlockedCardIds.indexOf(a.id);
-      const bIndex = profile.unlockedCardIds.indexOf(b.id);
-      // Most recently unlocked (higher index) comes first
-      return bIndex - aIndex;
-    });
+    const notInDeck = unlockedCards
+      .filter((c) => !profile.currentDeckIds.includes(c.id))
+      .sort((a, b) => b.basePower - a.basePower);
+    const inDeck = unlockedCards
+      .filter((c) => profile.currentDeckIds.includes(c.id))
+      .sort((a, b) => b.basePower - a.basePower);
+    return [...notInDeck, ...inDeck];
   }, [activeTab, unlockedCards, profile]);
+
+  const sortedDeckCards = useMemo(
+    () => [...deckCards].sort((a, b) => b.basePower - a.basePower),
+    [deckCards],
+  );
 
   if (isLoading || !profile) {
     return (
@@ -321,9 +333,9 @@ export function Collection() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center pt-2 sm:pt-8 p-2 sm:p-4">
+    <div className="h-screen flex flex-col items-center pt-2 sm:pt-8 p-2 sm:p-4 overflow-hidden">
       {/* Centered container - matches game column width */}
-      <div className="w-full max-w-[800px] bg-black/40 rounded-xl shadow-lg shadow-black/50 flex flex-col">
+      <div className="w-full max-w-[800px] bg-black/40 rounded-xl shadow-lg shadow-black/50 flex flex-col min-h-0 flex-1">
         {/* Header */}
         <header className="flex justify-between items-center p-2 sm:p-4 border-b border-gray-800">
           <div className="flex items-center gap-4">
@@ -477,7 +489,7 @@ export function Collection() {
         </div>
 
         {/* Main Content */}
-        <div className="p-2 sm:p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4">
           {/* Collection Grid */}
           {activeTab === "collection" && (
             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -498,7 +510,7 @@ export function Collection() {
           {activeTab === "deck" && (
             <div>
               <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                {deckCards.map((card) => (
+                {sortedDeckCards.map((card) => (
                   <MiniCard
                     key={card.id}
                     cardDef={card}
@@ -515,6 +527,9 @@ export function Collection() {
               )}
             </div>
           )}
+
+          {/* Spacer so the last row clears the fixed bottom sheet */}
+          <div style={{ height: selectedCardId ? "160px" : "8px" }} />
         </div>
       </div>
 
