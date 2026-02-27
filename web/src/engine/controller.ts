@@ -176,8 +176,11 @@ export function startNextTurn(state: GameState): { state: GameState; events: Gam
     // Bonus energy from card effects (e.g., Iris)
     const cardEffectBonus = getBonusEnergyNextTurn(state, playerId);
 
+    // Remaining energy from previous turn carries over
+    const remainingEnergy = getPlayer(state, playerId).energy;
+
     const totalBonus = locationBonus + cardEffectBonus;
-    const totalEnergy = baseEnergy + totalBonus;
+    const totalEnergy = baseEnergy + totalBonus + remainingEnergy;
 
     player = { ...player, energy: totalEnergy, maxEnergy: totalEnergy };
     newState = withPlayer(newState, playerId, player);
@@ -201,6 +204,17 @@ export function startNextTurn(state: GameState): { state: GameState; events: Gam
         playerId,
         bonus: cardEffectBonus,
         locationsWon: 0, // From card effect, not locations
+        newTotal: totalEnergy,
+      });
+    }
+
+    // Emit bonus energy event if player has leftover energy from previous turn
+    if (remainingEnergy > 0) {
+      events.push({
+        type: 'BonusEnergy',
+        playerId,
+        bonus: remainingEnergy,
+        locationsWon: 0, // Carried over from previous turn
         newTotal: totalEnergy,
       });
     }
@@ -250,11 +264,22 @@ export function startNextTurnWithSimpleDraw(state: GameState): { state: GameStat
     const baseEnergy = newTurn;
     const locationsWon = countLocationsWon(state, playerId);
     const cardEffectBonus = getBonusEnergyNextTurn(state, playerId);
-    const totalEnergy = baseEnergy + locationsWon + cardEffectBonus;
+    const remainingEnergy = getPlayer(state, playerId).energy;
+    const totalEnergy = baseEnergy + locationsWon + cardEffectBonus + remainingEnergy;
 
     player = { ...player, energy: totalEnergy, maxEnergy: totalEnergy };
     newState = withPlayer(newState, playerId, player);
     events.push({ type: 'EnergySet', playerId, energy: baseEnergy });
+
+    if (remainingEnergy > 0) {
+      events.push({
+        type: 'BonusEnergy',
+        playerId,
+        bonus: remainingEnergy,
+        locationsWon: 0,
+        newTotal: totalEnergy,
+      });
+    }
 
     const TARGET_HAND_SIZE = 4;
     while (player.hand.length < TARGET_HAND_SIZE && player.hand.length < MAX_HAND_SIZE) {

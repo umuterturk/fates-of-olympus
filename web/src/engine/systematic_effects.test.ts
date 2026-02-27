@@ -421,7 +421,7 @@ describe('Systematic Effect Verification', () => {
 
     describe('Energy Bonus (Iris / Locations)', () => {
         it('Should grant +1 max energy per location won at turn start', () => {
-            let state = createTestState({});
+            let state = createTestState({ p0Energy: 0, p1Energy: 0 });
             // P0 winning location 0
             const a1 = makeCard(101, getDef('hoplite'), 0);
             state = withLocation(state, 0, addCard(getLocation(state, 0), a1, 0));
@@ -431,6 +431,15 @@ describe('Systematic Effect Verification', () => {
             expect(nextTurnState.players[0].energy).toBe(3);
             // P1: Base 2 + 0 locations won = 2
             expect(nextTurnState.players[1].energy).toBe(2);
+        });
+
+        it('Should carry over remaining energy to next turn', () => {
+            // P0 has 2 energy left, P1 has 1 energy left at end of turn 1
+            const state = createTestState({ turn: 1, p0Energy: 2, p1Energy: 1 });
+            const { state: nextTurnState } = startNextTurn(state);
+            // Turn 2: Base 2 + carried over
+            expect(nextTurnState.players[0].energy).toBe(4); // 2 base + 2 carried
+            expect(nextTurnState.players[1].energy).toBe(3); // 2 base + 1 carried
         });
     });
 
