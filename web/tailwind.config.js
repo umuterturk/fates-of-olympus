@@ -1,49 +1,29 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Greek mythology theme
-        olympus: {
-          gold: '#D4AF37',
-          marble: '#F5F5F5',
-          bronze: '#CD7F32',
-          navy: '#1B2838',
-          sky: '#87CEEB',
-        },
-        card: {
-          bg: '#2A2A2A',
-          border: '#4A4A4A',
-          power: '#FFD700',
-          cost: '#4FC3F7',
-        },
+        parchment: '#f4e8d4',
+        storm: '#0f1419',
+        aegean: '#1a3a4a',
+        styx: '#0d1f14',
+        gold: '#c9a227',
+        ichor: '#7c3aed',
       },
       fontFamily: {
-        display: ['Cinzel', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'SF Pro Text',
+          'SF Pro Display',
+          'Segoe UI',
+          'system-ui',
+          'sans-serif',
+        ],
       },
-      animation: {
-        'pulse-power': 'pulse-power 0.5s ease-in-out',
-        'card-reveal': 'card-reveal 0.6s ease-out',
-        'float': 'float 3s ease-in-out infinite',
-      },
-      keyframes: {
-        'pulse-power': {
-          '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.2)' },
-        },
-        'card-reveal': {
-          '0%': { transform: 'rotateY(180deg)', opacity: '0' },
-          '100%': { transform: 'rotateY(0deg)', opacity: '1' },
-        },
-        'float': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
+      spacing: {
+        safe: 'env(safe-area-inset-bottom)',
       },
     },
   },

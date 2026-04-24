@@ -14,6 +14,7 @@ firebase-debug.log
 # Keys
 keys/
 
-# Env
+# Env (avoid `.env.*` — it ignores `.env.example` in subfolders)
 .env
-.env.*
+.env.local
+**/.env.local

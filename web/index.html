@@ -2,95 +2,51 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Fates of Olympus</title>
-    <meta name="description" content="A strategic card game set in ancient Greek mythology" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1a1a2e" />
-    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Fates of Olympus — Strategic mythic card battles for iPhone</title>
+    <meta
+      name="description"
+      content="Command gods, face legendary foes. Strategic card battles in ancient Greek mythology. Now available on iPhone."
+    />
+    <meta name="theme-color" content="#0f1419" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Fates" />
-    
-    <!-- Favicon & Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    
-    <!-- Google Fonts for Greek theme -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-title" content="Fates of Olympus" />
 
-    <!-- GA4: dataLayer and gtag stub (script loaded from ga4.ts with env measurement ID) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fates of Olympus" />
+    <meta
+      property="og:description"
+      content="Strategic mythic card battles on iPhone"
+    />
+    <meta property="og:image" content="/app-icon.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Fates of Olympus" />
+    <meta
+      name="twitter:description"
+      content="Strategic mythic card battles on iPhone"
+    />
+    <meta name="twitter:image" content="/app-icon.jpg" />
+
+    <link rel="icon" type="image/jpeg" href="/app-icon.jpg" />
+    <link rel="apple-touch-icon" href="/app-icon.jpg" />
+
+    <link
+      rel="preload"
+      as="image"
+      href="/backgrounds/background.jpg"
+      fetchpriority="high"
+    />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
-    </script>
-
-    <!-- GitHub Pages SPA redirect handler -->
-    <script>
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))
-    </script>
-    
-    <!-- PWA Version Check - Clear code caches on new version, preserve images/fonts -->
-    <script>
-      (async function checkVersion() {
-        var STORAGE_KEY = 'app_version';
-        // Cache names to preserve (images use StaleWhileRevalidate - auto-update in background)
-        var PRESERVE_PATTERNS = ['images-', 'google-fonts', 'gstatic-fonts'];
-        
-        function shouldPreserve(name) {
-          return PRESERVE_PATTERNS.some(function(p) { return name.includes(p); });
-        }
-        
-        try {
-          var res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
-          var data = await res.json();
-          var version = data.version;
-          var storedVersion = localStorage.getItem(STORAGE_KEY);
-          
-          if (storedVersion && storedVersion !== version) {
-            console.log('[Version] Update detected:', storedVersion, '->', version);
-            
-            if ('caches' in window) {
-              var keys = await caches.keys();
-              for (var i = 0; i < keys.length; i++) {
-                var k = keys[i];
-                if (shouldPreserve(k)) {
-                  console.log('[Version] Preserving:', k);
-                } else {
-                  console.log('[Version] Clearing:', k);
-                  await caches.delete(k);
-                }
-              }
-            }
-            
-            // Unregister service workers to force fresh registration with new code
-            if ('serviceWorker' in navigator) {
-              var regs = await navigator.serviceWorker.getRegistrations();
-              for (var j = 0; j < regs.length; j++) {
-                await regs[j].unregister();
-              }
-            }
-            
-            localStorage.setItem(STORAGE_KEY, version);
-            window.location.reload();
-            return;
-          }
-          localStorage.setItem(STORAGE_KEY, version);
-        } catch (e) { /* Network error, continue with cached version */ }
-      })();
+      function gtag() {
+        dataLayer.push(arguments);
+      }
     </script>
   </head>
   <body>
