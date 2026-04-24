@@ -1,26 +1,25 @@
 import { useI18n } from '@/i18n/I18nProvider';
-import { LanguageSelector } from '@/components/LanguageSelector';
+import { Header } from '@/components/Header';
 
 export function Support() {
   const { t } = useI18n();
 
   return (
-    <div className="min-h-screen bg-storm px-4 py-16 pt-[max(4rem,env(safe-area-inset-top))]">
-      <div className="mx-auto max-w-2xl">
-        <a
-          href="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-parchment/70 transition-colors hover:text-parchment"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {t.support.backHome}
-        </a>
+    <>
+      <Header />
+      <div className="min-h-screen bg-storm px-4 pb-16 pt-[max(1rem,calc(env(safe-area-inset-top)+3.25rem))]">
+        <div className="mx-auto max-w-2xl">
+          <a
+            href="/"
+            className="mb-8 inline-flex items-center gap-2 text-sm text-parchment/70 transition-colors hover:text-parchment"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t.support.backHome}
+          </a>
 
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-parchment">{t.support.title}</h1>
-          <LanguageSelector />
-        </div>
+          <h1 className="mb-8 text-3xl font-bold text-parchment">{t.support.title}</h1>
 
         <div className="space-y-6">
           <section className="rounded-2xl border border-white/10 bg-storm/60 p-6">
@@ -99,6 +98,7 @@ export function Support() {
           </section>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

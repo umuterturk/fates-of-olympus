@@ -6,7 +6,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative flex min-h-[85dvh] flex-col items-center justify-center px-6 pb-8 pt-[max(4rem,env(safe-area-inset-top))]"
+      className="relative flex min-h-[90dvh] flex-col items-center justify-center px-6 pb-8 pt-[max(2rem,calc(env(safe-area-inset-top)+3.5rem))]"
     >
       <img
         src="/backgrounds/background.jpg"
@@ -38,16 +38,9 @@ export function Hero() {
         <p className="mb-2 text-base text-parchment/80">
           {t.hero.subtitle}
         </p>
-        <p className="mb-8 text-sm text-parchment/65">
+        <p className="text-sm text-parchment/65">
           {t.hero.tagline}
         </p>
-
-        <a
-          href="#download"
-          className="inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-parchment px-8 py-3 text-base font-semibold text-storm shadow-xl transition-transform active:scale-95"
-        >
-          {t.hero.cta}
-        </a>
       </div>
     </section>
   );

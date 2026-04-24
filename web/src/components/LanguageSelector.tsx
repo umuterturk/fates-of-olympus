@@ -38,7 +38,7 @@ export function LanguageSelector() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-white/10 bg-storm/60 px-2.5 py-1.5 text-xs text-parchment backdrop-blur-sm transition-colors hover:border-white/20 active:scale-95"
+        className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-white/20 bg-transparent px-2.5 py-1.5 text-xs text-parchment shadow-sm backdrop-blur-sm transition-colors hover:border-white/35 hover:bg-white/5 active:scale-95"
         aria-label="Select language"
         aria-expanded={isOpen}
       >
